@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UTERA (UMKM Sejahtera) - Sistem aplikasi tata kelola keuangan dan perizinan usaha berbasis cloud untuk UMKM Indonesia.">
+  <meta name="keywords" content="UTERA, Moka POS, Aplikasi Kasir, Pembukuan Kas Warung, KUR 2026, Pinjaman Koperasi, NIB, PIRT, Halal, RPL Kelompok 3">
+  <meta name="author" content="Kelompok 3 RPL">
+
+  <title>UTERA (UMKM Sejahtera) — Satu Aplikasi Finansial untuk Semua Kebutuhan Usaha</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans (Standar Ekosistem SaaS Indonesia) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+  <!-- Auto URL normalizer: ensures /landing-page redirects to /landing-page/ so relative assets resolve properly -->
+  <script>
+    (function() {
+      var p = window.location.pathname;
+      if (p.endsWith('/landing-page')) {
+        window.location.replace(p + '/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+
+  <!-- Moka POS Inspired Modern SaaS Stylesheet -->
+  <link rel="stylesheet" href="styles.css?v=20261027_12">
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. FIXED SITE HEADER (Moka POS Clean White Sticky Navbar)
+       ======================================================================== -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <!-- Brand Logo -->
+      <a href="#beranda" class="brand-link" id="brand-home" aria-label="Beranda UTERA">
+        <div class="brand-badge">U</div>
+        <div class="brand-info">
+          <span class="brand-title">UTERA</span>
+          <span class="brand-subtitle">Aplikasi Finansial UMKM</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav aria-label="Navigasi Utama">
+        <ul class="header-nav">
+          <li><a href="#beranda">Beranda</a></li>
+          <li><a href="#fitur-utama">Layanan</a></li>
+          <li><a href="#solusi-bisnis">Solusi Bisnis</a></li>
+          <li><a href="#playground-simulator">Simulator Kas</a></li>
+          <li><a href="#kur-plafon">Plafon KUR 2026</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="../dashboard/" class="nav-highlight-link">Dashboard</a></li>
+        </ul>
+      </nav>
+
+      <!-- Action Group -->
+      <div class="header-actions">
+        <a href="../auth/index.html?mode=login" class="header-login-link" id="btn-login">Masuk</a>
+        <a href="../auth/index.html?mode=register" class="btn btn-primary btn-sm btn-pill" id="btn-register">Coba Gratis</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2. HERO SECTION (Moka POS 2-Column Split: Headline + Tablet/Mockup Card)
+       ======================================================================== -->
+  <section class="hero-section" id="beranda">
+    <div class="container hero-grid">
+      <!-- Left Column: Copy & CTAs -->
+      <div class="hero-content">
+        <div class="hero-eyebrow">PLATFORM FINANSIAL UMKM TERPADU</div>
+
+        <h1 class="heading-hero">
+          Satu Sistem Finansial untuk Semua Kebutuhan Bisnis.
+        </h1>
+
+        <p class="text-lead">
+          Kelola pembukuan kas warung harian, pantau skor kelayakan kredit secara real-time, dan persiapkan pengajuan KUR serta pinjaman koperasi dengan kepastian angka yang dapat dipercaya perbankan.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#playground-simulator" class="btn btn-primary btn-pill" id="hero-btn-primary">
+            <span>Mulai Gratis Sekarang</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+          <a href="#playground-simulator" class="btn btn-secondary btn-pill" id="hero-btn-demo">
+            Buka Simulator Interaktif
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Moka POS Signature Clean Dashboard Mockup Card -->
+      <div class="hero-mockup-wrap">
+        <!-- Device Card -->
+        <div class="hero-device-frame">
+          <div class="device-header">
+            <div class="device-title">
+              <span class="device-dot"></span>
+              <strong>Backoffice Kas Warung UTERA</strong>
+            </div>
+            <span class="device-date-chip">Hari ini • Real-time Sync</span>
+          </div>
+
+          <!-- Mockup Metrics Grid -->
+          <div class="mockup-metrics-grid">
+            <div class="mockup-metric-card">
+              <small>Total Pemasukan</small>
+              <div class="amount income tabular-nums">+ Rp 4.250.000</div>
+            </div>
+            <div class="mockup-metric-card">
+              <small>Laba Bersih Kas</small>
+              <div class="amount tabular-nums">Rp 1.480.000</div>
+            </div>
+          </div>
+
+          <!-- Live Ledger Snippet -->
+          <div class="mockup-ledger-preview">
+            <div class="mockup-ledger-header">
+              <span>Transaksi Terkini</span>
+              <span style="color: var(--primary); font-size: 0.75rem;">1 Sumber Data</span>
+            </div>
+            <div class="mockup-row">
+              <span class="mockup-row-desc">Penjualan Paket Keripik Pisang</span>
+              <span class="mockup-row-amount plus tabular-nums">+ Rp 1.800.000</span>
+            </div>
+            <div class="mockup-row">
+              <span class="mockup-row-desc">Beli Minyak & Bahan Baku</span>
+              <span class="mockup-row-amount minus tabular-nums">- Rp 650.000</span>
+            </div>
+            <div class="mockup-row">
+              <span class="mockup-row-desc">Pesanan Toko Sembako Berkah</span>
+              <span class="mockup-row-amount plus tabular-nums">+ Rp 2.450.000</span>
+            </div>
+          </div>
+
+          <!-- Status Bar -->
+          <div style="background-color: var(--primary-soft); border: 1px solid var(--primary-tint); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+            <span style="color: var(--primary-dark); font-weight: 700;">Status Arus Kas: SEHAT</span>
+            <span style="color: var(--primary); font-weight: 600;">Cicilan Maks. 22.4%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       AURORA BACKGROUND WRAPPER (Landing Page Background Animation - Non-Hero, Non-Footer)
+       ======================================================================== -->
+  <main class="landing-aurora-main" id="konten-utama">
+    <!-- Flowing Aurora Background Canvas -->
+    <div class="aurora-page-background" aria-hidden="true"></div>
+
+  <!-- ========================================================================
+       3. CREDIBILITY & STATS BAR (Moka POS "Investasi Terbaik Bisnis")
+       ======================================================================== -->
+  <section class="stats-bar-section">
+    <div class="container stats-grid">
+      <div class="stat-item">
+        <div class="stat-number tabular-nums">100 Poin</div>
+        <div class="stat-label">Formula Skor PRD Berdasarkan Konsistensi & Laba</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number tabular-nums">Maks. 30%</div>
+        <div class="stat-label">Batas Aman Rasio Beban Cicilan Kas Koperasi</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number tabular-nums">3 Kategori</div>
+        <div class="stat-label">Plafon KUR 2026: Super Mikro, Mikro, & Kecil</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number tabular-nums">100% Siap</div>
+        <div class="stat-label">Panduan Legalitas NIB, PIRT & Halal BPJPH</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       4. VALUE PROPOSITION: FEATURE SECTION (Moka POS "Sat-set" Section)
+       ======================================================================== -->
+  <section class="features-section" id="fitur-utama">
+    <div class="container">
+      <div class="section-center-header">
+        <h2 class="heading-section">
+          Pantau dan Kembangkan Usaha dengan <span class="text-primary-accent">Sat-set!</span>
+        </h2>
+        <p class="text-lead">
+          Bisnis yang menggunakan pencatatan terstruktur UTERA 70% lebih cepat mendapatkan persetujuan fasilitas kredit modal kerja dari perbankan dan koperasi.
+        </p>
+      </div>
+
+      <div class="features-grid-3">
+        <!-- Feature 1 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-icon-container" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <h3>Buku Kas Warung Real-Time</h3>
+            <p>
+              Catat pemasukan dan pengeluaran harian dalam hitungan detik. Tanpa istilah akuntansi rumit, saldo laba bersih kas operasional langsung diperbarui otomatis.
+            </p>
+          </div>
+          <a href="#playground-simulator" class="feature-link">
+            <span>Coba Pembukuan Kas</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-icon-container" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <h3>Engine Skor Kelayakan (0–100)</h3>
+            <p>
+              Algoritma otomatis berbasis formula PRD resmi. Menguji 4 parameter objektif: konsistensi pencatatan, pertumbuhan omzet, margin laba, dan stabilitas kas 6 bulan.
+            </p>
+          </div>
+          <a href="#playground-simulator" class="feature-link">
+            <span>Hitung Skor Usaha</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-icon-container" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h3>Simulasi Guardrail Batas 30% Kas</h3>
+            <p>
+              Cegah jeratan cicilan yang mengancam likuiditas usaha. Sistem memvalidasi ketat agar total angsuran bulanan tidak melampaui 30% dari rata-rata laba kas riil.
+            </p>
+          </div>
+          <a href="#playground-simulator" class="feature-link">
+            <span>Uji Kapasitas Kas</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       5A. MOKA-STYLE ALTERNATING FEATURE SECTION (Photo Left / Text Right)
+       ======================================================================== -->
+  <section class="moka-feature-alt-section" id="solusi-bisnis">
+
+    <!-- Feature Row 1: Calculator (Image Left, Text Right) -->
+    <div class="moka-feature-row">
+      <div class="moka-feature-img-col">
+        <div class="moka-feature-img-card">
+          <img src="assets/calculator-hands.jpg" alt="Kalkulator Keuangan UTERA" loading="lazy">
+        </div>
+      </div>
+      <div class="moka-feature-text-col">
+        <span class="moka-feature-kicker">UTERA Buku Kas</span>
+        <h2 class="moka-feature-heading">Kelola keuangan usaha Anda dengan presisi dan kepercayaan</h2>
+        <p class="moka-feature-desc">
+          Kami membantu Anda mencatat setiap pemasukan dan pengeluaran secara akurat sehingga laporan keuangan Anda siap untuk pengajuan kredit bank kapan saja.
+        </p>
+        <a href="#playground-simulator" class="moka-feature-link" id="btn-fitur-kas">
+          Pelajari &nbsp;<span aria-hidden="true">&#8594;</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Feature Row 2: Financial Team (Image Right, Text Left) -->
+    <div class="moka-feature-row reverse">
+      <div class="moka-feature-img-col">
+        <div class="moka-feature-img-card">
+          <img src="assets/financial-team.png" alt="Tim Analisis Keuangan UTERA" loading="lazy">
+        </div>
+      </div>
+      <div class="moka-feature-text-col">
+        <span class="moka-feature-kicker">UTERA Skor Kelayakan</span>
+        <h2 class="moka-feature-heading">Dapatkan data analitik menarik dari setiap transaksi bisnis Anda</h2>
+        <p class="moka-feature-desc">
+          Algoritma otomatis UTERA menganalisis 4 parameter objektif &mdash; konsistensi, pertumbuhan omzet, margin laba, dan stabilitas kas &mdash; untuk menghasilkan Skor PRD yang diakui perbankan.
+        </p>
+        <a href="#playground-simulator" class="moka-feature-link" id="btn-fitur-skor">
+          Pelajari &nbsp;<span aria-hidden="true">&#8594;</span>
+        </a>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ========================================================================
+       5C. COMMUNITY SHOWCASE (Entrepreneurs Photo Strip)
+       ======================================================================== -->
+  <section class="community-section">
+    <div class="community-inner">
+      <div class="community-photo-col">
+        <div class="community-photo-card">
+          <img src="assets/entrepreneurs-community.jpg" alt="Komunitas UMKM UTERA" class="community-photo" loading="lazy">
+        </div>
+      </div>
+      <div class="community-text-col">
+        <span class="moka-feature-kicker">UTERA Komunitas</span>
+        <h2 class="moka-feature-heading">Bergabung bersama ribuan pelaku UMKM yang telah berkembang</h2>
+        <p class="moka-feature-desc">
+          Jutaan transaksi dicatat setiap bulan oleh pelaku usaha yang menggunakan UTERA. Mereka membuktikan bahwa pembukuan yang rapi adalah kunci membuka akses permodalan lebih cepat.
+        </p>
+        <a href="#playground-simulator" class="moka-feature-link" id="btn-komunitas">
+          Mulai Sekarang &nbsp;<span aria-hidden="true">&#8594;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       6. INTERACTIVE FINANCIAL PLAYGROUND (Moka POS SaaS Tool Container)
+       ======================================================================== -->
+  <section class="playground-section" id="playground-simulator">
+    <div class="container">
+      <div class="section-center-header">
+        <h2 class="heading-section">
+          Coba Langsung <span class="text-primary-accent">Sistemnya</span>
+        </h2>
+        <p class="text-lead">
+          Eksplorasi bagaimana catatan transaksi kas harian mempengaruhi Skor Kelayakan pembiayaan dan batas aman cicilan pinjaman koperasi Anda secara instan.
+        </p>
+      </div>
+
+      <!-- Mount Target for app.js -->
+      <div id="playground-root">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       7. KUR TIERS & PLAFON (Moka POS Clean Pricing / Plafon Cards)
+       ======================================================================== -->
+  <section class="kur-section" id="kur-plafon">
+    <div class="container">
+      <div class="section-center-header">
+        <h2 class="heading-section">
+          Pilihan Plafon KUR Bank Sesuai <span class="text-primary-accent">Kapasitas Usaha</span>
+        </h2>
+        <p class="text-lead">
+          Mengacu pada ketentuan Permenko Perekonomian No. 1 Tahun 2023 dan pedoman penyaluran KUR BRI 2026.
+        </p>
+      </div>
+
+      <div class="kur-grid-3">
+        <!-- Tier 1 -->
+        <div class="kur-tier-card">
+          <div>
+            <span class="tier-category">Tahap Rintisan</span>
+            <h3 class="tier-name">KUR Super Mikro</h3>
+            <div class="tier-plafon tabular-nums">s.d Rp 10 Juta</div>
+            <p style="font-size: 0.92rem; color: var(--neutral-600); line-height: 1.55;">
+              Cocok untuk tambahan modal awal dan pengadaan peralatan kerja bagi usaha mikro yang baru berjalan.
+            </p>
+            <ul class="tier-checklist">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Suku bunga bersubsidi 3% efektif per tahun</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Tanpa agunan fisik tambahan</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Cukup NIB atau Surat Keterangan Usaha (SKU)</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Tenor kredit modal kerja hingga 36 bulan</span>
+              </li>
+            </ul>
+          </div>
+          <a href="#playground-simulator" class="btn btn-secondary" style="width: 100%;">
+            Uji Syarat Super Mikro
+          </a>
+        </div>
+
+        <!-- Tier 2 (Featured Moka POS Style) -->
+        <div class="kur-tier-card featured">
+          <span class="featured-ribbon">Paling Banyak Dipilih</span>
+          <div>
+            <span class="tier-category" style="color: var(--primary);">Rekomendasi Utama</span>
+            <h3 class="tier-name">KUR Mikro</h3>
+            <div class="tier-plafon highlight tabular-nums">Rp 10 Juta – Rp 50 Juta</div>
+            <p style="font-size: 0.92rem; color: var(--neutral-600); line-height: 1.55;">
+              Skema paling ideal bagi warung, katering, dan bengkel yang membutuhkan stok dan bahan baku reguler.
+            </p>
+            <ul class="tier-checklist">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Suku bunga bersubsidi 6% efektif per tahun</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Evaluasi catatan kas minimal 6 bulan berturut-turut</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Rekomendasi Skor Kelayakan UTERA: BAIK (≥ 70)</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Laporan keuangan PDF UTERA siap dilampirkan</span>
+              </li>
+            </ul>
+          </div>
+          <a href="#playground-simulator" class="btn btn-primary" style="width: 100%;">
+            Uji Kelayakan KUR Mikro
+          </a>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="kur-tier-card">
+          <div>
+            <span class="tier-category">Skala Ekspansi</span>
+            <h3 class="tier-name">KUR Kecil</h3>
+            <div class="tier-plafon tabular-nums">Rp 50 Juta – Rp 500 Juta</div>
+            <p style="font-size: 0.92rem; color: var(--neutral-600); line-height: 1.55;">
+              Dikhususkan untuk usaha yang siap membuka cabang baru atau pengadaan armada logistik produksi.
+            </p>
+            <ul class="tier-checklist">
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Suku bunga bertahap 6% s.d 9% efektif</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Wajib melampirkan NIB aktif dan NPWP usaha</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Agunan pokok sesuai dengan ketentuan bank pelaksana</span>
+              </li>
+              <li>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Tenor investasi hingga 60 bulan (5 tahun)</span>
+              </li>
+            </ul>
+          </div>
+          <a href="#playground-simulator" class="btn btn-secondary" style="width: 100%;">
+            Uji Syarat KUR Kecil
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       8. TESTIMONIALS SECTION (Moka POS Real Merchant Stories)
+       ======================================================================== -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-center-header">
+        <h2 class="heading-section">
+          Dipercaya oleh Pelaku Usaha di <span class="text-primary-accent">Seluruh Indonesia</span>
+        </h2>
+        <p class="text-lead">
+          Bagaimana kepastian pembukuan satu sumber data membantu pengusaha mikro mendapatkan persetujuan modal kerja.
+        </p>
+      </div>
+
+      <div class="testi-grid">
+        <!-- Testi 1 -->
+        <div class="testi-card">
+          <p class="testi-quote">
+            « Sejak menggunakan UTERA, pembukuan kas warung saya tidak lagi tercecer di sobekan nota. Saat mengajukan KUR Mikro Rp 30 Juta, pihak bank langsung menyetujui karena laporan arus kas 6 bulan rapi dan skor kelayakan saya 84. »
+          </p>
+          <div class="testi-author">
+            <div class="author-avatar">SN</div>
+            <div class="author-meta">
+              <h5>Suryani Ningsih</h5>
+              <span>Pemilik Keripik Pisang Berkah, Mojokerto</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testi 2 -->
+        <div class="testi-card">
+          <p class="testi-quote">
+            « Fitur simulasi batas 30% koperasi sangat menyelematkan usaha bengkel saya. Saya jadi tahu persis berapa cicilan yang aman tanpa mengganggu uang belanja suku cadang bulanan. »
+          </p>
+          <div class="testi-author">
+            <div class="author-avatar" style="background-color: var(--secondary);">HG</div>
+            <div class="author-meta">
+              <h5>Hendra Gunawan</h5>
+              <span>Pemilik Bengkel Motor Makmur, Malang</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testi 3 -->
+        <div class="testi-card">
+          <p class="testi-quote">
+            « Panduan NIB OSS dan sertifikasi halal UTERA membuat izin usaha saya selesai dalam 1 minggu. Ekspor laporan laba rugi format PDF-nya langsung diterima tanpa revisi oleh koperasi. »
+          </p>
+          <div class="testi-author">
+            <div class="author-avatar" style="background-color: var(--tertiary);">DP</div>
+            <div class="author-meta">
+              <h5>Dimas Pratama</h5>
+              <span>Owner Konveksi Kaos Lokal, Bandung</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       9. HIGH-CONVERTING CTA BANNER (Moka POS Vibrant Green Card)
+       ======================================================================== -->
+  <section class="cta-banner-section">
+    <div class="container">
+      <div class="cta-banner-card">
+        <div class="cta-banner-text">
+          <h2>Cari tahu bagaimana UTERA bisa membantu memajukan usaha Anda</h2>
+          <p>Beralih dari pencatatan bon kertas tercecer menuju pembukuan kas modern yang membukakan jalan menuju permodalan dan kemandirian usaha Anda.</p>
+        </div>
+        <div class="cta-banner-buttons">
+          <a href="#playground-simulator" class="btn btn-white btn-pill">
+            Mulai Sekarang Gratis
+          </a>
+          <a href="#playground-simulator" class="btn btn-ghost-white btn-pill">
+            Uji Skor Kelayakan
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       10. FAQ ACCORDION SECTION (Moka POS Clean FAQ)
+       ======================================================================== -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-center-header">
+        <h2 class="heading-section">
+          Pertanyaan Seputar <span class="text-primary-accent">Platform UTERA</span>
+        </h2>
+      </div>
+
+      <div class="faq-list">
+        <!-- FAQ 1 -->
+        <div class="faq-item active">
+          <div class="faq-header">
+            <h4>Bagaimana cara UTERA menjamin data keuangan usaha saya valid?</h4>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="faq-body">
+            UTERA menerapkan prinsip Satu Sumber Data Keuangan. Setiap catatan transaksi harian pada Buku Kas Warung secara otomatis mengalir ke neraca laba rugi, mesin hitung skor kelayakan, dan simulasi guardrail cicilan tanpa kemungkinan pengeditan ganda yang tidak konsisten.
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <div class="faq-header">
+            <h4>Apakah UTERA memberikan persetujuan pinjaman secara langsung?</h4>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="faq-body">
+            Tidak. UTERA adalah platform analitik dan pendampingan kesehatan finansial. Skor kelayakan dan laporan yang dihasilkan UTERA berfungsi sebagai berkas pendukung resmi untuk mempermudah penilaian oleh bank penyalur KUR (seperti BRI, Mandiri, BNI) atau koperasi simpan pinjam terkait.
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <div class="faq-header">
+            <h4>Mengapa beban cicilan pinjaman dibatasi maksimal 30% dari laba kas?</h4>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="faq-body">
+            Batas 30% adalah standar manajemen risiko kas (Debt Service Coverage) yang direkomendasikan untuk usaha mikro. Jika cicilan melebihi 30% dari laba bersih bulanan, usaha Anda berisiko mengalami defisit modal saat terjadi penurunan omzet atau kenaikan harga bahan baku.
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <div class="faq-header">
+            <h4>Bantuan perizinan apa saja yang disediakan dalam sistem UTERA?</h4>
+            <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="faq-body">
+            UTERA menyediakan panduan pemenuhan dokumen NIB berbasis risiko (OSS RBA), persyaratan izin edar pangan industri rumah tangga (PIRT) dari Dinas Kesehatan, serta panduan sertifikasi halal melalui BPJPH Kementerian Agama.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ========================================================================
+       11. COMPREHENSIVE FOOTER (Moka POS Indonesian SaaS Footer)
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top-grid">
+        <!-- Brand Statement -->
+        <div class="footer-brand">
+          <a href="#beranda" class="brand-link" aria-label="Beranda UTERA">
+            <div class="brand-badge">U</div>
+            <div class="brand-info">
+              <span class="brand-title">UTERA</span>
+              <span class="brand-subtitle">Aplikasi Finansial UMKM</span>
+            </div>
+          </a>
+          <p>
+            Platform pendampingan finansial dan kepatuhan perizinan berbasis cloud untuk kemandirian dan akuntabilitas UMKM Indonesia.
+          </p>
+        </div>
+
+        <!-- Col 1 -->
+        <div class="footer-col">
+          <h5>Layanan</h5>
+          <ul>
+            <li><a href="#playground-simulator">Buku Kas Warung Digital</a></li>
+            <li><a href="#playground-simulator">Kalkulator Skor Kelayakan</a></li>
+            <li><a href="#playground-simulator">Simulasi Guardrail 30% Kas</a></li>
+            <li><a href="#kur-plafon">Plafon KUR BRI 2026</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 2 -->
+        <div class="footer-col">
+          <h5>Solusi Bisnis</h5>
+          <ul>
+            <li><a href="#solusi-bisnis">Kuliner & Kedai Kopi</a></li>
+            <li><a href="#solusi-bisnis">Retail & Warung Sembako</a></li>
+            <li><a href="#solusi-bisnis">Jasa, Bengkel & Salon</a></li>
+            <li><a href="#solusi-bisnis">Kerajinan & Fashion</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3 -->
+        <div class="footer-col">
+          <h5>Informasi & Legal</h5>
+          <ul>
+            <li><a href="#fitur-utama">Standar Akuntansi SAK EMKM</a></li>
+            <li><a href="#fitur-utama">Panduan NIB via OSS RBA</a></li>
+            <li><a href="#fitur-utama">Sertifikasi Halal BPJPH</a></li>
+            <li><a href="#faq">Kebijakan Privasi & Ketentuan</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Compliance Disclaimer Note Sesuai PRD -->
+      <div class="footer-compliance-box">
+        <strong>Pemberitahuan Resmi:</strong> Fitur skor kelayakan, perhitungan estimasi KUR Planner, dan simulasi guardrail beban koperasi pada sistem UTERA disajikan sebagai instrumen analitik dan persiapan administratif. Platform UTERA tidak bertindak sebagai lembaga keuangan penyalur kredit dan tidak menerbitkan keputusan persetujuan pinjaman secara mandiri. Hak persetujuan sepenuhnya merupakan diskresi bank penyalur atau koperasi terkait.
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom">
+        <div>© 2026 UTERA (UMKM Sejahtera) • Proyek RPL Kelompok 3. Seluruh Hak Cipta Dilindungi.</div>
+        <div>Inspirasi Layout & Arsitektur SaaS: <em>Moka POS (mokapos.com)</em></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Engine Script -->
+  <script src="app.js?v=20261027_01"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "utera-landing-page",
+  "version": "1.0.0",
+  "description": "Landing Page UTERA (UMKM Sejahtera) - Platform Pendamping Finansial & Legalitas UMKM",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve . -p 3000",
+    "dev": "npx -y serve . -p 3000"
+  },
+  "keywords": [
+    "utera",
+    "umkm",
+    "buku-kas",
+    "kur-planner",
+    "fintech-umkm"
+  ],
+  "author": "Kelompok 3 RPL",
+  "license": "MIT"
+}
