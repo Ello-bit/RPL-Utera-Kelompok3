@@ -1,0 +1,611 @@
+/* ==========================================================================
+   UTERA AUTHENTICATION (Login & Create Account)
+   Design System: Consistent with UTERA Landing Page (Plus Jakarta Sans)
+   ========================================================================== */
+
+:root {
+  --primary: #1F6B4F;
+  --primary-hover: #17543E;
+  --primary-dark: #12402F;
+  --primary-light: #2A8865;
+  --primary-soft: #EEF7F2;
+  --primary-tint: #D4EAE0;
+  --primary-glow: rgba(31, 107, 79, 0.2);
+
+  --accent-gold: #C98A1B;
+  --accent-gold-soft: #FEF7EC;
+  --accent-blue: #38BDF8;
+
+  --neutral-900: #19221D;
+  --neutral-800: #25332C;
+  --neutral-700: #374151;
+  --neutral-600: #4B5E54;
+  --neutral-500: #6B8075;
+  --neutral-400: #98ABA1;
+  --neutral-300: #D1D5DB;
+  --neutral-200: #E2EAE5;
+  --neutral-100: #F1F6F3;
+  --neutral-50: #F8FAF8;
+
+  /* 100% Typography Consistency with Landing Page */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: #EBF0ED;
+  background-image: radial-gradient(#DDE6E1 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--neutral-800);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Outer Window Frame */
+.auth-viewport {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Big Split Card */
+.auth-card {
+  background-color: #FFFFFF;
+  border-radius: 32px;
+  box-shadow: 0 24px 60px -12px rgba(25, 34, 29, 0.12), 0 0 1px rgba(25, 34, 29, 0.08);
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 640px;
+  padding: 16px;
+  gap: 24px;
+}
+
+/* ==========================================================================
+   LEFT PANEL (Branded Visual Graphic Panel)
+   ========================================================================== */
+.auth-visual-panel {
+  background: radial-gradient(circle at 80% 30%, #E6F3ED 0%, #F5F9F7 45%, #FFFFFF 100%);
+  border-radius: 24px;
+  padding: 38px 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(31, 107, 79, 0.1);
+}
+
+/* Halftone Dotted Background Effect */
+.auth-halftone-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle, rgba(31, 107, 79, 0.18) 1.2px, transparent 1.2px),
+    radial-gradient(circle, rgba(25, 34, 29, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px, 32px 32px;
+  background-position: 0 0, 8px 8px;
+  mask-image: radial-gradient(ellipse at 35% 50%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 35% 50%, black 30%, transparent 75%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Top Header */
+.auth-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--neutral-900);
+}
+
+.auth-wave-icon {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 18px;
+}
+
+.auth-wave-icon span {
+  width: 3px;
+  background-color: var(--primary);
+  border-radius: 2px;
+  animation: pulse-wave 1.8s ease-in-out infinite alternate;
+}
+
+.auth-wave-icon span:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+.auth-wave-icon span:nth-child(2) { height: 16px; animation-delay: 0.3s; }
+.auth-wave-icon span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+.auth-wave-icon span:nth-child(4) { height: 18px; animation-delay: 0.4s; }
+.auth-wave-icon span:nth-child(5) { height: 10px; animation-delay: 0.15s; }
+
+@keyframes pulse-wave {
+  0% { transform: scaleY(0.6); }
+  100% { transform: scaleY(1.15); }
+}
+
+.auth-brand-name {
+  font-family: var(--font-family);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--neutral-900);
+}
+
+/* Small Floating Top Badge */
+.floating-top-badge {
+  position: absolute;
+  top: 90px;
+  left: 34px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-squircle {
+  width: 44px;
+  height: 44px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(25, 34, 29, 0.08), 0 1px 3px rgba(25, 34, 29, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(31, 107, 79, 0.08);
+}
+
+.badge-dash {
+  width: 22px;
+  height: 3px;
+  background-color: var(--accent-blue);
+  border-radius: 2px;
+}
+
+/* Central Floating Interactive Glass Card */
+.floating-feature-card {
+  position: relative;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 16px 36px rgba(25, 34, 29, 0.09), 0 2px 6px rgba(25, 34, 29, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  margin: 36px 0;
+  max-width: 430px;
+}
+
+/* Tabs Inside Glass Card */
+.feature-card-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.feature-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-family);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--neutral-600);
+  transition: all 0.2s ease;
+}
+
+.feature-tab.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--primary-tint);
+}
+
+.feature-card-desc {
+  font-family: var(--font-family);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--neutral-600);
+  margin-bottom: 16px;
+}
+
+/* Chips List */
+.feature-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--neutral-700);
+  background: var(--neutral-100);
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-200);
+}
+
+.chip-item.highlight {
+  background: var(--accent-gold-soft);
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+/* Small Floating Bottom Badge */
+.floating-bottom-badge {
+  position: absolute;
+  bottom: 130px;
+  right: 44px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-dash-blue {
+  width: 18px;
+  height: 3px;
+  background-color: var(--accent-blue);
+  border-radius: 2px;
+}
+
+.badge-squircle-sm {
+  width: 36px;
+  height: 36px;
+  background: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(25, 34, 29, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--primary);
+  border: 1px solid rgba(31, 107, 79, 0.1);
+}
+
+/* Big Display Headline (Matching Landing Page Typography) */
+.auth-visual-headline {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-family);
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--neutral-900);
+  letter-spacing: -0.03em;
+  max-width: 360px;
+}
+
+/* ==========================================================================
+   RIGHT PANEL (Form Panel: Register / Login)
+   ========================================================================== */
+.auth-form-panel {
+  padding: 28px 36px 28px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Back Link to Landing Page */
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--neutral-500);
+  text-decoration: none;
+  margin-bottom: 18px;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+
+.auth-back-link:hover {
+  color: var(--primary);
+}
+
+/* Mode Switcher Tabs (Segmented Control) */
+.auth-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.mode-tab {
+  border: none;
+  background: transparent;
+  padding: 9px 16px;
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--neutral-600);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mode-tab:hover {
+  color: var(--neutral-900);
+}
+
+.mode-tab.active {
+  background-color: #FFFFFF;
+  color: var(--neutral-900);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Form Header */
+.form-header {
+  margin-bottom: 20px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.form-title {
+  font-family: var(--font-family);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--neutral-900);
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.form-subtitle {
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  color: var(--neutral-500);
+  line-height: 1.5;
+}
+
+/* Checkbox Row */
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.form-checkbox {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--primary);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.form-checkbox-label {
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  color: var(--neutral-600);
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.45;
+}
+
+/* Form Body */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Collapsible Form Group for Smooth Transition */
+.form-group-collapsible {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 100px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 0.25s ease, 
+              transform 0.25s ease,
+              margin 0.3s ease;
+  overflow: hidden;
+}
+
+.form-group-collapsible.collapsed {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  margin: 0;
+  pointer-events: none;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: var(--font-family);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--neutral-900);
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  font-family: var(--font-family);
+  font-size: 0.92rem;
+  color: var(--neutral-900);
+  background-color: #FFFFFF;
+  border: 1px solid var(--neutral-300);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.12);
+}
+
+.form-input::placeholder {
+  color: var(--neutral-400);
+  font-size: 0.88rem;
+}
+
+/* Toggle Password Visibility Button */
+.btn-toggle-pw {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--neutral-400);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.btn-toggle-pw:hover {
+  color: var(--neutral-800);
+}
+
+/* Terms Disclaimer */
+.form-terms {
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--neutral-500);
+  margin-top: -2px;
+}
+
+.form-terms a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Primary Action Button (UTERA Forest Green Hover) */
+.btn-submit {
+  width: 100%;
+  height: 50px;
+  background-color: var(--neutral-900);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -6px rgba(25, 34, 29, 0.3);
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.btn-submit:hover {
+  background-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -6px var(--primary-glow);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Footer Switch */
+.auth-footer-switch {
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  color: var(--neutral-500);
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--neutral-200);
+}
+
+.auth-footer-switch button {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-family: var(--font-family);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-footer-switch button:hover {
+  color: var(--primary-dark);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 960px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+    border-radius: 24px;
+    padding: 14px;
+  }
+  .auth-visual-panel {
+    min-height: 400px;
+    padding: 30px 24px;
+  }
+  .auth-visual-headline {
+    font-size: 1.75rem;
+  }
+  .auth-form-panel {
+    padding: 24px 16px;
+  }
+}
