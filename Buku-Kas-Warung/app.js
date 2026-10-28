@@ -193,17 +193,40 @@ document.addEventListener('DOMContentLoaded', function () {
   var activeBizId = 'biz_kopi';
   var activeWalletId = 'wal_operasional';
 
+  function getActiveBiz() {
+    return businessProfiles.find(function (b) { return b.id === activeBizId; }) || businessProfiles[0];
+  }
+
+  function getActiveBizTransactions() {
+    return state.all.filter(function (tx) {
+      return (tx.bizId || 'biz_kopi') === activeBizId;
+    });
+  }
+
+  function computeBizMonthOmzet(bizId) {
+    var curKey = monthKey(state.year, state.month);
+    var sum = 0;
+    state.all.forEach(function (tx) {
+      if ((tx.bizId || 'biz_kopi') === bizId && tx.type === 'income' && tx.date.slice(0, 7) === curKey) {
+        sum += tx.amount;
+      }
+    });
+    return sum;
+  }
+
   function renderBusinessOptions() {
     if (!el.listBizOptions) return;
     el.listBizOptions.innerHTML = businessProfiles.map(function (biz) {
       var isSelected = biz.id === activeBizId;
+      var curOmzet = computeBizMonthOmzet(biz.id);
+      var omzetText = curOmzet > 0 ? (' • Omzet: ' + formatCompactRupiah(curOmzet)) : '';
       return '<li class="dropdown-item' + (isSelected ? ' is-selected' : '') + '" data-biz-id="' + biz.id + '">' +
                '<div class="dropdown-item-icon ' + biz.iconBg + '">' +
                  '<span class="material-symbols-rounded ' + biz.iconColor + '">' + biz.icon + '</span>' +
                '</div>' +
                '<div class="dropdown-item-info">' +
                  '<span class="dropdown-item-title">' + escapeHtml(biz.name) + '</span>' +
-                 '<span class="dropdown-item-meta">' + escapeHtml(biz.desc) + '</span>' +
+                 '<span class="dropdown-item-meta">' + escapeHtml(biz.desc) + omzetText + '</span>' +
                '</div>' +
                (isSelected ? '<span class="material-symbols-rounded dropdown-item-check">check</span>' : '') +
              '</li>';
@@ -238,6 +261,10 @@ document.addEventListener('DOMContentLoaded', function () {
     el.activeBizIconWrap.className = 'selector-icon-wrap ' + found.iconBg;
     closeAllDropdowns();
     renderBusinessOptions();
+    if (!state.editingId) {
+      el.formTitle.textContent = 'Catat Transaksi Kas (' + found.name + ')';
+    }
+    renderAllViews();
     showToast('Beralih ke profil usaha: ' + found.name);
   }
 
@@ -434,6 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var series = [];
     var curYear = state.year;
     var curMonth = state.month;
+    var bizTxs = getActiveBizTransactions();
 
     for (var i = monthsCount - 1; i >= 0; i--) {
       var d = new Date(curYear, curMonth - i, 1);
@@ -444,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var monthIncome = 0;
       var monthExpense = 0;
 
-      state.all.forEach(function (tx) {
+      bizTxs.forEach(function (tx) {
         if (tx.date.slice(0, 7) === key) {
           if (tx.type === 'income') monthIncome += tx.amount;
           else monthExpense += tx.amount;
@@ -556,9 +584,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Update Big Metric on Header to Current Month's Value
     var activeMonthData = series[series.length - 1];
+    var activeBiz = getActiveBiz();
     if (activeMonthData) {
       el.chartProfitVal.textContent = Kas.formatRupiah(activeMonthData.net);
-      el.chartProfitCaption.textContent = activeMonthData.fullLabel + ' • Laba bersih terakumulasi dari kasir';
+      el.chartProfitCaption.textContent = activeMonthData.fullLabel + ' • Laba bersih terakumulasi ' + escapeHtml(activeBiz.name);
+
+      if (el.chartProfitTrend && series.length >= 2) {
+        var prevMonthData = series[series.length - 2];
+        var diff = activeMonthData.net - prevMonthData.net;
+        var pct = prevMonthData.net !== 0
+          ? Math.round((Math.abs(diff) / Math.abs(prevMonthData.net)) * 100)
+          : (activeMonthData.net > 0 ? 100 : 0);
+
+        if (diff >= 0) {
+          el.chartProfitTrend.innerHTML = '<span class="material-symbols-rounded">trending_up</span><span>+' + pct + '% tren positif</span>';
+          el.chartProfitTrend.className = 'trend-badge-positive';
+        } else {
+          el.chartProfitTrend.innerHTML = '<span class="material-symbols-rounded">trending_down</span><span>-' + pct + '% defisit laba</span>';
+          el.chartProfitTrend.className = 'trend-badge-negative';
+        }
+      }
     }
 
     // Attach Hover Handlers to Data Dots
@@ -598,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderVolumeChart() {
     if (!el.volBarsContainer) return;
 
-    // Generate last 12 bars based on recent days or months
+    var bizTxs = getActiveBizTransactions();
     var barsData = [];
     var totalVol = 0;
 
@@ -608,14 +653,18 @@ document.addEventListener('DOMContentLoaded', function () {
       var dayIso = Kas.toISODate(d);
       var vol = 0;
 
-      state.all.forEach(function (tx) {
+      bizTxs.forEach(function (tx) {
         if (tx.date === dayIso || (i === 0 && tx.date.slice(0, 7) === monthKey(state.year, state.month))) {
           vol += tx.amount;
         }
       });
 
       // Reasonable placeholder volume if sparse
-      if (vol === 0) vol = Math.round(800000 + (Math.sin(i * 1.2) * 500000));
+      if (vol === 0) {
+        var baseSeed = bizTxs.reduce(function (acc, t) { return acc + t.amount; }, 0) / (bizTxs.length || 1);
+        vol = Math.round((baseSeed * 0.35) + (Math.sin(i * 1.2) * (baseSeed * 0.2)));
+        if (vol < 0) vol = 400000;
+      }
 
       totalVol += vol;
       barsData.push({
@@ -639,7 +688,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (el.chartVolumeVal) {
       var activeMonthIncome = 0;
       var curKey = monthKey(state.year, state.month);
-      state.all.forEach(function (tx) {
+      bizTxs.forEach(function (tx) {
         if (tx.date.slice(0, 7) === curKey && tx.type === 'income') {
           activeMonthIncome += tx.amount;
         }
@@ -670,10 +719,12 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderLedgerTable() {
     var key = monthKey(state.year, state.month);
     var label = monthName(state.year, state.month);
+    var activeBiz = getActiveBiz();
 
     el.monthLabel.textContent = label;
 
-    var sorted = Kas.sortLedger(state.all);
+    var bizTxs = getActiveBizTransactions();
+    var sorted = Kas.sortLedger(bizTxs);
     var carry = 0;
     var hasEarlier = false;
     var monthRows = [];
@@ -729,13 +780,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Update Pagination / Row Count
     if (el.paginationInfo) {
-      el.paginationInfo.textContent = 'Menampilkan ' + filtered.length + ' dari ' + monthRows.length + ' transaksi';
+      el.paginationInfo.textContent = 'Menampilkan ' + filtered.length + ' dari ' + monthRows.length + ' transaksi (' + activeBiz.name + ')';
     }
 
     // Empty state
     if (filtered.length === 0) {
       el.tableBody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding: 36px 16px; color: var(--slate-400);">' +
-        (monthRows.length === 0 ? 'Belum ada transaksi di ' + label + '. Silakan catat transaksi baru.' : 'Tidak ada transaksi yang cocok dengan filter.') +
+        (monthRows.length === 0 ? 'Belum ada transaksi di ' + label + ' untuk usaha ' + escapeHtml(activeBiz.name) + '. Silakan catat transaksi baru.' : 'Tidak ada transaksi yang cocok dengan filter.') +
         '</td></tr>';
       el.tableFoot.innerHTML = '';
       return;
@@ -823,7 +874,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function resetForm() {
     el.form.reset();
     state.editingId = null;
-    el.formTitle.textContent = 'Catat Transaksi Kas';
+    var activeBiz = getActiveBiz();
+    el.formTitle.textContent = 'Catat Transaksi Kas (' + activeBiz.name + ')';
     el.btnSubmit.textContent = 'CATAT TRANSAKSI KAS';
     el.btnCancel.hidden = true;
     setFormType('income');
@@ -913,7 +965,12 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     } else {
       savedId = Kas.newId();
-      next = state.all.concat([Object.assign({ id: savedId, createdAt: Date.now() }, data)]);
+      next = state.all.concat([Object.assign({
+        id: savedId,
+        bizId: activeBizId,
+        walletId: activeWalletId,
+        createdAt: Date.now()
+      }, data)]);
     }
 
     if (!Kas.save(next)) {
@@ -1129,7 +1186,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // CSV Export
   function exportCsvFile() {
     var key = monthKey(state.year, state.month);
-    var sorted = Kas.sortLedger(state.all);
+    var activeBiz = getActiveBiz();
+    var sorted = Kas.sortLedger(getActiveBizTransactions());
     var saldo = 0;
     var lines = [];
 
@@ -1148,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (!lines.length) {
-      showToast('Belum ada transaksi di ' + monthName(state.year, state.month) + ' untuk diunduh.');
+      showToast('Belum ada transaksi di ' + monthName(state.year, state.month) + ' untuk usaha ' + activeBiz.name + ' untuk diunduh.');
       return;
     }
 
@@ -1163,8 +1221,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
+    var sanitizedBiz = activeBiz.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     a.href = url;
-    a.download = 'utera-buku-kas-' + key + '.csv';
+    a.download = 'utera-kas-' + sanitizedBiz + '-' + key + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -1198,12 +1257,14 @@ document.addEventListener('DOMContentLoaded', function () {
     renderAreaChart();
     renderVolumeChart();
     renderLedgerTable();
+    renderBusinessOptions();
   }
 
   // Initial Form & Categories Setup
   fillFilterCategories();
   setFormType('income');
   el.date.value = todayISO;
+  resetForm();
   renderBusinessOptions();
   renderWalletOptions();
 

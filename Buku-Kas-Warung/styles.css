@@ -643,6 +643,21 @@ button, input, select {
   font-size: 15px;
 }
 
+.trend-badge-negative {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--terracotta);
+  background: transparent;
+  padding: 0;
+}
+
+.trend-badge-negative .material-symbols-rounded {
+  font-size: 15px;
+}
+
 .chart-date-caption {
   display: block;
   font-size: 12px;
