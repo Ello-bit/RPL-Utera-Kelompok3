@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buku Kas Warung | UTERA</title>
-  <meta name="description" content="Catat uang masuk dan keluar warung per hari. Saldo dihitung otomatis per baris, rekap pemasukan, pengeluaran, dan laba bersih per bulan.">
+  <title>Buku Kas Warung | UTERA SaaS Finansial UMKM</title>
+  <meta name="description" content="Sistem pembukuan kas warung, grafik laba bersih per bulan, volume arus kas real-time, dan manajemen transaksi keuangan UMKM.">
 
-  <!-- Tipografi sesuai PRD: Source Serif 4 untuk judul dan angka utama, IBM Plex Sans untuk isi dan nominal tabular -->
+  <!-- Google Fonts: Plus Jakarta Sans & Inter for sleek modern SaaS typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
-  <!-- Ikon yang sama dengan Dashboard agar konsisten antarpilar -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,0,0">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Google Material Symbols Rounded Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 
   <script>
     (function () {
@@ -22,237 +23,535 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261028_01">
 </head>
-<body>
-  <a class="skip-link" href="#ledger">Langsung ke lembar kas</a>
+<body class="saas-body">
 
-  <div class="app">
-    <!-- Menu samping (laptop) -->
-    <aside class="side-nav" aria-label="Navigasi aplikasi">
-      <a href="../landing-page/" class="side-brand">
-        <span class="side-brand-name">UTERA</span>
-        <span class="side-brand-tag">Finansial UMKM</span>
+  <div class="app-layout">
+
+    <!-- ========================================================================
+         1. LEFT ICON DOCK / SIDEBAR (Matches reference design)
+         ======================================================================== -->
+    <aside class="icon-dock" id="icon-dock" aria-label="Navigasi Utama">
+      <!-- Brand Logo / Emblem at top (Red hexagon/emblem matching screenshot) -->
+      <a href="../landing-page/" class="dock-logo" title="Beranda UTERA">
+        <div class="emblem-symbol" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L28 8.9V23.1L16 30L4 23.1V8.9L16 2Z" fill="#E11D48"/>
+            <path d="M16 7L23 11.5V19.5L16 24L9 19.5V11.5L16 7Z" fill="#FFF"/>
+            <path d="M16 11L20 13.5V17.5L16 20L12 17.5V13.5L16 11Z" fill="#E11D48"/>
+          </svg>
+        </div>
       </a>
 
-      <nav>
-        <ul class="side-list">
+      <!-- Group 1: PAGES -->
+      <div class="dock-section">
+        <span class="dock-section-tag">PAGES</span>
+        <ul class="dock-list">
           <li>
-            <a href="../dashboard/" class="side-link">
-              <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
-              Dashboard
+            <a href="../dashboard/" class="dock-link" title="Dashboard Finansial">
+              <span class="material-symbols-rounded">grid_view</span>
             </a>
           </li>
           <li>
-            <a href="./" class="side-link is-active" aria-current="page">
-              <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
-              Buku Kas Warung
+            <!-- Active item: vibrant emerald green pill container -->
+            <a href="./" class="dock-link is-active" title="Buku Kas Warung (Aktif)" aria-current="page">
+              <span class="material-symbols-rounded">receipt_long</span>
             </a>
           </li>
           <li>
-            <a href="../landing-page/" class="side-link">
-              <span class="material-symbols-rounded" aria-hidden="true">home</span>
-              Halaman utama
+            <a href="../dashboard/#kur" class="dock-link" title="Simulasi KUR & Bank">
+              <span class="material-symbols-rounded">account_balance</span>
+            </a>
+          </li>
+          <li>
+            <a href="../dashboard/#legalitas" class="dock-link" title="Legalitas & NIB">
+              <span class="material-symbols-rounded">verified_user</span>
             </a>
           </li>
         </ul>
-      </nav>
+      </div>
 
-      <a href="../auth/index.html?mode=login" class="side-link side-logout">
-        <span class="material-symbols-rounded" aria-hidden="true">logout</span>
-        Keluar
-      </a>
+      <!-- Group 2: UI -->
+      <div class="dock-section">
+        <span class="dock-section-tag">UI</span>
+        <ul class="dock-list">
+          <li>
+            <a href="../dashboard/#profil-usaha" class="dock-link" title="Profil Usaha">
+              <span class="material-symbols-rounded">person</span>
+            </a>
+          </li>
+          <li>
+            <a href="../dashboard/#laporan" class="dock-link" title="Laporan & Ekspor">
+              <span class="material-symbols-rounded">bar_chart</span>
+            </a>
+          </li>
+          <li>
+            <a href="../landing-page/" class="dock-link" title="Halaman Depan UTERA">
+              <span class="material-symbols-rounded">storefront</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Group 3: DOC / SYSTEM -->
+      <div class="dock-section dock-section-bottom">
+        <span class="dock-section-tag">DOC</span>
+        <ul class="dock-list">
+          <li>
+            <a href="../landing-page/#faq" class="dock-link" title="Bantuan & Panduan">
+              <span class="material-symbols-rounded">help</span>
+            </a>
+          </li>
+          <li>
+            <a href="../auth/index.html?mode=login" class="dock-link" title="Keluar">
+              <span class="material-symbols-rounded">logout</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </aside>
 
-    <main class="main" id="main">
-      <header class="page-head">
-        <div class="page-title">
-          <p class="page-kicker">Manajemen keuangan</p>
-          <h1>Buku Kas Warung</h1>
-          <p class="page-lead">Catat setiap uang masuk dan keluar. Saldo dihitung otomatis di tiap baris, seperti buku kas biasa.</p>
+    <!-- Overlay backdrop for mobile icon dock -->
+    <div class="dock-backdrop" id="dock-backdrop" hidden></div>
+
+    <!-- ========================================================================
+         2. MAIN APP CONTAINER
+         ======================================================================== -->
+    <div class="app-main">
+
+      <!-- Top Sticky App Bar -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button type="button" class="btn-dock-toggle" id="btn-dock-toggle" aria-label="Buka navigasi sidebar">
+            <span class="material-symbols-rounded">menu</span>
+          </button>
+
+          <!-- Search Bar (Matches screenshot Search...) -->
+          <div class="topbar-search">
+            <span class="material-symbols-rounded search-icon" aria-hidden="true">search</span>
+            <input type="text" id="global-search" placeholder="Cari transaksi kas, keterangan, atau kategori..." autocomplete="off">
+            <span class="search-badge">⌘K</span>
+          </div>
         </div>
 
-        <div class="page-actions">
-          <div class="month-nav" role="group" aria-label="Pilih bulan">
-            <button type="button" class="icon-btn" id="btn-prev-month" aria-label="Bulan sebelumnya">
-              <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
-            </button>
-            <span class="month-label" id="month-label" aria-live="polite">Memuat...</span>
-            <button type="button" class="icon-btn" id="btn-next-month" aria-label="Bulan berikutnya">
-              <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
-            </button>
+        <div class="topbar-right">
+          <!-- Notification Icon -->
+          <button type="button" class="icon-circle-btn" id="btn-notif" aria-label="Notifikasi Kas" title="Notifikasi Arus Kas">
+            <span class="material-symbols-rounded">notifications</span>
+            <span class="badge-dot"></span>
+          </button>
+
+          <!-- Mail Icon -->
+          <button type="button" class="icon-circle-btn" id="btn-mail" aria-label="Pesan &amp; Laporan" title="Laporan Kas">
+            <span class="material-symbols-rounded">mail</span>
+          </button>
+
+          <!-- User Profile (Matches screenshot user pill) -->
+          <div class="user-profile-pill">
+            <div class="user-avatar-wrap">
+              <span class="user-initials">BR</span>
+              <span class="status-online"></span>
+            </div>
+            <div class="user-text-meta">
+              <span class="user-full-name">Bryan</span>
+              <span class="user-role-title">Pemilik Warung</span>
+            </div>
+            <!-- Country Flag (Indonesian Flag badge) -->
+            <div class="country-flag-badge" title="Indonesia">
+              <svg width="22" height="16" viewBox="0 0 24 16" fill="none" class="flag-svg">
+                <rect width="24" height="8" fill="#E11D48"/>
+                <rect y="8" width="24" height="8" fill="#FFFFFF"/>
+                <rect width="24" height="16" stroke="#E2E8F0" stroke-width="1"/>
+              </svg>
+            </div>
           </div>
-          <button type="button" class="btn btn-outline" id="btn-export">
-            <span class="material-symbols-rounded" aria-hidden="true">download</span>
-            Unduh CSV
-          </button>
-          <button type="button" class="btn btn-primary" id="btn-open-entry">
-            <span class="material-symbols-rounded" aria-hidden="true">add</span>
-            Catat transaksi
-          </button>
         </div>
       </header>
 
-      <!-- Pesan error penyimpanan dan penanda data contoh -->
-      <div id="notice-region"></div>
+      <!-- Main Scrollable Content Area -->
+      <main class="dashboard-viewport" id="main-content">
 
-      <section class="rekap" aria-labelledby="rekap-title">
-        <h2 class="sr-only" id="rekap-title">Rekap bulan ini</h2>
-        <dl class="rekap-list">
-          <div class="rekap-item">
-            <dt>Pemasukan</dt>
-            <dd class="num is-income" id="sum-income">Rp 0</dd>
+        <!-- Top Title Row (Crypto Portfolio style) -->
+        <div class="page-title-row">
+          <div>
+            <h1 class="page-main-heading">Buku Kas Warung</h1>
+            <p class="page-main-subheading">Catat arus kas harian, pantau grafik laba bulanan, dan kelola saldo riil warung Anda.</p>
           </div>
-          <div class="rekap-item">
-            <dt>Pengeluaran</dt>
-            <dd class="num is-expense" id="sum-expense">Rp 0</dd>
-          </div>
-          <div class="rekap-item rekap-net">
-            <dt>Laba bersih</dt>
-            <dd class="num" id="sum-net">Rp 0</dd>
-            <p class="rekap-note" id="sum-net-note">Pemasukan dikurangi pengeluaran bulan ini.</p>
-          </div>
-        </dl>
-      </section>
 
-      <div class="work">
-        <section class="ledger" id="ledger" aria-labelledby="ledger-title" tabindex="-1">
-          <div class="ledger-head">
-            <h2 id="ledger-title">Lembar kas</h2>
-
-            <div class="ledger-tools">
-              <label class="search">
-                <span class="material-symbols-rounded" aria-hidden="true">search</span>
-                <span class="sr-only">Cari keterangan atau kategori</span>
-                <input type="search" id="filter-search" placeholder="Cari keterangan atau kategori" autocomplete="off">
-              </label>
-
-              <div class="seg" role="radiogroup" aria-label="Tampilkan jenis transaksi">
-                <label class="seg-opt"><input type="radio" name="filter-type" value="all" checked><span>Semua</span></label>
-                <label class="seg-opt"><input type="radio" name="filter-type" value="income"><span>Masuk</span></label>
-                <label class="seg-opt"><input type="radio" name="filter-type" value="expense"><span>Keluar</span></label>
-              </div>
-
-              <label class="sr-only" for="filter-category">Kategori</label>
-              <select id="filter-category" class="select-sm">
-                <option value="all">Semua kategori</option>
-              </select>
+          <div class="page-title-actions">
+            <div class="month-selector-pill">
+              <button type="button" class="month-nav-arrow" id="btn-prev-month" aria-label="Bulan sebelumnya">
+                <span class="material-symbols-rounded">chevron_left</span>
+              </button>
+              <span class="month-name-display" id="month-label">Oktober 2026</span>
+              <button type="button" class="month-nav-arrow" id="btn-next-month" aria-label="Bulan berikutnya">
+                <span class="material-symbols-rounded">chevron_right</span>
+              </button>
             </div>
-          </div>
 
-          <div class="table-wrap">
-            <table class="kas-table">
-              <caption class="sr-only" id="table-caption">Daftar transaksi kas</caption>
-              <thead>
-                <tr>
-                  <th scope="col" class="col-date">Tanggal</th>
-                  <th scope="col" class="col-desc">Keterangan</th>
-                  <th scope="col" class="col-num col-in">Masuk</th>
-                  <th scope="col" class="col-num">Keluar</th>
-                  <th scope="col" class="col-num">Saldo</th>
-                  <th scope="col" class="col-act"><span class="sr-only">Aksi</span></th>
-                </tr>
-              </thead>
-              <tbody id="ledger-body">
-                <tr class="row-state">
-                  <td colspan="6">
-                    <p class="state-text">Memuat buku kas dari penyimpanan browser...</p>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot id="ledger-foot"></tfoot>
-            </table>
-          </div>
-        </section>
-
-        <!-- Form catat: panel tetap di laptop, lembar bawah di ponsel -->
-        <aside class="entry" id="entry-panel" aria-labelledby="entry-title">
-          <div class="entry-head">
-            <h2 id="entry-title">Catat transaksi</h2>
-            <button type="button" class="icon-btn entry-close" id="btn-close-entry" aria-label="Tutup form">
-              <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            <button type="button" class="btn btn-outline-white" id="btn-export-csv">
+              <span class="material-symbols-rounded">download</span>
+              <span>Unduh CSV</span>
             </button>
           </div>
+        </div>
 
-          <form id="entry-form" novalidate>
-            <fieldset class="field">
-              <legend class="field-label">Jenis</legend>
-              <div class="type-toggle">
-                <label class="type-opt type-in">
-                  <input type="radio" name="type" value="income" checked>
-                  <span>Uang masuk</span>
-                </label>
-                <label class="type-opt type-out">
-                  <input type="radio" name="type" value="expense">
-                  <span>Uang keluar</span>
-                </label>
+        <!-- System Notices Region (Sample Data Notice, Storage Warning) -->
+        <div id="notice-region"></div>
+
+        <!-- ====================================================================
+             TWO COLUMN MAIN DASHBOARD GRID (Matches Screenshot Structure)
+             ==================================================================== -->
+        <div class="dashboard-grid">
+
+          <!-- ==================================================================
+               LEFT COLUMN (68% width): Charts & Transactions Ledger
+               ================================================================== -->
+          <div class="grid-col-left">
+
+            <!-- CARD 1: GRAFIK LABA BERSIH BULANAN (Area Chart with Green Gradient) -->
+            <section class="saas-card card-chart-profit" aria-labelledby="chart-profit-title">
+              <div class="card-chart-header">
+                <div>
+                  <span class="chart-eyebrow" id="chart-profit-title">TOTAL LABA BERSIH (PROFIT BULANAN)</span>
+                  <div class="chart-metric-row">
+                    <span class="chart-big-metric" id="chart-profit-val">Rp 18.450.000</span>
+                    <span class="trend-badge-positive" id="chart-profit-trend">
+                      <span class="material-symbols-rounded">trending_up</span>
+                      <span>+14.8% tren positif</span>
+                    </span>
+                  </div>
+                  <span class="chart-date-caption" id="chart-profit-caption">Bulan Oktober 2026 • Laba bersih terakumulasi dari kasir</span>
+                </div>
+
+                <!-- Time Range Filter Pills (1B, 3B, 6B, 1T, ALL) -->
+                <div class="time-filter-group" role="group" aria-label="Rentang Waktu Grafik">
+                  <button type="button" class="time-btn" data-range="1m">1B</button>
+                  <button type="button" class="time-btn" data-range="3m">3B</button>
+                  <button type="button" class="time-btn is-active" data-range="6m">6B</button>
+                  <button type="button" class="time-btn" data-range="1y">1T</button>
+                  <button type="button" class="time-btn" data-range="all">ALL</button>
+                </div>
               </div>
-            </fieldset>
 
-            <div class="field">
-              <label class="field-label" for="input-amount">Nominal</label>
-              <div class="input-money">
-                <span aria-hidden="true">Rp</span>
-                <input type="text" id="input-amount" name="amount" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="err-amount">
+              <!-- SVG Interactive Area Chart Container -->
+              <div class="chart-svg-wrapper" id="chart-svg-container">
+                <!-- Injected via JavaScript for dynamic smoothness & data reactivity -->
+                <svg id="profit-area-chart" viewBox="0 0 760 220" preserveAspectRatio="none" class="profit-svg">
+                  <!-- Gradient definitions -->
+                  <defs>
+                    <linearGradient id="emeraldAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#10B981" stop-opacity="0.38"/>
+                      <stop offset="70%" stop-color="#10B981" stop-opacity="0.08"/>
+                      <stop offset="100%" stop-color="#10B981" stop-opacity="0.00"/>
+                    </linearGradient>
+                    <linearGradient id="emeraldLineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#059669"/>
+                      <stop offset="100%" stop-color="#10B981"/>
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Chart Elements injected dynamically -->
+                  <g class="chart-grid-lines" id="svg-grid-lines"></g>
+                  <path id="svg-area-fill" class="area-fill" d="" fill="url(#emeraldAreaGradient)"/>
+                  <path id="svg-line-stroke" class="line-stroke" d="" fill="none" stroke="url(#emeraldLineGradient)" stroke-width="3" stroke-linecap="round"/>
+                  <g class="chart-data-points" id="svg-data-points"></g>
+                  <g class="chart-x-labels" id="svg-x-labels"></g>
+                </svg>
+
+                <!-- Floating Interactive Chart Tooltip -->
+                <div class="chart-floating-tooltip" id="chart-tooltip" hidden>
+                  <strong class="tooltip-month" id="tooltip-month">Oktober 2026</strong>
+                  <div class="tooltip-row">
+                    <span>Laba Bersih:</span>
+                    <strong class="tooltip-net text-emerald" id="tooltip-net">Rp 18.450.000</strong>
+                  </div>
+                  <div class="tooltip-row text-xs">
+                    <span>Pemasukan: <span id="tooltip-in" class="text-emerald">Rp 24.85M</span></span>
+                    <span>Pengeluaran: <span id="tooltip-out" class="text-terracotta">Rp 6.40M</span></span>
+                  </div>
+                </div>
               </div>
-              <p class="field-error" id="err-amount"></p>
+            </section>
+
+            <!-- CARD 2: GRAFIK VOLUME ARUS KAS (Matches second chart in screenshot) -->
+            <section class="saas-card card-chart-volume" aria-labelledby="chart-volume-title">
+              <div class="card-chart-header">
+                <div>
+                  <span class="chart-eyebrow" id="chart-volume-title">VOLUME ARUS KAS MASUK &amp; KELUAR</span>
+                  <div class="chart-metric-row">
+                    <span class="chart-big-metric" id="chart-volume-val">Rp 24.850.000</span>
+                    <span class="volume-subtext">Total omzet bruto terkelola</span>
+                  </div>
+                  <span class="chart-date-caption">Perbandingan harian transaksi operasional kasir warung</span>
+                </div>
+
+                <!-- Time Range Filter for Volume -->
+                <div class="time-filter-group" role="group" aria-label="Rentang Waktu Volume">
+                  <button type="button" class="time-btn" data-vol-range="1m">1B</button>
+                  <button type="button" class="time-btn is-active" data-vol-range="7d">7D</button>
+                  <button type="button" class="time-btn" data-vol-range="3m">3B</button>
+                  <button type="button" class="time-btn" data-vol-range="1y">1T</button>
+                  <button type="button" class="time-btn" data-vol-range="all">ALL</button>
+                </div>
+              </div>
+
+              <!-- Bar Chart Volume Wrapper (Dense emerald bars like screenshot) -->
+              <div class="volume-bars-container" id="volume-bars-container">
+                <!-- Rendered dynamically by app.js -->
+              </div>
+            </section>
+
+            <!-- CARD 3: LEMBAR TRANSAKSI KAS WARUNG & FILTER POOLS -->
+            <section class="saas-card card-transactions-ledger" aria-labelledby="ledger-card-title">
+              
+              <!-- Pool Filter Tabs (Matches screenshot ALL POOLS, FARM, OPTIONS, etc.) -->
+              <div class="pool-tabs-header">
+                <div class="pool-nav-list" role="tablist">
+                  <button type="button" class="pool-tab is-active" data-tab="all">SEMUA TRANSAKSI</button>
+                  <button type="button" class="pool-tab" data-tab="income">PEMASUKAN</button>
+                  <button type="button" class="pool-tab" data-tab="expense">PENGELUARAN</button>
+                  <button type="button" class="pool-tab" data-tab="kulakan">BAHAN BAKU</button>
+                  <button type="button" class="pool-tab" data-tab="operasional">OPERASIONAL</button>
+                </div>
+
+                <div class="pool-header-actions">
+                  <span class="pagination-info" id="ledger-pagination-info">Menampilkan transaksi aktif</span>
+                  <button type="button" class="btn btn-emerald-sm" id="btn-quick-catat">
+                    <span class="material-symbols-rounded">add</span>
+                    <span>+ CATAT KAS</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Search & Category Filters Row -->
+              <div class="ledger-filter-row">
+                <div class="table-search-box">
+                  <span class="material-symbols-rounded" aria-hidden="true">search</span>
+                  <input type="text" id="filter-search" placeholder="Cari keterangan atau kategori..." autocomplete="off">
+                </div>
+
+                <div class="category-select-wrap">
+                  <select id="filter-category" class="select-category" aria-label="Filter kategori">
+                    <option value="all">Semua Kategori</option>
+                  </select>
+                </div>
+
+                <button type="button" class="btn btn-secondary-clean" id="btn-reset-filters" title="Reset semua filter">
+                  <span class="material-symbols-rounded">refresh</span>
+                  <span>Reset Filter</span>
+                </button>
+              </div>
+
+              <!-- Modern SaaS Data Table -->
+              <div class="table-responsive-clean">
+                <table class="saas-table" id="kas-ledger-table">
+                  <thead>
+                    <tr>
+                      <th class="th-date">Tanggal</th>
+                      <th class="th-desc">Keterangan Transaksi</th>
+                      <th class="th-cat">Kategori</th>
+                      <th class="th-num text-right">Uang Masuk</th>
+                      <th class="th-num text-right">Uang Keluar</th>
+                      <th class="th-num text-right">Saldo Berjalan</th>
+                      <th class="th-act text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ledger-table-body">
+                    <!-- Dynamic Rows Rendered by app.js -->
+                  </tbody>
+                  <tfoot id="ledger-table-foot">
+                    <!-- Dynamic Summary Footers Rendered by app.js -->
+                  </tfoot>
+                </table>
+              </div>
+
+            </section>
+
+          </div>
+
+          <!-- ==================================================================
+               RIGHT COLUMN (32% width): Selectors, Metrics 2x2, Action Form
+               ================================================================== -->
+          <div class="grid-col-right">
+
+            <!-- Top Business Selectors (Matches ETH / USDC dropdown cards in screenshot) -->
+            <div class="selector-card-group">
+              <div class="selector-card">
+                <div class="selector-icon-wrap bg-emerald-light">
+                  <span class="material-symbols-rounded text-emerald">local_cafe</span>
+                </div>
+                <div class="selector-meta">
+                  <span class="selector-title">Kopi Nusantara</span>
+                  <span class="selector-desc">Usaha Aktif • UMKM Kuliner</span>
+                </div>
+                <span class="material-symbols-rounded text-muted">expand_more</span>
+              </div>
+
+              <div class="selector-card">
+                <div class="selector-icon-wrap bg-blue-light">
+                  <span class="material-symbols-rounded text-blue">account_balance_wallet</span>
+                </div>
+                <div class="selector-meta">
+                  <span class="selector-title">Kas Operasional Warung</span>
+                  <span class="selector-desc">Rekening &amp; Kasir Utama</span>
+                </div>
+                <span class="material-symbols-rounded text-muted">expand_more</span>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="field-label" for="input-date">Tanggal</label>
-              <input type="date" id="input-date" name="date" class="input" aria-describedby="err-date">
-              <p class="field-error" id="err-date"></p>
+            <!-- 2x2 Metric Grid (Matches Commission 0.01 / 0.05 / 0.3 / 1 in screenshot) -->
+            <div class="commission-grid-card">
+              <div class="commission-head-label">REKAP KINERJA KAS (BULAN INI)</div>
+              
+              <div class="grid-2x2">
+                <!-- Cell 1: Total Pemasukan -->
+                <div class="comm-cell">
+                  <span class="comm-val text-emerald" id="val-rekap-income">Rp 24.85M</span>
+                  <span class="comm-sub text-emerald">+8.2% omzet kasir</span>
+                </div>
+
+                <!-- Cell 2: Total Pengeluaran -->
+                <div class="comm-cell">
+                  <span class="comm-val text-terracotta" id="val-rekap-expense">Rp 6.40M</span>
+                  <span class="comm-sub text-muted">Hemat 3.4% biaya</span>
+                </div>
+
+                <!-- Cell 3: Margin Keuntungan -->
+                <div class="comm-cell">
+                  <span class="comm-val" id="val-rekap-margin">74.2%</span>
+                  <span class="comm-sub text-emerald">Arus kas sehat</span>
+                </div>
+
+                <!-- Cell 4: Guardrail 30% Cicilan -->
+                <div class="comm-cell">
+                  <span class="comm-val text-primary" id="val-rekap-guardrail">Rp 5.53M</span>
+                  <span class="comm-sub text-muted">Batas cicilan 30%</span>
+                </div>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="field-label" for="input-category">Kategori</label>
-              <select id="input-category" name="category" class="input" aria-describedby="err-category"></select>
-              <p class="field-error" id="err-category"></p>
+            <!-- ACTION CARD: CATAT TRANSAKSI KAS (Matches Low price / High price / ADD LIQUIDITY) -->
+            <section class="saas-card card-action-entry" id="entry-panel" aria-labelledby="form-entry-title">
+              <div class="entry-card-header">
+                <h2 class="entry-title-text" id="form-entry-title">Catat Transaksi Kas</h2>
+                <span class="entry-badge-live">Real-time</span>
+              </div>
+
+              <form id="entry-form" novalidate class="entry-saas-form">
+                <!-- Segmented Type Toggle (Masuk / Keluar) -->
+                <div class="form-group-clean">
+                  <label class="form-label-clean">Tipe Arus Kas</label>
+                  <div class="type-segmented-toggle">
+                    <label class="type-pill-label type-pill-in is-active" id="label-type-income">
+                      <input type="radio" name="type" value="income" checked>
+                      <span>+ Pemasukan (Omzet)</span>
+                    </label>
+                    <label class="type-pill-label type-pill-out" id="label-type-expense">
+                      <input type="radio" name="type" value="expense">
+                      <span>- Pengeluaran (Biaya)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Nominal (Rp) (Matches "Low price" numeric card in screenshot) -->
+                <div class="form-group-clean">
+                  <label for="input-amount" class="form-label-clean">Nominal Transaksi (Rp)</label>
+                  <div class="numeric-input-card" id="wrap-amount">
+                    <span class="currency-prefix">Rp</span>
+                    <input type="text" id="input-amount" name="amount" inputmode="numeric" placeholder="0" class="numeric-amount-input" autocomplete="off" required>
+                    <div class="step-buttons" aria-hidden="true">
+                      <button type="button" class="btn-step" id="btn-step-plus" tabindex="-1">+</button>
+                      <button type="button" class="btn-step" id="btn-step-minus" tabindex="-1">-</button>
+                    </div>
+                  </div>
+                  <p class="form-field-error" id="err-amount"></p>
+                </div>
+
+                <!-- Tanggal Transaksi (Matches "High price" numeric card in screenshot) -->
+                <div class="form-group-clean">
+                  <label for="input-date" class="form-label-clean">Tanggal Pembukuan</label>
+                  <div class="numeric-input-card" id="wrap-date">
+                    <input type="date" id="input-date" name="date" class="date-input-clean" required>
+                  </div>
+                  <p class="form-field-error" id="err-date"></p>
+                </div>
+
+                <!-- Kategori Dropdown -->
+                <div class="form-group-clean">
+                  <label for="input-category" class="form-label-clean">Kategori Transaksi</label>
+                  <select id="input-category" name="category" class="select-clean" required>
+                    <!-- Options populated dynamically -->
+                  </select>
+                  <p class="form-field-error" id="err-category"></p>
+                </div>
+
+                <!-- Keterangan Transaksi -->
+                <div class="form-group-clean">
+                  <label for="input-note" class="form-label-clean">Keterangan / Rincian</label>
+                  <input type="text" id="input-note" name="note" placeholder="contoh: Penjualan 25 cup es kopi aren" class="text-input-clean" maxlength="100" autocomplete="off">
+                </div>
+
+                <!-- Big Vibrant Emerald CTA (Matches ADD LIQUIDITY in screenshot) -->
+                <div class="entry-cta-wrap">
+                  <button type="submit" class="btn btn-emerald-primary btn-block" id="btn-submit-tx">
+                    CATAT TRANSAKSI KAS
+                  </button>
+                  <button type="button" class="btn btn-secondary-clean btn-block" id="btn-cancel-tx" hidden>
+                    Batalkan Perubahan
+                  </button>
+                </div>
+                <p class="form-general-error" id="err-form" role="alert"></p>
+              </form>
+            </section>
+
+            <!-- Bottom Quick Info Cards (Matches Curvo & Mooniswap cards at bottom right) -->
+            <div class="quick-info-grid">
+              <!-- Info Card 1 -->
+              <div class="saas-mini-card">
+                <div class="mini-card-head">
+                  <div class="mini-brand">
+                    <span class="mini-dot bg-emerald"></span>
+                    <strong>Kelayakan KUR</strong>
+                  </div>
+                  <span class="badge-mini-tag text-emerald">Skor 84/100</span>
+                </div>
+                <p class="mini-card-desc">Arus kas dan konsistensi pencatatan memenuhi syarat pengajuan KUR Mikro.</p>
+                <a href="../dashboard/" class="btn-mini-action">BUKA DASHBOARD</a>
+              </div>
+
+              <!-- Info Card 2 -->
+              <div class="saas-mini-card">
+                <div class="mini-card-head">
+                  <div class="mini-brand">
+                    <span class="mini-dot bg-blue"></span>
+                    <strong>Laporan Siap Bank</strong>
+                  </div>
+                  <span class="badge-mini-tag text-blue">CSV / PDF</span>
+                </div>
+                <p class="mini-card-desc">Ekspor data riwayat kas bulanan untuk keperluan pembukuan dan verifikasi perbankan.</p>
+                <button type="button" class="btn-mini-action" id="btn-mini-export">UNDUH DATA KAS</button>
+              </div>
             </div>
 
-            <div class="field">
-              <label class="field-label" for="input-note">Keterangan <span class="field-optional">(boleh kosong)</span></label>
-              <input type="text" id="input-note" name="note" class="input" maxlength="80" placeholder="Contoh: kulakan gula dan kopi" autocomplete="off">
-            </div>
+          </div>
 
-            <div class="entry-actions">
-              <button type="submit" class="btn btn-primary btn-block" id="btn-submit">Catat transaksi</button>
-              <button type="button" class="btn btn-secondary btn-block" id="btn-cancel">Batal</button>
-            </div>
-            <p class="form-error" id="err-form" role="alert"></p>
-          </form>
-        </aside>
-      </div>
-    </main>
+        </div>
+
+      </main>
+
+    </div>
+
   </div>
 
-  <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
-
-  <!-- Menu bawah (ponsel): empat item sesuai PRD -->
-  <nav class="bottom-nav" aria-label="Navigasi aplikasi">
-    <a href="../dashboard/" class="bottom-link">
-      <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
-      Dashboard
-    </a>
-    <a href="./" class="bottom-link is-active" aria-current="page">
-      <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
-      Buku kas
-    </a>
-    <button type="button" class="bottom-link" id="btn-bottom-entry">
-      <span class="material-symbols-rounded" aria-hidden="true">add_circle</span>
-      Catat
-    </button>
-    <a href="../landing-page/" class="bottom-link">
-      <span class="material-symbols-rounded" aria-hidden="true">home</span>
-      Beranda
-    </a>
-  </nav>
-
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
-    <span id="toast-text"></span>
-    <button type="button" class="toast-action" id="toast-action" hidden>Urungkan</button>
+  <!-- Toast Notification -->
+  <div class="toast-popup" id="toast" role="status" aria-live="polite" hidden>
+    <span class="toast-message" id="toast-text"></span>
+    <button type="button" class="toast-undo-btn" id="toast-action" hidden>Urungkan</button>
   </div>
 
+  <!-- Store & Application Scripts -->
   <script src="kas-store.js"></script>
   <script src="app.js"></script>
 </body>
