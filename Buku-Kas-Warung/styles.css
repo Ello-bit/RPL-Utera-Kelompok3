@@ -632,12 +632,11 @@ button, input, select {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--emerald-dark);
-  background-color: var(--emerald-light);
-  padding: 3px 8px;
-  border-radius: var(--radius-full);
+  color: var(--emerald);
+  background: transparent;
+  padding: 0;
 }
 
 .trend-badge-positive .material-symbols-rounded {
