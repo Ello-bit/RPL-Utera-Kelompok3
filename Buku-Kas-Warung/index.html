@@ -376,28 +376,62 @@
                ================================================================== -->
           <div class="grid-col-right">
 
-            <!-- Top Business Selectors (Matches ETH / USDC dropdown cards in screenshot) -->
+            <!-- Top Business Selectors (Multi-Usaha UMKM & Kantong Kas Dropdowns) -->
             <div class="selector-card-group">
-              <div class="selector-card">
-                <div class="selector-icon-wrap bg-emerald-light">
-                  <span class="material-symbols-rounded text-emerald">local_cafe</span>
+              <!-- Dropdown 1: Profil Usaha UMKM -->
+              <div class="selector-card" id="card-dropdown-business" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0">
+                <div class="selector-icon-wrap bg-emerald-light" id="active-biz-icon-wrap">
+                  <span class="material-symbols-rounded text-emerald" id="active-biz-icon">local_cafe</span>
                 </div>
                 <div class="selector-meta">
-                  <span class="selector-title">Kopi Nusantara</span>
-                  <span class="selector-desc">Usaha Aktif • UMKM Kuliner</span>
+                  <span class="selector-title" id="active-biz-name">Kopi Nusantara</span>
+                  <span class="selector-desc" id="active-biz-desc">Usaha Aktif • UMKM Kuliner</span>
                 </div>
-                <span class="material-symbols-rounded text-muted">expand_more</span>
+                <span class="material-symbols-rounded text-muted dropdown-arrow" id="arrow-biz">expand_more</span>
+
+                <!-- Dropdown Popover Menu -->
+                <div class="dropdown-popover" id="menu-dropdown-business" hidden>
+                  <div class="dropdown-header">
+                    <span>PILIH PROFIL USAHA UMKM</span>
+                  </div>
+                  <ul class="dropdown-list" id="list-business-options">
+                    <!-- Populated dynamically via JS -->
+                  </ul>
+                  <div class="dropdown-footer">
+                    <button type="button" class="btn-dropdown-action" id="btn-add-business">
+                      <span class="material-symbols-rounded">add_circle</span>
+                      <span>+ Daftarkan Usaha Baru</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="selector-card">
-                <div class="selector-icon-wrap bg-blue-light">
-                  <span class="material-symbols-rounded text-blue">account_balance_wallet</span>
+              <!-- Dropdown 2: Kantong Kas & Rekening -->
+              <div class="selector-card" id="card-dropdown-wallet" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0">
+                <div class="selector-icon-wrap bg-blue-light" id="active-wallet-icon-wrap">
+                  <span class="material-symbols-rounded text-blue" id="active-wallet-icon">account_balance_wallet</span>
                 </div>
                 <div class="selector-meta">
-                  <span class="selector-title">Kas Operasional Warung</span>
-                  <span class="selector-desc">Rekening &amp; Kasir Utama</span>
+                  <span class="selector-title" id="active-wallet-name">Kas Operasional Warung</span>
+                  <span class="selector-desc" id="active-wallet-desc">Rekening &amp; Kasir Utama</span>
                 </div>
-                <span class="material-symbols-rounded text-muted">expand_more</span>
+                <span class="material-symbols-rounded text-muted dropdown-arrow" id="arrow-wallet">expand_more</span>
+
+                <!-- Dropdown Popover Menu -->
+                <div class="dropdown-popover" id="menu-dropdown-wallet" hidden>
+                  <div class="dropdown-header">
+                    <span>PILIH KANTONG KAS / REKENING</span>
+                  </div>
+                  <ul class="dropdown-list" id="list-wallet-options">
+                    <!-- Populated dynamically via JS -->
+                  </ul>
+                  <div class="dropdown-footer">
+                    <button type="button" class="btn-dropdown-action" id="btn-add-wallet">
+                      <span class="material-symbols-rounded">add_circle</span>
+                      <span>+ Tambah Akun Rekening / Kas</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

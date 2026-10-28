@@ -91,7 +91,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Mobile dock
     dock: $('icon-dock'),
     dockBackdrop: $('dock-backdrop'),
-    btnDockToggle: $('btn-dock-toggle')
+    btnDockToggle: $('btn-dock-toggle'),
+
+    // Dropdown Selectors
+    cardBiz: $('card-dropdown-business'),
+    menuBiz: $('menu-dropdown-business'),
+    listBizOptions: $('list-business-options'),
+    activeBizName: $('active-biz-name'),
+    activeBizDesc: $('active-biz-desc'),
+    activeBizIcon: $('active-biz-icon'),
+    activeBizIconWrap: $('active-biz-icon-wrap'),
+    btnAddBiz: $('btn-add-business'),
+
+    cardWallet: $('card-dropdown-wallet'),
+    menuWallet: $('menu-dropdown-wallet'),
+    listWalletOptions: $('list-wallet-options'),
+    activeWalletName: $('active-wallet-name'),
+    activeWalletDesc: $('active-wallet-desc'),
+    activeWalletIcon: $('active-wallet-icon'),
+    activeWalletIconWrap: $('active-wallet-icon-wrap'),
+    btnAddWallet: $('btn-add-wallet')
   };
 
   var today = new Date();
@@ -109,6 +128,229 @@ document.addEventListener('DOMContentLoaded', function () {
     editingId: null,
     highlightId: null
   };
+
+  // Multi-Usaha & Kantong Kas Data Model
+  var businessProfiles = [
+    {
+      id: 'biz_kopi',
+      name: 'Kopi Nusantara',
+      desc: 'Usaha Aktif • UMKM Kuliner',
+      icon: 'local_cafe',
+      iconBg: 'bg-emerald-light',
+      iconColor: 'text-emerald',
+      omzet: 'Rp 24.85M'
+    },
+    {
+      id: 'biz_sembako',
+      name: 'Warung Sembako Barokah',
+      desc: 'Cabang 2 • UMKM Ritel Sembako',
+      icon: 'storefront',
+      iconBg: 'bg-blue-light',
+      iconColor: 'text-blue',
+      omzet: 'Rp 16.20M'
+    },
+    {
+      id: 'biz_katering',
+      name: 'Dapur Katering Mama',
+      desc: 'Usaha Rumahan • Katering Harian',
+      icon: 'restaurant',
+      iconBg: 'bg-gold-light',
+      iconColor: 'text-gold',
+      omzet: 'Rp 9.40M'
+    }
+  ];
+
+  var walletAccounts = [
+    {
+      id: 'wal_operasional',
+      name: 'Kas Operasional Warung',
+      desc: 'Rekening & Kasir Utama',
+      icon: 'account_balance_wallet',
+      iconBg: 'bg-blue-light',
+      iconColor: 'text-blue',
+      saldo: 'Rp 18.450.000'
+    },
+    {
+      id: 'wal_bri_kur',
+      name: 'Tabungan Usaha (Bank BRI - KUR)',
+      desc: 'No. Rek 0129-01-002341-50-8',
+      icon: 'account_balance',
+      iconBg: 'bg-emerald-light',
+      iconColor: 'text-emerald',
+      saldo: 'Rp 35.800.000'
+    },
+    {
+      id: 'wal_petty_cash',
+      name: 'Kas Kecil (Petty Cash)',
+      desc: 'Uang Kembalian & Belanja Harian',
+      icon: 'payments',
+      iconBg: 'bg-gold-light',
+      iconColor: 'text-gold',
+      saldo: 'Rp 1.500.000'
+    }
+  ];
+
+  var activeBizId = 'biz_kopi';
+  var activeWalletId = 'wal_operasional';
+
+  function renderBusinessOptions() {
+    if (!el.listBizOptions) return;
+    el.listBizOptions.innerHTML = businessProfiles.map(function (biz) {
+      var isSelected = biz.id === activeBizId;
+      return '<li class="dropdown-item' + (isSelected ? ' is-selected' : '') + '" data-biz-id="' + biz.id + '">' +
+               '<div class="dropdown-item-icon ' + biz.iconBg + '">' +
+                 '<span class="material-symbols-rounded ' + biz.iconColor + '">' + biz.icon + '</span>' +
+               '</div>' +
+               '<div class="dropdown-item-info">' +
+                 '<span class="dropdown-item-title">' + escapeHtml(biz.name) + '</span>' +
+                 '<span class="dropdown-item-meta">' + escapeHtml(biz.desc) + '</span>' +
+               '</div>' +
+               (isSelected ? '<span class="material-symbols-rounded dropdown-item-check">check</span>' : '') +
+             '</li>';
+    }).join('');
+  }
+
+  function renderWalletOptions() {
+    if (!el.listWalletOptions) return;
+    el.listWalletOptions.innerHTML = walletAccounts.map(function (wal) {
+      var isSelected = wal.id === activeWalletId;
+      return '<li class="dropdown-item' + (isSelected ? ' is-selected' : '') + '" data-wal-id="' + wal.id + '">' +
+               '<div class="dropdown-item-icon ' + wal.iconBg + '">' +
+                 '<span class="material-symbols-rounded ' + wal.iconColor + '">' + wal.icon + '</span>' +
+               '</div>' +
+               '<div class="dropdown-item-info">' +
+                 '<span class="dropdown-item-title">' + escapeHtml(wal.name) + '</span>' +
+                 '<span class="dropdown-item-meta">' + escapeHtml(wal.desc) + '</span>' +
+               '</div>' +
+               (isSelected ? '<span class="material-symbols-rounded dropdown-item-check">check</span>' : '') +
+             '</li>';
+    }).join('');
+  }
+
+  function selectBusiness(bizId) {
+    var found = businessProfiles.find(function (b) { return b.id === bizId; });
+    if (!found) return;
+    activeBizId = bizId;
+    el.activeBizName.textContent = found.name;
+    el.activeBizDesc.textContent = found.desc;
+    el.activeBizIcon.textContent = found.icon;
+    el.activeBizIcon.className = 'material-symbols-rounded ' + found.iconColor;
+    el.activeBizIconWrap.className = 'selector-icon-wrap ' + found.iconBg;
+    closeAllDropdowns();
+    renderBusinessOptions();
+    showToast('Beralih ke profil usaha: ' + found.name);
+  }
+
+  function selectWallet(walId) {
+    var found = walletAccounts.find(function (w) { return w.id === walId; });
+    if (!found) return;
+    activeWalletId = walId;
+    el.activeWalletName.textContent = found.name;
+    el.activeWalletDesc.textContent = found.desc;
+    el.activeWalletIcon.textContent = found.icon;
+    el.activeWalletIcon.className = 'material-symbols-rounded ' + found.iconColor;
+    el.activeWalletIconWrap.className = 'selector-icon-wrap ' + found.iconBg;
+    closeAllDropdowns();
+    renderWalletOptions();
+    showToast('Beralih ke rekening kas: ' + found.name);
+  }
+
+  function closeAllDropdowns() {
+    if (el.menuBiz) { el.menuBiz.hidden = true; el.cardBiz.classList.remove('is-open'); el.cardBiz.setAttribute('aria-expanded', 'false'); }
+    if (el.menuWallet) { el.menuWallet.hidden = true; el.cardWallet.classList.remove('is-open'); el.cardWallet.setAttribute('aria-expanded', 'false'); }
+  }
+
+  function toggleDropdown(card, menu) {
+    var isOpen = !menu.hidden;
+    closeAllDropdowns();
+    if (!isOpen) {
+      menu.hidden = false;
+      card.classList.add('is-open');
+      card.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  if (el.cardBiz && el.menuBiz) {
+    el.cardBiz.addEventListener('click', function (e) {
+      if (e.target.closest('#menu-dropdown-business')) return;
+      toggleDropdown(el.cardBiz, el.menuBiz);
+    });
+  }
+
+  if (el.cardWallet && el.menuWallet) {
+    el.cardWallet.addEventListener('click', function (e) {
+      if (e.target.closest('#menu-dropdown-wallet')) return;
+      toggleDropdown(el.cardWallet, el.menuWallet);
+    });
+  }
+
+  if (el.listBizOptions) {
+    el.listBizOptions.addEventListener('click', function (e) {
+      var item = e.target.closest('li[data-biz-id]');
+      if (item) {
+        selectBusiness(item.getAttribute('data-biz-id'));
+      }
+    });
+  }
+
+  if (el.listWalletOptions) {
+    el.listWalletOptions.addEventListener('click', function (e) {
+      var item = e.target.closest('li[data-wal-id]');
+      if (item) {
+        selectWallet(item.getAttribute('data-wal-id'));
+      }
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#card-dropdown-business') && !e.target.closest('#card-dropdown-wallet')) {
+      closeAllDropdowns();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAllDropdowns();
+  });
+
+  if (el.btnAddBiz) {
+    el.btnAddBiz.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var name = prompt('Masukkan nama usaha UMKM baru:', 'Kedai Kopi Barokah');
+      if (name && name.trim()) {
+        var newBiz = {
+          id: 'biz_' + Date.now(),
+          name: name.trim(),
+          desc: 'Usaha Baru • Terdaftar',
+          icon: 'storefront',
+          iconBg: 'bg-emerald-light',
+          iconColor: 'text-emerald',
+          omzet: 'Rp 0'
+        };
+        businessProfiles.push(newBiz);
+        selectBusiness(newBiz.id);
+      }
+    });
+  }
+
+  if (el.btnAddWallet) {
+    el.btnAddWallet.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var name = prompt('Masukkan nama rekening atau kantong kas baru:', 'Kas Tabungan Mandiri');
+      if (name && name.trim()) {
+        var newWal = {
+          id: 'wal_' + Date.now(),
+          name: name.trim(),
+          desc: 'Rekening Kas Tambahan',
+          icon: 'account_balance_wallet',
+          iconBg: 'bg-blue-light',
+          iconColor: 'text-blue',
+          saldo: 'Rp 0'
+        };
+        walletAccounts.push(newWal);
+        selectWallet(newWal.id);
+      }
+    });
+  }
 
   /* ==========================================================================
      HELPERS & FORMATTERS
@@ -962,6 +1204,8 @@ document.addEventListener('DOMContentLoaded', function () {
   fillFilterCategories();
   setFormType('income');
   el.date.value = todayISO;
+  renderBusinessOptions();
+  renderWalletOptions();
 
   // Master Render
   renderAllViews();
