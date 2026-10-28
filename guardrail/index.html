@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardrail 30% Kas &amp; Simulasi Pembiayaan — UTERA</title>
+  <meta name="description" content="Simulasi kapasitas cicilan pinjaman KUR dan Koperasi dengan pagar aman batas 30% arus kas operasional warung UMKM.">
+
+  <!-- Plus Jakarta Sans Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+  <!-- Google Material Symbols (Rounded) Free Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+
+  <!-- Auto URL normalizer: ensures /guardrail redirects to /guardrail/ -->
+  <script>
+    (function() {
+      var p = window.location.pathname;
+      if (p.endsWith('/guardrail')) {
+        window.location.replace(p + '/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="styles.css?v=20261028_01">
+</head>
+<body class="dashboard-body">
+
+  <div class="app-layout">
+    
+    <!-- ========================================================================
+         SIDEBAR NAVIGATION (Consistent with Dashboard & Buku Kas)
+         ======================================================================== -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="../landing-page/index.html" class="sidebar-brand">
+          <div class="brand-symbol">U</div>
+          <div class="brand-text">
+            <span class="brand-name">UTERA</span>
+            <span class="brand-tag">Finansial UMKM</span>
+          </div>
+        </a>
+        <button type="button" class="sidebar-toggle-btn" id="btn-collapse-sidebar" aria-label="Toggle navigasi">
+          <span class="material-symbols-rounded">dock_to_right</span>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu Utama">
+        <!-- GENERAL -->
+        <div class="nav-section">
+          <div class="nav-section-title">UTAMA</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/index.html" class="nav-item" data-page="ringkasan">
+                <span class="material-symbols-rounded">grid_view</span>
+                <span>Ringkasan Kas</span>
+              </a>
+            </li>
+            <li>
+              <a href="../Buku-Kas-Warung/index.html" class="nav-item" data-page="transaksi">
+                <span class="material-symbols-rounded">receipt_long</span>
+                <span>Buku Kas Warung</span>
+                <span class="nav-badge" id="sidebar-badge-tx">5</span>
+              </a>
+            </li>
+            <li>
+              <a href="../Skor-Kelayakan/index.html" class="nav-item" data-page="skor">
+                <span class="material-symbols-rounded">verified</span>
+                <span>Skor Kelayakan</span>
+                <span class="nav-pill-good">84</span>
+              </a>
+            </li>
+            <li>
+              <a href="index.html" class="nav-item active" data-page="guardrail">
+                <span class="material-symbols-rounded">shield</span>
+                <span>Guardrail 30% Kas</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- LAYANAN & BANK -->
+        <div class="nav-section">
+          <div class="nav-section-title">LAYANAN &amp; BANK</div>
+          <ul class="nav-list">
+            <li>
+              <a href="#section-simulasi" class="nav-item" data-page="kur">
+                <span class="material-symbols-rounded">account_balance</span>
+                <span>Simulasi KUR 2026</span>
+              </a>
+            </li>
+            <li>
+              <a href="../landing-page/index.html#kur-plafon" class="nav-item" data-page="legalitas">
+                <span class="material-symbols-rounded">description</span>
+                <span>Legalitas &amp; NIB</span>
+                <span class="nav-pill-info">OSS RBA</span>
+              </a>
+            </li>
+            <li>
+              <a href="#section-perbandingan" class="nav-item" data-page="laporan">
+                <span class="material-symbols-rounded">monitoring</span>
+                <span>Laporan Siap Bank</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- PENGATURAN -->
+        <div class="nav-section">
+          <div class="nav-section-title">PENGATURAN</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/index.html" class="nav-item">
+                <span class="material-symbols-rounded">storefront</span>
+                <span>Profil Usaha</span>
+              </a>
+            </li>
+            <li>
+              <a href="../landing-page/index.html" class="nav-item">
+                <span class="material-symbols-rounded">open_in_new</span>
+                <span>Halaman Utama</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Bottom Profile -->
+      <div class="sidebar-footer">
+        <div class="business-profile-card">
+          <div class="business-avatar" aria-hidden="true">
+            <span class="material-symbols-rounded icon-coffee">local_cafe</span>
+          </div>
+          <div class="business-details">
+            <span class="business-title">Kopi Nusantara</span>
+            <span class="business-badge">UMKM Kuliner Mandiri</span>
+          </div>
+        </div>
+        <a href="../auth/index.html?mode=login" class="btn-logout" title="Keluar">
+          <span class="material-symbols-rounded">logout</span>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- ========================================================================
+         MAIN CONTENT AREA
+         ======================================================================== -->
+    <main class="main-content" id="main-content">
+      
+      <!-- Top Sticky App Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button type="button" class="btn-mobile-menu" id="btn-mobile-menu" aria-label="Buka navigasi">
+            <span class="material-symbols-rounded">menu</span>
+          </button>
+          
+          <div class="search-box">
+            <span class="material-symbols-rounded search-icon">search</span>
+            <input type="text" id="global-search" placeholder="Cari simulasi cicilan, tenor, bank..." autocomplete="off">
+            <span class="search-shortcut">⌘F</span>
+          </div>
+        </div>
+
+        <div class="top-bar-right">
+          <div class="topbar-action-pill" id="action-notif" title="Notifikasi Keuangan">
+            <span class="material-symbols-rounded">notifications</span>
+            <span class="dot-unread"></span>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm" id="btn-export-pdf">
+            <span class="material-symbols-rounded btn-icon">download</span>
+            <span>Ekspor Hasil Uji</span>
+          </button>
+
+          <div class="user-top-profile">
+            <div class="user-avatar-circle">BR</div>
+            <div class="user-meta-top">
+              <span class="user-name-label">Bryan</span>
+              <small class="user-role-label">Pemilik Warung</small>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Viewport Content -->
+      <div class="dashboard-scroll-wrap">
+        
+        <!-- Header Row -->
+        <div class="dash-header-row">
+          <div>
+            <div class="breadcrumbs-tag">
+              <span class="material-symbols-rounded" style="font-size:15px; color:var(--primary);">shield</span>
+              <span>Pilar 3 PRD UTERA — Keamanan Pembiayaan Usaha</span>
+            </div>
+            <h1 class="dash-heading">Guardrail 30% Arus Kas &amp; Simulasi Pembiayaan</h1>
+            <p class="dash-subheading">Kalkulasi batas aman beban angsuran cicilan kredit perbankan agar likuiditas kas operasional warung tetap terjaga.</p>
+          </div>
+
+          <div class="dash-header-actions">
+            <div class="source-badge">
+              <span class="source-dot"></span>
+              <span>Terkoneksi ke Buku Kas Warung (Real-time)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====================================================================
+             1. TOP METRICS: CAPACITY & CASHFLOW FOUNDATION
+             ==================================================================== -->
+        <section class="metrics-grid" aria-label="Fondasi Kapasitas Kas">
+          
+          <!-- Metric 1: Rata-rata Laba Bersih Kas -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-label">Rata-rata Laba Bersih Kas Warung</span>
+              <div class="metric-icon-wrap bg-emerald" aria-hidden="true">
+                <span class="material-symbols-rounded text-emerald">payments</span>
+              </div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-value" id="val-net-profit">Rp 18.450.000</span>
+              <span class="trend-pill trend-up">
+                <span class="material-symbols-rounded trend-icon">trending_up</span>
+                <span>+14.2%</span>
+              </span>
+            </div>
+            <p class="metric-caption">Rata-rata 3 bulan terakhir dari Buku Kas Warung aktif.</p>
+          </div>
+
+          <!-- Metric 2: Batas Plafon Cicilan 30% (The Guardrail) -->
+          <div class="metric-card metric-card-highlight">
+            <div class="metric-top">
+              <span class="metric-label">Plafon Beban Cicilan Maksimal (30%)</span>
+              <div class="metric-icon-wrap bg-primary-soft" aria-hidden="true">
+                <span class="material-symbols-rounded text-primary">shield</span>
+              </div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-value text-primary" id="val-guardrail-limit">Rp 5.535.000</span>
+              <span class="badge-status-safe">Batas Pagar Aman</span>
+            </div>
+            <p class="metric-caption">Batas tertinggi angsuran bulanan yang diizinkan sistem.</p>
+          </div>
+
+          <!-- Metric 3: Estimasi Angsuran Simulasi Saat Ini -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-label">Estimasi Angsuran Terpilih</span>
+              <div class="metric-icon-wrap bg-gold" aria-hidden="true">
+                <span class="material-symbols-rounded text-gold">calculate</span>
+              </div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-value" id="val-est-installment">Rp 2.216.000</span>
+              <span class="ratio-badge" id="val-ratio-badge">12.0% dari laba</span>
+            </div>
+            <p class="metric-caption" id="val-installment-sub">Plafon Rp 50.000.000 • Tenor 24 bulan</p>
+          </div>
+
+          <!-- Metric 4: Sisa Kas Aman Operasional (70%+) -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-label">Sisa Kas Aman Operasional</span>
+              <div class="metric-icon-wrap bg-blue" aria-hidden="true">
+                <span class="material-symbols-rounded text-blue">savings</span>
+              </div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-value text-emerald" id="val-remaining-cash">Rp 16.234.000</span>
+              <span class="trend-pill trend-up">88.0% tersisa</span>
+            </div>
+            <p class="metric-caption">Kas bebas untuk kulakan stok harian &amp; dana darurat warung.</p>
+          </div>
+
+        </section>
+
+        <!-- ====================================================================
+             2. INTERACTIVE SIMULATOR & GUARDRAIL GAUGE
+             ==================================================================== -->
+        <div class="guardrail-main-grid" id="section-simulasi">
+          
+          <!-- Left Panel: Interactive Slider Simulator -->
+          <div class="dash-panel panel-simulator">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Kalkulator Simulasi Pembiayaan Usaha</h2>
+                <p class="panel-subtitle">Sesuaikan plafon pinjaman modal kerja, jangka waktu, dan jenis lembaga pembiayaan</p>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-reset-sim">Reset Nilai</button>
+            </div>
+
+            <!-- Program Selector Tabs (KUR vs Koperasi) -->
+            <div class="program-selector">
+              <button type="button" class="program-tab active" data-program="kur-mikro">
+                <span class="material-symbols-rounded">account_balance</span>
+                <div class="program-meta">
+                  <strong>KUR Mikro Bank (BRI / Mandiri)</strong>
+                  <small>Bunga subsidi pemerintah 6% p.a. • Plafon s.d. Rp 100 Juta</small>
+                </div>
+              </button>
+
+              <button type="button" class="program-tab" data-program="kur-super">
+                <span class="material-symbols-rounded">rocket_launch</span>
+                <div class="program-meta">
+                  <strong>KUR Super Mikro</strong>
+                  <small>Bunga subsidi 3% p.a. • Plafon s.d. Rp 10 Juta</small>
+                </div>
+              </button>
+
+              <button type="button" class="program-tab" data-program="koperasi">
+                <span class="material-symbols-rounded">handshake</span>
+                <div class="program-meta">
+                  <strong>Pinjaman Koperasi Usaha</strong>
+                  <small>Bunga jasa 9% p.a. flat • Tanpa agunan bank</small>
+                </div>
+              </button>
+            </div>
+
+            <!-- Simulator Controls -->
+            <div class="controls-form">
+              
+              <!-- Control 1: Plafon Pinjaman Slider -->
+              <div class="control-row">
+                <div class="control-header">
+                  <label for="range-plafon" class="control-label">Nominal Pengajuan Pinjaman (Plafon)</label>
+                  <div class="control-live-val">
+                    <span class="currency-prefix">Rp</span>
+                    <input type="text" id="display-plafon" class="live-input-val" value="50.000.000" inputmode="numeric">
+                  </div>
+                </div>
+                <input type="range" id="range-plafon" min="5000000" max="100000000" step="1000000" value="50000000" class="custom-slider">
+                <div class="slider-ticks">
+                  <span>Rp 5 Juta</span>
+                  <span>Rp 25 Juta</span>
+                  <span>Rp 50 Juta (Rekomendasi)</span>
+                  <span>Rp 100 Juta</span>
+                </div>
+              </div>
+
+              <!-- Control 2: Tenor (Jangka Waktu) -->
+              <div class="control-row">
+                <div class="control-header">
+                  <span class="control-label">Jangka Waktu Pengembalian (Tenor)</span>
+                  <span class="tenor-selected-text" id="display-tenor">24 Bulan (2 Tahun)</span>
+                </div>
+                <div class="tenor-pills-group" id="tenor-selector">
+                  <button type="button" class="tenor-pill" data-months="6">6 Bln</button>
+                  <button type="button" class="tenor-pill" data-months="12">12 Bln</button>
+                  <button type="button" class="tenor-pill" data-months="18">18 Bln</button>
+                  <button type="button" class="tenor-pill active" data-months="24">24 Bln</button>
+                  <button type="button" class="tenor-pill" data-months="36">36 Bln</button>
+                  <button type="button" class="tenor-pill" data-months="48">48 Bln</button>
+                  <button type="button" class="tenor-pill" data-months="60">60 Bln</button>
+                </div>
+              </div>
+
+              <!-- Control 3: Suku Bunga Setting -->
+              <div class="control-row inline-settings">
+                <div class="setting-col">
+                  <span class="setting-label">Suku Bunga / Jasa Efektif</span>
+                  <div class="rate-badge">
+                    <strong id="display-interest-rate">6.0%</strong>
+                    <small>per tahun (flat anuitas)</small>
+                  </div>
+                </div>
+                <div class="setting-col">
+                  <span class="setting-label">Metode Perhitungan</span>
+                  <div class="method-text">Sistem Anuitas Resmi Perbankan</div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Right Panel: Visual Guardrail Meter & Capacity Gauge -->
+          <div class="dash-panel panel-gauge">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Visualisasi Beban Arus Kas</h2>
+                <p class="panel-subtitle">Posisi cicilan terhadap ambang batas 30%</p>
+              </div>
+              <span class="status-indicator-chip safe" id="status-chip">
+                <span class="status-indicator-dot"></span>
+                <span id="status-chip-text">Kondisi Aman</span>
+              </span>
+            </div>
+
+            <!-- Big Gauge / Meter Box -->
+            <div class="gauge-card">
+              <div class="gauge-center-stat">
+                <span class="gauge-big-pct" id="gauge-pct">12,0%</span>
+                <span class="gauge-sub-label">Rasio Beban terhadap Laba Kas</span>
+              </div>
+
+              <!-- Multi-segment Progress Bar -->
+              <div class="guardrail-track-wrap">
+                <div class="track-bar">
+                  <div class="track-fill-safe" id="track-fill" style="width: 40%;"></div>
+                  <!-- 30% Threshold Line -->
+                  <div class="threshold-marker" style="left: 100%;">
+                    <div class="threshold-flag">Batas 30% Kas</div>
+                  </div>
+                </div>
+                <div class="track-axis-labels">
+                  <span>0%</span>
+                  <span>15%</span>
+                  <span class="font-semibold text-terracotta">30% (Pagar Aman)</span>
+                  <span>45%+</span>
+                </div>
+              </div>
+
+              <!-- Dynamic Risk Assessment Banner -->
+              <div class="risk-banner safe" id="risk-banner">
+                <div class="risk-icon" id="risk-icon">
+                  <span class="material-symbols-rounded">check_circle</span>
+                </div>
+                <div class="risk-copy">
+                  <strong id="risk-title">Kapasitas Likuiditas Sangat Baik</strong>
+                  <p id="risk-desc">Angsuran Rp 2.216.000/bulan hanya memakan 12,0% laba bersih. Anda masih memiliki bantalan kas 88,0% untuk mengamankan operasional harian warung.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Breakdown Detail Numbers -->
+            <div class="installment-breakdown">
+              <div class="breakdown-item">
+                <span class="breakdown-label">Pokok Pinjaman / Bln</span>
+                <span class="breakdown-val tabular-nums" id="val-principal">Rp 2.083.333</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Bunga Subsidi / Bln</span>
+                <span class="breakdown-val tabular-nums" id="val-interest">Rp 132.667</span>
+              </div>
+              <div class="breakdown-item total">
+                <span class="breakdown-label">Total Angsuran / Bln</span>
+                <span class="breakdown-val tabular-nums text-primary" id="val-total-installment">Rp 2.216.000</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ====================================================================
+             3. PILAR 3 PRD: PERBANDINGAN PEMBIAYAAN & KUR PLANNER
+             ==================================================================== -->
+        <div class="dash-bottom-grid" id="section-perbandingan">
+          
+          <!-- Left Table: Perbandingan Pilihan Pembiayaan Realistis (F17 PRD) -->
+          <div class="dash-panel panel-comparison">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Tabel Perbandingan Opsi Pembiayaan (F17 PRD)</h2>
+                <p class="panel-subtitle">Bandingkan beban cicilan riil dari berbagai fasilitas kredit terhadap kemampuan bayar usaha</p>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Lembaga / Program</th>
+                    <th>Plafon Uji</th>
+                    <th>Suku Bunga</th>
+                    <th>Tenor</th>
+                    <th class="text-right">Cicilan / Bln</th>
+                    <th class="text-center">Status Guardrail</th>
+                  </tr>
+                </thead>
+                <tbody id="comparison-tbody">
+                  <!-- Generated dynamically based on current user profit -->
+                  <tr>
+                    <td>
+                      <div class="institution-meta">
+                        <span class="material-symbols-rounded inst-icon">account_balance</span>
+                        <div>
+                          <strong>KUR Super Mikro Bank</strong>
+                          <small>Fasilitas Modal Perdana</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="tabular-nums">Rp 10.000.000</td>
+                    <td><span class="badge-rate">3% p.a.</span></td>
+                    <td>12 Bulan</td>
+                    <td class="text-right tabular-nums font-semibold">Rp 858.000</td>
+                    <td class="text-center"><span class="badge-status-safe">4.6% (Sangat Aman)</span></td>
+                  </tr>
+
+                  <tr class="highlight-row">
+                    <td>
+                      <div class="institution-meta">
+                        <span class="material-symbols-rounded inst-icon text-primary">account_balance</span>
+                        <div>
+                          <strong>KUR Mikro Bank BRI / Mandiri</strong>
+                          <small>Paling Direkomendasikan</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="tabular-nums font-semibold">Rp 50.000.000</td>
+                    <td><span class="badge-rate gold">6% p.a.</span></td>
+                    <td>24 Bulan</td>
+                    <td class="text-right tabular-nums font-bold text-primary">Rp 2.216.000</td>
+                    <td class="text-center"><span class="badge-status-safe">12.0% (Aman)</span></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="institution-meta">
+                        <span class="material-symbols-rounded inst-icon">handshake</span>
+                        <div>
+                          <strong>Pinjaman Koperasi UMKM</strong>
+                          <small>Syarat Cepat &amp; Fleksibel</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="tabular-nums">Rp 25.000.000</td>
+                    <td><span class="badge-rate">9% p.a.</span></td>
+                    <td>12 Bulan</td>
+                    <td class="text-right tabular-nums font-semibold">Rp 2.270.000</td>
+                    <td class="text-center"><span class="badge-status-safe">12.3% (Aman)</span></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="institution-meta">
+                        <span class="material-symbols-rounded inst-icon">domain</span>
+                        <div>
+                          <strong>Kredit Usaha Komersial (Non-KUR)</strong>
+                          <small>Bunga Pasar Standar</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="tabular-nums">Rp 50.000.000</td>
+                    <td><span class="badge-rate danger">13% p.a.</span></td>
+                    <td>24 Bulan</td>
+                    <td class="text-right tabular-nums font-semibold text-terracotta">Rp 2.518.000</td>
+                    <td class="text-center"><span class="badge-status-warning">13.6% (Beban Tinggi)</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="comparison-footer-tip">
+              <span class="material-symbols-rounded tip-icon">lightbulb</span>
+              <p><strong>Tips Finansial UTERA:</strong> Program <strong>KUR Mikro 6%</strong> memberikan rasio bunga subsidi terendah dengan cicilan yang hanya memakan 12% laba warung Anda, menjadikannya pilihan pembiayaan paling aman sebelum mempertimbangkan opsi komersial.</p>
+            </div>
+          </div>
+
+          <!-- Right Column: KUR Planner Alokasi Dana (F10 PRD) -->
+          <div class="dash-panel panel-planner">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">KUR Planner: Alokasi Dana (F10 PRD)</h2>
+                <p class="panel-subtitle">Rencana produktif penggunaan modal kerja</p>
+              </div>
+            </div>
+
+            <div class="planner-allocations-wrap">
+              <div class="allocation-item">
+                <div class="alloc-header">
+                  <span>Modal Belanja Stok Bahan Baku (Kulakan)</span>
+                  <strong class="tabular-nums" id="alloc-val-1">Rp 30.000.000 (60%)</strong>
+                </div>
+                <div class="alloc-track">
+                  <div class="alloc-fill bg-emerald" style="width: 60%;"></div>
+                </div>
+              </div>
+
+              <div class="allocation-item">
+                <div class="alloc-header">
+                  <span>Peremajaan Alat Kasir &amp; Mesin Kopi</span>
+                  <strong class="tabular-nums" id="alloc-val-2">Rp 15.000.000 (30%)</strong>
+                </div>
+                <div class="alloc-track">
+                  <div class="alloc-fill bg-primary" style="width: 30%;"></div>
+                </div>
+              </div>
+
+              <div class="allocation-item">
+                <div class="alloc-header">
+                  <span>Cadangan Likuiditas / Dana Darurat</span>
+                  <strong class="tabular-nums" id="alloc-val-3">Rp 5.000.000 (10%)</strong>
+                </div>
+                <div class="alloc-track">
+                  <div class="alloc-fill bg-gold" style="width: 10%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Syarat Kelayakan Bank Himbara Checklist -->
+            <div class="eligibility-box">
+              <div class="eligibility-title">
+                <span class="material-symbols-rounded" style="color:var(--primary); font-size:18px;">verified_user</span>
+                <strong>Validasi Skor &amp; Guardrail Siap Bank</strong>
+              </div>
+              <ul class="eligibility-checklist">
+                <li class="pass">✓ Skor Kelayakan 84/100 (Melampaui syarat min. 70)</li>
+                <li class="pass">✓ Rasio Beban Cicilan di bawah batas aman 30%</li>
+                <li class="pass">✓ Konsistensi pencatatan kas harian aktif > 3 bulan</li>
+              </ul>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" id="btn-save-simulation">
+              <span class="material-symbols-rounded btn-icon">bookmark</span>
+              <span>Simpan Simulasi ke Portofolio</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script src="app.js?v=20261028_01"></script>
+</body>
+</html>
