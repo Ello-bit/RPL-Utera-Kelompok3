@@ -68,14 +68,14 @@
               </a>
             </li>
             <li>
-              <a href="#" class="nav-item" data-page="skor">
+              <a href="../Skor-Kelayakan/index.html" class="nav-item" data-page="skor">
                 <span class="material-symbols-rounded">verified</span>
                 <span>Skor Kelayakan</span>
-                <span class="nav-pill-good">84</span>
+                <span class="nav-pill-good" id="nav-pill-skor">84</span>
               </a>
             </li>
             <li>
-              <a href="#" class="nav-item" data-page="guardrail">
+              <a href="#section-guardrail" class="nav-item" data-page="guardrail">
                 <span class="material-symbols-rounded">shield</span>
                 <span>Guardrail 30% Kas</span>
               </a>
@@ -88,7 +88,7 @@
           <div class="nav-section-title">LAYANAN &amp; BANK</div>
           <ul class="nav-list">
             <li>
-              <a href="#" class="nav-item" data-page="kur">
+              <a href="#section-guardrail" class="nav-item" data-page="kur">
                 <span class="material-symbols-rounded">account_balance</span>
                 <span>Simulasi KUR 2026</span>
               </a>
@@ -283,7 +283,7 @@
           </div>
 
           <!-- Card 4: Skor Kelayakan Kredit PRD UTERA -->
-          <div class="metric-card metric-card-highlight">
+          <a href="../Skor-Kelayakan/index.html" class="metric-card metric-card-highlight" style="text-decoration:none; color:inherit; display:flex; flex-direction:column; cursor:pointer;" title="Buka Detail Analisis Skor Kelayakan">
             <div class="metric-top">
               <span class="metric-label">Skor Kelayakan Bank (PRD)</span>
               <div class="metric-icon-wrap bg-gold" aria-hidden="true">
@@ -297,8 +297,13 @@
               </div>
               <span class="badge-status-good">Layak KUR Mikro</span>
             </div>
-            <p class="metric-caption">Berdasarkan 27 hari konsistensi pencatatan kas aktif.</p>
-          </div>
+            <div class="metric-footer-link" style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:6px;">
+              <p class="metric-caption" style="margin:0;">Berdasarkan 27 hari konsistensi pencatatan kas aktif.</p>
+              <span style="font-size:0.75rem; font-weight:600; color:var(--primary); display:inline-flex; align-items:center; gap:2px; white-space:nowrap; margin-left:8px;">
+                Buka <span class="material-symbols-rounded" style="font-size:14px;">arrow_forward</span>
+              </span>
+            </div>
+          </a>
 
         </section>
 
@@ -401,7 +406,7 @@
           </div>
 
           <!-- Side Panel: Guardrail Rasio Cicilan 30% (PRD Pillar 3) -->
-          <div class="dash-panel panel-guardrail">
+          <div class="dash-panel panel-guardrail" id="section-guardrail">
             <div class="panel-header">
               <div>
                 <h2 class="panel-title">Guardrail Cicilan 30%</h2>
@@ -482,7 +487,7 @@
         <div class="dash-bottom-grid">
           
           <!-- Left/Main: Recent Transactions Table -->
-          <div class="dash-panel panel-transactions">
+          <div class="dash-panel panel-transactions" id="section-buku-kas">
             <div class="panel-header">
               <div>
                 <h2 class="panel-title">Buku Kas: Transaksi Terakhir</h2>
