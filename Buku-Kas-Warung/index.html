@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku Kas Warung | UTERA</title>
+  <meta name="description" content="Catat uang masuk dan keluar warung per hari. Saldo dihitung otomatis per baris, rekap pemasukan, pengeluaran, dan laba bersih per bulan.">
+
+  <!-- Tipografi sesuai PRD: Source Serif 4 untuk judul dan angka utama, IBM Plex Sans untuk isi dan nominal tabular -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+  <!-- Ikon yang sama dengan Dashboard agar konsisten antarpilar -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..24,400,0,0">
+
+  <script>
+    (function () {
+      var p = window.location.pathname;
+      if (p.endsWith('/Buku-Kas-Warung')) {
+        window.location.replace(p + '/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#ledger">Langsung ke lembar kas</a>
+
+  <div class="app">
+    <!-- Menu samping (laptop) -->
+    <aside class="side-nav" aria-label="Navigasi aplikasi">
+      <a href="../landing-page/" class="side-brand">
+        <span class="side-brand-name">UTERA</span>
+        <span class="side-brand-tag">Finansial UMKM</span>
+      </a>
+
+      <nav>
+        <ul class="side-list">
+          <li>
+            <a href="../dashboard/" class="side-link">
+              <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="./" class="side-link is-active" aria-current="page">
+              <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
+              Buku Kas Warung
+            </a>
+          </li>
+          <li>
+            <a href="../landing-page/" class="side-link">
+              <span class="material-symbols-rounded" aria-hidden="true">home</span>
+              Halaman utama
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <a href="../auth/index.html?mode=login" class="side-link side-logout">
+        <span class="material-symbols-rounded" aria-hidden="true">logout</span>
+        Keluar
+      </a>
+    </aside>
+
+    <main class="main" id="main">
+      <header class="page-head">
+        <div class="page-title">
+          <p class="page-kicker">Manajemen keuangan</p>
+          <h1>Buku Kas Warung</h1>
+          <p class="page-lead">Catat setiap uang masuk dan keluar. Saldo dihitung otomatis di tiap baris, seperti buku kas biasa.</p>
+        </div>
+
+        <div class="page-actions">
+          <div class="month-nav" role="group" aria-label="Pilih bulan">
+            <button type="button" class="icon-btn" id="btn-prev-month" aria-label="Bulan sebelumnya">
+              <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+            </button>
+            <span class="month-label" id="month-label" aria-live="polite">Memuat...</span>
+            <button type="button" class="icon-btn" id="btn-next-month" aria-label="Bulan berikutnya">
+              <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-outline" id="btn-export">
+            <span class="material-symbols-rounded" aria-hidden="true">download</span>
+            Unduh CSV
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-open-entry">
+            <span class="material-symbols-rounded" aria-hidden="true">add</span>
+            Catat transaksi
+          </button>
+        </div>
+      </header>
+
+      <!-- Pesan error penyimpanan dan penanda data contoh -->
+      <div id="notice-region"></div>
+
+      <section class="rekap" aria-labelledby="rekap-title">
+        <h2 class="sr-only" id="rekap-title">Rekap bulan ini</h2>
+        <dl class="rekap-list">
+          <div class="rekap-item">
+            <dt>Pemasukan</dt>
+            <dd class="num is-income" id="sum-income">Rp 0</dd>
+          </div>
+          <div class="rekap-item">
+            <dt>Pengeluaran</dt>
+            <dd class="num is-expense" id="sum-expense">Rp 0</dd>
+          </div>
+          <div class="rekap-item rekap-net">
+            <dt>Laba bersih</dt>
+            <dd class="num" id="sum-net">Rp 0</dd>
+            <p class="rekap-note" id="sum-net-note">Pemasukan dikurangi pengeluaran bulan ini.</p>
+          </div>
+        </dl>
+      </section>
+
+      <div class="work">
+        <section class="ledger" id="ledger" aria-labelledby="ledger-title" tabindex="-1">
+          <div class="ledger-head">
+            <h2 id="ledger-title">Lembar kas</h2>
+
+            <div class="ledger-tools">
+              <label class="search">
+                <span class="material-symbols-rounded" aria-hidden="true">search</span>
+                <span class="sr-only">Cari keterangan atau kategori</span>
+                <input type="search" id="filter-search" placeholder="Cari keterangan atau kategori" autocomplete="off">
+              </label>
+
+              <div class="seg" role="radiogroup" aria-label="Tampilkan jenis transaksi">
+                <label class="seg-opt"><input type="radio" name="filter-type" value="all" checked><span>Semua</span></label>
+                <label class="seg-opt"><input type="radio" name="filter-type" value="income"><span>Masuk</span></label>
+                <label class="seg-opt"><input type="radio" name="filter-type" value="expense"><span>Keluar</span></label>
+              </div>
+
+              <label class="sr-only" for="filter-category">Kategori</label>
+              <select id="filter-category" class="select-sm">
+                <option value="all">Semua kategori</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="kas-table">
+              <caption class="sr-only" id="table-caption">Daftar transaksi kas</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-date">Tanggal</th>
+                  <th scope="col" class="col-desc">Keterangan</th>
+                  <th scope="col" class="col-num col-in">Masuk</th>
+                  <th scope="col" class="col-num">Keluar</th>
+                  <th scope="col" class="col-num">Saldo</th>
+                  <th scope="col" class="col-act"><span class="sr-only">Aksi</span></th>
+                </tr>
+              </thead>
+              <tbody id="ledger-body">
+                <tr class="row-state">
+                  <td colspan="6">
+                    <p class="state-text">Memuat buku kas dari penyimpanan browser...</p>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot id="ledger-foot"></tfoot>
+            </table>
+          </div>
+        </section>
+
+        <!-- Form catat: panel tetap di laptop, lembar bawah di ponsel -->
+        <aside class="entry" id="entry-panel" aria-labelledby="entry-title">
+          <div class="entry-head">
+            <h2 id="entry-title">Catat transaksi</h2>
+            <button type="button" class="icon-btn entry-close" id="btn-close-entry" aria-label="Tutup form">
+              <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            </button>
+          </div>
+
+          <form id="entry-form" novalidate>
+            <fieldset class="field">
+              <legend class="field-label">Jenis</legend>
+              <div class="type-toggle">
+                <label class="type-opt type-in">
+                  <input type="radio" name="type" value="income" checked>
+                  <span>Uang masuk</span>
+                </label>
+                <label class="type-opt type-out">
+                  <input type="radio" name="type" value="expense">
+                  <span>Uang keluar</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label class="field-label" for="input-amount">Nominal</label>
+              <div class="input-money">
+                <span aria-hidden="true">Rp</span>
+                <input type="text" id="input-amount" name="amount" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="err-amount">
+              </div>
+              <p class="field-error" id="err-amount"></p>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="input-date">Tanggal</label>
+              <input type="date" id="input-date" name="date" class="input" aria-describedby="err-date">
+              <p class="field-error" id="err-date"></p>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="input-category">Kategori</label>
+              <select id="input-category" name="category" class="input" aria-describedby="err-category"></select>
+              <p class="field-error" id="err-category"></p>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="input-note">Keterangan <span class="field-optional">(boleh kosong)</span></label>
+              <input type="text" id="input-note" name="note" class="input" maxlength="80" placeholder="Contoh: kulakan gula dan kopi" autocomplete="off">
+            </div>
+
+            <div class="entry-actions">
+              <button type="submit" class="btn btn-primary btn-block" id="btn-submit">Catat transaksi</button>
+              <button type="button" class="btn btn-secondary btn-block" id="btn-cancel">Batal</button>
+            </div>
+            <p class="form-error" id="err-form" role="alert"></p>
+          </form>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+  <!-- Menu bawah (ponsel): empat item sesuai PRD -->
+  <nav class="bottom-nav" aria-label="Navigasi aplikasi">
+    <a href="../dashboard/" class="bottom-link">
+      <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
+      Dashboard
+    </a>
+    <a href="./" class="bottom-link is-active" aria-current="page">
+      <span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>
+      Buku kas
+    </a>
+    <button type="button" class="bottom-link" id="btn-bottom-entry">
+      <span class="material-symbols-rounded" aria-hidden="true">add_circle</span>
+      Catat
+    </button>
+    <a href="../landing-page/" class="bottom-link">
+      <span class="material-symbols-rounded" aria-hidden="true">home</span>
+      Beranda
+    </a>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-text"></span>
+    <button type="button" class="toast-action" id="toast-action" hidden>Urungkan</button>
+  </div>
+
+  <script src="kas-store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

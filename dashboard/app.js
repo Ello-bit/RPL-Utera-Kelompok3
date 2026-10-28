@@ -4,49 +4,32 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Initial Realistic UMKM Warung Transactions ---
-  let transactions = [
-    {
-      id: 1,
-      time: 'Hari ini, 13:45',
-      category: 'Penjualan Minuman',
-      desc: 'Pesanan 15 Cup Kopi Susu Gula Aren',
-      type: 'income',
-      amount: 270000
-    },
-    {
-      id: 2,
-      time: 'Hari ini, 11:20',
-      category: 'Penjualan Makanan',
-      desc: 'Roti Bakar Coklat Keju & Camilan',
-      type: 'income',
-      amount: 185000
-    },
-    {
-      id: 3,
-      time: 'Hari ini, 09:10',
-      category: 'Bahan Baku',
-      desc: 'Kulakan Biji Kopi Robusta & Susu UHT',
-      type: 'expense',
-      amount: 450000
-    },
-    {
-      id: 4,
-      time: 'Kemarin, 20:30',
-      category: 'Penjualan Minuman',
-      desc: 'Rekap Kasir Shift Malam Warung',
-      type: 'income',
-      amount: 1420000
-    },
-    {
-      id: 5,
-      time: 'Kemarin, 14:00',
-      category: 'Operasional',
-      desc: 'Token Listrik PLN Warung Bulanan',
-      type: 'expense',
-      amount: 200000
-    }
-  ];
+  // --- Transaksi diambil dari penyimpanan bersama Buku Kas Warung ---
+  const Kas = window.UteraKas;
+  const RECENT_LIMIT = 5;
+
+  function describeDate(iso) {
+    const today = Kas.toISODate(new Date());
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    if (iso === today) return 'Hari ini';
+    if (iso === Kas.toISODate(y)) return 'Kemarin';
+    const p = iso.split('-');
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function loadRecent() {
+    return Kas.sortLedger(Kas.load()).reverse().slice(0, RECENT_LIMIT).map(tx => ({
+      id: tx.id,
+      time: describeDate(tx.date),
+      category: tx.category,
+      desc: tx.note || tx.category,
+      type: tx.type,
+      amount: tx.amount
+    }));
+  }
+
+  let transactions = loadRecent();
 
   // DOM Elements
   const txTableBody = document.getElementById('tx-table-body');
@@ -82,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return 'Rp ' + Number(number).toLocaleString('id-ID');
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
   // Calculate & Update Metrics
   function recalculateMetrics() {
     let baseIncome = 22975000;  // Base historical month income
@@ -109,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (valSaldo) valSaldo.textContent = formatRupiah(netProfit);
     if (valMaxCicilan) valMaxCicilan.textContent = formatRupiah(maxInstallment30Pct) + ' / bln';
     if (valSkor) valSkor.textContent = score;
-    if (badgeTotalTx) badgeTotalTx.textContent = transactions.length;
+    if (badgeTotalTx) badgeTotalTx.textContent = Kas.load().length;
   }
 
   // Render Table
@@ -123,7 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      txTableBody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:28px; color:var(--text-muted)">Belum ada data transaksi untuk filter ini.</td></tr>`;
+      const emptyText = transactions.length === 0
+        ? 'Belum ada transaksi. Catat yang pertama di <a href="../Buku-Kas-Warung/">Buku Kas Warung</a>.'
+        : 'Belum ada data transaksi untuk filter ini.';
+      txTableBody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:28px; color:var(--text-muted)">${emptyText}</td></tr>`;
       if (txCountDisplay) txCountDisplay.textContent = 'Menampilkan 0 transaksi';
       return;
     }
@@ -139,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tr.innerHTML = `
         <td class="text-muted">${tx.time}</td>
-        <td><span class="chip-cat ${catClass}">${tx.category}</span></td>
-        <td><strong>${tx.desc}</strong></td>
+        <td><span class="chip-cat ${catClass}">${escapeHtml(tx.category)}</span></td>
+        <td><strong>${escapeHtml(tx.desc)}</strong></td>
         <td>
           <span class="badge-type ${isIncome ? 'income' : 'expense'}">
             ${isIncome ? 'Masuk (Kasir)' : 'Keluar (Biaya)'}
@@ -160,14 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (txCountDisplay) {
-      txCountDisplay.textContent = `Menampilkan ${filtered.length} dari ${transactions.length} transaksi kas`;
+      txCountDisplay.textContent = `Menampilkan ${filtered.length} transaksi terbaru dari ${Kas.load().length} catatan kas`;
     }
 
     // Attach Delete Handlers
     txTableBody.querySelectorAll('.btn-icon-del').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const id = Number(e.currentTarget.getAttribute('data-id'));
-        transactions = transactions.filter(t => t.id !== id);
+        const id = e.currentTarget.getAttribute('data-id');
+        if (!Kas.save(Kas.load().filter(t => t.id !== id))) return;
+        transactions = loadRecent();
         renderTransactions(filterTxType ? filterTxType.value : 'all');
         recalculateMetrics();
       });
@@ -212,7 +203,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Type Radio Buttons in Modal
+  const selectCat = document.getElementById('select-tx-cat');
+
+  function fillModalCategories(type) {
+    if (!selectCat) return;
+    selectCat.innerHTML = Kas.CATEGORIES[type]
+      .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  }
+
   function setTypeActive(type) {
+    fillModalCategories(type);
     if (type === 'income') {
       labelIncome?.classList.add('active');
       labelExpense?.classList.remove('active');
@@ -236,17 +236,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!amount || amount <= 0 || !desc) return;
 
-      const now = new Date();
-      const timeStr = `Hari ini, ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      transactions.unshift({
-        id: Date.now(),
-        time: timeStr,
-        category,
-        desc,
+      const store = Kas.load();
+      store.push({
+        id: Kas.newId(),
+        date: Kas.toISODate(new Date()),
         type,
-        amount
+        category,
+        note: desc,
+        amount,
+        createdAt: Date.now()
       });
+      if (!Kas.save(store)) {
+        alert('Transaksi belum tersimpan: penyimpanan browser menolak perubahan.');
+        return;
+      }
+
+      transactions = loadRecent();
 
       renderTransactions(filterTxType ? filterTxType.value : 'all');
       recalculateMetrics();
@@ -307,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initial Boot
+  fillModalCategories('income');
   renderTransactions();
   recalculateMetrics();
 });
