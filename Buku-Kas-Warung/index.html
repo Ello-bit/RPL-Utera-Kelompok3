@@ -30,147 +30,171 @@
   <div class="app-layout">
 
     <!-- ========================================================================
-         1. LEFT ICON DOCK / SIDEBAR (Matches reference design)
+         SIDEBAR NAVIGATION (Google Material Symbols + UTERA Brand Identity)
          ======================================================================== -->
-    <aside class="icon-dock" id="icon-dock" aria-label="Navigasi Utama">
-      <!-- Brand Logo / Emblem at top (Red hexagon/emblem matching screenshot) -->
-      <a href="../landing-page/" class="dock-logo" title="Beranda UTERA">
-        <div class="emblem-symbol" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <path d="M16 2L28 8.9V23.1L16 30L4 23.1V8.9L16 2Z" fill="#E11D48"/>
-            <path d="M16 7L23 11.5V19.5L16 24L9 19.5V11.5L16 7Z" fill="#FFF"/>
-            <path d="M16 11L20 13.5V17.5L16 20L12 17.5V13.5L16 11Z" fill="#E11D48"/>
-          </svg>
+    <aside class="sidebar" id="app-sidebar">
+      <!-- Sidebar Header / Brand -->
+      <div class="sidebar-header">
+        <a href="../landing-page/index.html" class="sidebar-brand">
+          <div class="brand-symbol">U</div>
+          <div class="brand-text">
+            <span class="brand-name">UTERA</span>
+            <span class="brand-tag">Finansial UMKM</span>
+          </div>
+        </a>
+        <button type="button" class="sidebar-toggle-btn" id="btn-collapse-sidebar" aria-label="Toggle navigasi">
+          <span class="material-symbols-rounded">dock_to_right</span>
+        </button>
+      </div>
+
+      <!-- Navigation Menus -->
+      <nav class="sidebar-nav" aria-label="Menu Utama Dashboard">
+        <!-- GENERAL -->
+        <div class="nav-section">
+          <div class="nav-section-title">UTAMA</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/" class="nav-item" data-page="ringkasan">
+                <span class="material-symbols-rounded">grid_view</span>
+                <span>Ringkasan Kas</span>
+              </a>
+            </li>
+            <li>
+              <a href="./" class="nav-item active" data-page="transaksi">
+                <span class="material-symbols-rounded">receipt_long</span>
+                <span>Buku Kas Warung</span>
+                <span class="nav-badge" id="badge-total-tx">Aktif</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/#skor" class="nav-item" data-page="skor">
+                <span class="material-symbols-rounded">verified</span>
+                <span>Skor Kelayakan</span>
+                <span class="nav-pill-good">84</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/#guardrail" class="nav-item" data-page="guardrail">
+                <span class="material-symbols-rounded">shield</span>
+                <span>Guardrail 30% Kas</span>
+              </a>
+            </li>
+          </ul>
         </div>
-      </a>
 
-      <!-- Group 1: PAGES -->
-      <div class="dock-section">
-        <span class="dock-section-tag">PAGES</span>
-        <ul class="dock-list">
-          <li>
-            <a href="../dashboard/" class="dock-link" title="Dashboard Finansial">
-              <span class="material-symbols-rounded">grid_view</span>
-            </a>
-          </li>
-          <li>
-            <!-- Active item: vibrant emerald green pill container -->
-            <a href="./" class="dock-link is-active" title="Buku Kas Warung (Aktif)" aria-current="page">
-              <span class="material-symbols-rounded">receipt_long</span>
-            </a>
-          </li>
-          <li>
-            <a href="../dashboard/#kur" class="dock-link" title="Simulasi KUR & Bank">
-              <span class="material-symbols-rounded">account_balance</span>
-            </a>
-          </li>
-          <li>
-            <a href="../dashboard/#legalitas" class="dock-link" title="Legalitas & NIB">
-              <span class="material-symbols-rounded">verified_user</span>
-            </a>
-          </li>
-        </ul>
-      </div>
+        <!-- TOOLS & PERBANKAN -->
+        <div class="nav-section">
+          <div class="nav-section-title">LAYANAN &amp; BANK</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/#kur" class="nav-item" data-page="kur">
+                <span class="material-symbols-rounded">account_balance</span>
+                <span>Simulasi KUR 2026</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/#legalitas" class="nav-item" data-page="legalitas">
+                <span class="material-symbols-rounded">description</span>
+                <span>Legalitas &amp; NIB</span>
+                <span class="nav-pill-info">OSS RBA</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/#laporan" class="nav-item" data-page="laporan">
+                <span class="material-symbols-rounded">monitoring</span>
+                <span>Laporan Siap Bank</span>
+              </a>
+            </li>
+          </ul>
+        </div>
 
-      <!-- Group 2: UI -->
-      <div class="dock-section">
-        <span class="dock-section-tag">UI</span>
-        <ul class="dock-list">
-          <li>
-            <a href="../dashboard/#profil-usaha" class="dock-link" title="Profil Usaha">
-              <span class="material-symbols-rounded">person</span>
-            </a>
-          </li>
-          <li>
-            <a href="../dashboard/#laporan" class="dock-link" title="Laporan & Ekspor">
-              <span class="material-symbols-rounded">bar_chart</span>
-            </a>
-          </li>
-          <li>
-            <a href="../landing-page/" class="dock-link" title="Halaman Depan UTERA">
-              <span class="material-symbols-rounded">storefront</span>
-            </a>
-          </li>
-        </ul>
-      </div>
+        <!-- PENGATURAN -->
+        <div class="nav-section">
+          <div class="nav-section-title">PENGATURAN</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/#profil-usaha" class="nav-item" data-page="profil-usaha">
+                <span class="material-symbols-rounded">storefront</span>
+                <span>Profil Usaha</span>
+              </a>
+            </li>
+            <li>
+              <a href="../landing-page/index.html" class="nav-item">
+                <span class="material-symbols-rounded">open_in_new</span>
+                <span>Halaman Utama</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
 
-      <!-- Group 3: DOC / SYSTEM -->
-      <div class="dock-section dock-section-bottom">
-        <span class="dock-section-tag">DOC</span>
-        <ul class="dock-list">
-          <li>
-            <a href="../landing-page/#faq" class="dock-link" title="Bantuan & Panduan">
-              <span class="material-symbols-rounded">help</span>
-            </a>
-          </li>
-          <li>
-            <a href="../auth/index.html?mode=login" class="dock-link" title="Keluar">
-              <span class="material-symbols-rounded">logout</span>
-            </a>
-          </li>
-        </ul>
+      <!-- Bottom Profile / Business Card -->
+      <div class="sidebar-footer">
+        <div class="business-profile-card">
+          <div class="business-avatar" aria-hidden="true">
+            <span class="material-symbols-rounded icon-coffee" id="sidebar-biz-icon">local_cafe</span>
+          </div>
+          <div class="business-details">
+            <span class="business-title" id="sidebar-business-name">Kopi Nusantara</span>
+            <span class="business-badge" id="sidebar-business-badge">UMKM Kuliner Mandiri</span>
+          </div>
+        </div>
+        <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun">
+          <span class="material-symbols-rounded">logout</span>
+          <span>Keluar</span>
+        </a>
       </div>
     </aside>
 
-    <!-- Overlay backdrop for mobile icon dock -->
-    <div class="dock-backdrop" id="dock-backdrop" hidden></div>
+    <!-- Overlay for mobile navigation -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
     <!-- ========================================================================
-         2. MAIN APP CONTAINER
+         MAIN CONTENT AREA
          ======================================================================== -->
-    <div class="app-main">
+    <div class="main-content" id="main-content">
 
       <!-- Top Sticky App Bar -->
-      <header class="app-topbar">
-        <div class="topbar-left">
-          <button type="button" class="btn-dock-toggle" id="btn-dock-toggle" aria-label="Buka navigasi sidebar">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button type="button" class="btn-mobile-menu" id="btn-mobile-menu" aria-label="Buka menu navigasi">
             <span class="material-symbols-rounded">menu</span>
           </button>
 
-          <!-- Search Bar (Matches screenshot Search...) -->
-          <div class="topbar-search">
-            <span class="material-symbols-rounded search-icon" aria-hidden="true">search</span>
+          <!-- Search Bar -->
+          <div class="search-box">
+            <span class="material-symbols-rounded search-icon">search</span>
             <input type="text" id="global-search" placeholder="Cari transaksi kas, keterangan, atau kategori..." autocomplete="off">
-            <span class="search-badge">⌘K</span>
+            <span class="search-shortcut">⌘F</span>
           </div>
         </div>
 
-        <div class="topbar-right">
-          <!-- Notification Icon -->
-          <button type="button" class="icon-circle-btn" id="btn-notif" aria-label="Notifikasi Kas" title="Notifikasi Arus Kas">
+        <div class="top-bar-right">
+          <!-- Notification Pill -->
+          <div class="topbar-action-pill" id="action-notif" title="Notifikasi Keuangan">
             <span class="material-symbols-rounded">notifications</span>
-            <span class="badge-dot"></span>
+            <span class="dot-unread"></span>
+          </div>
+
+          <!-- Quick Action: Catat Kas -->
+          <button type="button" class="btn btn-primary btn-sm" id="btn-top-catat" title="Fokus ke formulir pencatatan kas">
+            <span class="material-symbols-rounded btn-icon">add</span>
+            <span>Catat Kas</span>
           </button>
 
-          <!-- Mail Icon -->
-          <button type="button" class="icon-circle-btn" id="btn-mail" aria-label="Pesan &amp; Laporan" title="Laporan Kas">
-            <span class="material-symbols-rounded">mail</span>
-          </button>
-
-          <!-- User Profile (Matches screenshot user pill) -->
-          <div class="user-profile-pill">
-            <div class="user-avatar-wrap">
-              <span class="user-initials">BR</span>
-              <span class="status-online"></span>
-            </div>
-            <div class="user-text-meta">
-              <span class="user-full-name">Bryan</span>
-              <span class="user-role-title">Pemilik Warung</span>
-            </div>
-            <!-- Country Flag (Indonesian Flag badge) -->
-            <div class="country-flag-badge" title="Indonesia">
-              <svg width="22" height="16" viewBox="0 0 24 16" fill="none" class="flag-svg">
-                <rect width="24" height="8" fill="#E11D48"/>
-                <rect y="8" width="24" height="8" fill="#FFFFFF"/>
-                <rect width="24" height="16" stroke="#E2E8F0" stroke-width="1"/>
-              </svg>
+          <!-- User Topbar Profile -->
+          <div class="user-top-profile">
+            <div class="user-avatar-circle">BR</div>
+            <div class="user-meta-top">
+              <span class="user-name-label">Bryan</span>
+              <small class="user-role-label">Pemilik Warung</small>
             </div>
           </div>
         </div>
       </header>
 
       <!-- Main Scrollable Content Area -->
-      <main class="dashboard-viewport" id="main-content">
+      <div class="dashboard-viewport">
 
         <!-- Top Title Row (Crypto Portfolio style) -->
         <div class="page-title-row">
@@ -242,13 +266,13 @@
                   <!-- Gradient definitions -->
                   <defs>
                     <linearGradient id="emeraldAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#10B981" stop-opacity="0.38"/>
-                      <stop offset="70%" stop-color="#10B981" stop-opacity="0.08"/>
-                      <stop offset="100%" stop-color="#10B981" stop-opacity="0.00"/>
+                      <stop offset="0%" stop-color="#1F6B4F" stop-opacity="0.28"/>
+                      <stop offset="70%" stop-color="#1F6B4F" stop-opacity="0.05"/>
+                      <stop offset="100%" stop-color="#1F6B4F" stop-opacity="0.00"/>
                     </linearGradient>
                     <linearGradient id="emeraldLineGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stop-color="#059669"/>
-                      <stop offset="100%" stop-color="#10B981"/>
+                      <stop offset="0%" stop-color="#17543E"/>
+                      <stop offset="100%" stop-color="#1F6B4F"/>
                     </linearGradient>
                   </defs>
 
@@ -573,10 +597,8 @@
 
         </div>
 
-      </main>
-
+      </div>
     </div>
-
   </div>
 
   <!-- Toast Notification -->
