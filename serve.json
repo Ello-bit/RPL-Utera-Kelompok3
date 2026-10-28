@@ -5,6 +5,8 @@
     { "source": "/auth/", "destination": "/auth/index.html" },
     { "source": "/landing-page/", "destination": "/landing-page/index.html" },
     { "source": "/dashboard/", "destination": "/dashboard/index.html" },
+    { "source": "/Buku-Kas-Warung/", "destination": "/Buku-Kas-Warung/index.html" },
+    { "source": "/buku-kas-warung/", "destination": "/Buku-Kas-Warung/index.html" },
     { "source": "/Skor-Kelayakan/", "destination": "/Skor-Kelayakan/index.html" },
     { "source": "/skor-kelayakan/", "destination": "/Skor-Kelayakan/index.html" }
   ]
