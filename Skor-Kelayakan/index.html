@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skor Kelayakan Usaha — UTERA</title>
+  <meta name="description" content="Analisis skor kelayakan usaha UMKM berdasarkan konsistensi pencatatan, tren pemasukan, profitabilitas, dan stabilitas arus kas.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+
+  <script>
+    (function() {
+      var p = window.location.pathname;
+      if (p.endsWith('/Skor-Kelayakan') || p.endsWith('/skor-kelayakan')) {
+        window.location.replace(p + '/' + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-body">
+
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="../landing-page/index.html" class="sidebar-brand">
+          <div class="brand-symbol">U</div>
+          <div class="brand-text">
+            <span class="brand-name">UTERA</span>
+            <span class="brand-tag">Finansial UMKM</span>
+          </div>
+        </a>
+        <button type="button" class="sidebar-toggle-btn" id="btn-collapse-sidebar" aria-label="Toggle navigasi">
+          <span class="material-symbols-rounded">dock_to_right</span>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu Utama Dashboard">
+        <div class="nav-section">
+          <div class="nav-section-title">UTAMA</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/index.html" class="nav-item" data-page="ringkasan">
+                <span class="material-symbols-rounded">grid_view</span>
+                <span>Ringkasan Kas</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/index.html#section-buku-kas" class="nav-item" data-page="transaksi">
+                <span class="material-symbols-rounded">receipt_long</span>
+                <span>Buku Kas Warung</span>
+                <span class="nav-badge">5</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-item active" data-page="skor">
+                <span class="material-symbols-rounded">verified</span>
+                <span>Skor Kelayakan</span>
+                <span class="nav-pill-good" id="nav-skor-value">84</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/index.html#section-guardrail" class="nav-item" data-page="guardrail">
+                <span class="material-symbols-rounded">shield</span>
+                <span>Guardrail 30% Kas</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">LAYANAN &amp; BANK</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/index.html#section-guardrail" class="nav-item" data-page="kur">
+                <span class="material-symbols-rounded">account_balance</span>
+                <span>Simulasi KUR 2026</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/index.html" class="nav-item" data-page="legalitas">
+                <span class="material-symbols-rounded">description</span>
+                <span>Legalitas &amp; NIB</span>
+                <span class="nav-pill-info">OSS RBA</span>
+              </a>
+            </li>
+            <li>
+              <a href="../dashboard/index.html" class="nav-item" data-page="laporan">
+                <span class="material-symbols-rounded">monitoring</span>
+                <span>Laporan Siap Bank</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PENGATURAN</div>
+          <ul class="nav-list">
+            <li>
+              <a href="../dashboard/index.html" class="nav-item" data-page="profil-usaha">
+                <span class="material-symbols-rounded">storefront</span>
+                <span>Profil Usaha</span>
+              </a>
+            </li>
+            <li>
+              <a href="../landing-page/index.html" class="nav-item">
+                <span class="material-symbols-rounded">open_in_new</span>
+                <span>Halaman Utama</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="business-profile-card">
+          <div class="business-avatar" aria-hidden="true">
+            <span class="material-symbols-rounded icon-coffee">local_cafe</span>
+          </div>
+          <div class="business-details">
+            <span class="business-title">Kopi Nusantara</span>
+            <span class="business-badge">UMKM Kuliner Mandiri</span>
+          </div>
+        </div>
+        <a href="../auth/index.html?mode=login" class="btn-logout" title="Keluar dari akun">
+          <span class="material-symbols-rounded">logout</span>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="main-content">
+
+      <!-- Top Sticky Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button type="button" class="btn-mobile-menu" id="btn-mobile-menu" aria-label="Buka menu navigasi">
+            <span class="material-symbols-rounded">menu</span>
+          </button>
+          <div class="search-box">
+            <span class="material-symbols-rounded search-icon">search</span>
+            <input type="text" id="global-search" placeholder="Cari transaksi kas, kategori, atau fitur..." autocomplete="off">
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="topbar-action-pill" id="action-notif" title="Notifikasi Keuangan">
+            <span class="material-symbols-rounded">notifications</span>
+          </div>
+          <a href="../dashboard/index.html" class="btn btn-outline btn-sm">
+            <span class="material-symbols-rounded btn-icon">arrow_back</span>
+            <span>Dashboard</span>
+          </a>
+          <div class="user-top-profile">
+            <div class="user-avatar-circle">BR</div>
+            <div class="user-meta-top">
+              <span class="user-name-label">Bryan</span>
+              <small class="user-role-label">Pemilik Warung</small>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="dashboard-scroll-wrap">
+
+        <!-- Page Header -->
+        <div class="dash-header-row">
+          <div>
+            <h1 class="dash-heading">Skor Kelayakan Usaha</h1>
+            <p class="dash-subheading">Penilaian kesiapan usaha untuk pengajuan KUR berdasarkan riwayat keuangan 6 bulan terakhir.</p>
+          </div>
+          <div class="dash-header-actions">
+            <span class="estimasi-badge">
+              <span class="material-symbols-rounded" style="font-size:14px;">info</span>
+              Skor ini adalah estimasi, bukan keputusan bank
+            </span>
+          </div>
+        </div>
+
+        <!-- 1. SKOR UTAMA + STATUS -->
+        <div class="skor-hero-grid">
+
+          <!-- Skor Besar & Visualizer Lengkap -->
+          <div class="dash-panel skor-main-panel">
+            
+            <!-- Top Row: Ring Gauge + Detail Status -->
+            <div class="skor-main-display">
+              <div class="skor-ring" id="skor-ring">
+                <svg viewBox="0 0 120 120" class="skor-ring-svg" aria-hidden="true">
+                  <circle cx="60" cy="60" r="52" class="ring-track"></circle>
+                  <circle cx="60" cy="60" r="52" class="ring-fill" id="ring-fill"
+                    stroke-dasharray="326.73" stroke-dashoffset="52.28"></circle>
+                </svg>
+                <div class="skor-ring-value">
+                  <span class="skor-badge-kicker">PRD ENGINE</span>
+                  <span class="skor-number tabular-nums" id="skor-number">84</span>
+                  <span class="skor-of">/ 100 Poin</span>
+                </div>
+              </div>
+
+              <div class="skor-main-info">
+                <div class="skor-status-header">
+                  <span class="skor-category-badge skor-baik" id="skor-category-badge">Baik</span>
+                  <span class="skor-benchmark-tag">
+                    <span class="material-symbols-rounded" style="font-size:15px;">verified</span>
+                    +14 Poin di Atas Standar Bank
+                  </span>
+                  <span class="skor-status-pill">
+                    <span class="pulse-dot"></span> Siap Pengajuan KUR
+                  </span>
+                </div>
+                <p class="skor-verdict" id="skor-verdict">Keuangan usaha Anda menunjukkan pola yang konsisten dan sehat. Usaha ini siap untuk pengajuan KUR Mikro.</p>
+                <div class="skor-meta">
+                  <span class="skor-meta-item">
+                    <span class="material-symbols-rounded" style="font-size:15px;">calendar_today</span>
+                    Periode: Mei &ndash; Okt 2026
+                  </span>
+                  <span class="skor-meta-item">
+                    <span class="material-symbols-rounded" style="font-size:15px;">receipt_long</span>
+                    Basis: 6 Bulan Kas Aktif
+                  </span>
+                  <span class="skor-meta-item">
+                    <span class="material-symbols-rounded" style="font-size:15px;">update</span>
+                    Diperbarui: <span id="skor-update-date">27 Okt 2026</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Row: Spektrum Skala Kelayakan (Visual Bar + Pointer) -->
+            <div class="skor-spectrum-card">
+              <div class="spectrum-header">
+                <div class="spectrum-title">
+                  <span class="material-symbols-rounded text-primary" style="font-size:18px;">tune</span>
+                  <span>Spektrum Kelayakan &amp; Posisi Usaha Anda</span>
+                </div>
+                <div class="spectrum-current-badge">
+                  Posisi Usaha: <strong class="text-primary">84 / 100</strong> (Sangat Layak)
+                </div>
+              </div>
+
+              <!-- Bar Container with Top Pointer Lane -->
+              <div class="spectrum-bar-wrap">
+                <!-- Posisi Usaha Pointer Pin (Always on TOP, pointing down at the bar) -->
+                <div class="spectrum-pointer" style="left: 84%;" id="spectrum-pointer" title="Skor Usaha Anda: 84 Poin">
+                  <div class="pointer-tag">Anda: 84 &starf;</div>
+                  <div class="pointer-arrow"></div>
+                </div>
+
+                <!-- 3-Segment Visual Bar -->
+                <div class="spectrum-bar">
+                  <div class="spectrum-segment seg-rendah" style="width: 40%;" title="Rendah: 0 - 39">
+                    <span class="seg-label">Rendah (0&ndash;39)</span>
+                  </div>
+                  <div class="spectrum-segment seg-cukup" style="width: 30%;" title="Cukup: 40 - 69">
+                    <span class="seg-label">Cukup (40&ndash;69)</span>
+                  </div>
+                  <div class="spectrum-segment seg-baik" style="width: 30%;" title="Baik: 70 - 100">
+                    <span class="seg-label">Baik (70&ndash;100)</span>
+                  </div>
+
+                  <!-- Clean Line Marker for 70 Poin on the bar -->
+                  <div class="spectrum-threshold-line" style="left: 70%;" title="Batas Minimal Lolos KUR: 70 Poin"></div>
+                </div>
+              </div>
+
+              <!-- Bottom Scale Labels (Aligned cleanly below the bar with verified KUR badge) -->
+              <div class="spectrum-scale-labels">
+                <div class="scale-point point-0">0 Poin</div>
+                <div class="scale-point point-40">40 (Batas Cukup)</div>
+                <div class="scale-point point-70">
+                  <span class="scale-kur-badge">
+                    <span class="material-symbols-rounded" style="font-size:13px;">verified</span>
+                    Ambang Minimal KUR: 70 Poin
+                  </span>
+                </div>
+                <div class="scale-point point-100">100 (Maksimal)</div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: 3 Metrik Vital Pemanfaatan Ruang -->
+            <div class="skor-vitals-grid">
+              <div class="vital-card">
+                <div class="vital-icon bg-emerald-soft">
+                  <span class="material-symbols-rounded text-emerald">thumb_up</span>
+                </div>
+                <div class="vital-info">
+                  <span class="vital-label">Peluang Lolos KUR</span>
+                  <span class="vital-val text-emerald">Tinggi (94%)</span>
+                  <span class="vital-sub">Konsistensi 6 bln lengkap terpenuhi</span>
+                </div>
+              </div>
+
+              <div class="vital-card">
+                <div class="vital-icon bg-primary-soft">
+                  <span class="material-symbols-rounded text-primary">account_balance</span>
+                </div>
+                <div class="vital-info">
+                  <span class="vital-label">Estimasi Plafon Layak</span>
+                  <span class="vital-val text-primary">s.d. Rp 50 Juta</span>
+                  <span class="vital-sub">KUR Mikro Subsidi Bunga 6% p.a.</span>
+                </div>
+              </div>
+
+              <div class="vital-card">
+                <div class="vital-icon bg-blue-soft">
+                  <span class="material-symbols-rounded text-blue">shield</span>
+                </div>
+                <div class="vital-info">
+                  <span class="vital-label">Batas Angsuran Aman (30%)</span>
+                  <span class="vital-val text-blue">Rp 5.535.000 <small style="font-size:0.75rem; font-weight:600;">/ bln</small></span>
+                  <span class="vital-sub">Guardrail arus kas bebas gagal bayar</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Kategori Skor & Standar Bank -->
+          <div class="dash-panel skor-legend-panel">
+            <div class="panel-header" style="margin-bottom:12px;">
+              <div>
+                <h2 class="panel-title">Standar Penilaian Bank</h2>
+                <p class="panel-subtitle">Kriteria persetujuan kredit KUR BRI &amp; Perbankan 2026</p>
+              </div>
+            </div>
+
+            <div class="kategori-list">
+              <div class="kategori-row" id="kat-rendah">
+                <div class="kat-color-bar kat-rendah"></div>
+                <div class="kat-info">
+                  <strong>Rendah</strong>
+                  <span>0 - 39</span>
+                </div>
+                <span class="kat-desc">Arus kas belum stabil; bank membutuhkan penjamin tambahan.</span>
+              </div>
+              <div class="kategori-row" id="kat-cukup">
+                <div class="kat-color-bar kat-cukup"></div>
+                <div class="kat-info">
+                  <strong>Cukup</strong>
+                  <span>40 - 69</span>
+                </div>
+                <span class="kat-desc">Dapat diproses, namun plafon berpeluang dipangkas analis bank.</span>
+              </div>
+              <div class="kategori-row active" id="kat-baik">
+                <div class="kat-color-bar kat-baik"></div>
+                <div class="kat-info">
+                  <strong>Baik</strong>
+                  <span>70 - 100</span>
+                </div>
+                <span class="kat-desc">Kriteria prioritas bank; approval cepat dengan plafon optimal.</span>
+              </div>
+            </div>
+
+            <!-- Checklist Kesiapan Berkas Bank -->
+            <div class="bank-readiness-checklist">
+              <div class="readiness-title">
+                <span class="material-symbols-rounded text-emerald" style="font-size:16px;">checklist</span>
+                <span>Checklist Parameter UTERA Terpenuhi:</span>
+              </div>
+              <div class="readiness-item">
+                <span class="material-symbols-rounded item-icon-check">check_circle</span>
+                <span>Pencatatan kas konsisten 6 bulan penuh (30/30 pts)</span>
+              </div>
+              <div class="readiness-item">
+                <span class="material-symbols-rounded item-icon-check">check_circle</span>
+                <span>Pertumbuhan omzet positif +37.2% (25/25 pts)</span>
+              </div>
+              <div class="readiness-item">
+                <span class="material-symbols-rounded item-icon-check">check_circle</span>
+                <span>Surplus arus kas 5 dari 6 bulan (17/20 pts)</span>
+              </div>
+              <div class="readiness-item">
+                <span class="material-symbols-rounded item-icon-check">check_circle</span>
+                <span>Rasio angsuran lolos batas 30% laba operasional</span>
+              </div>
+            </div>
+
+            <!-- Action Button directly to Dashboard Guardrail -->
+            <div class="legend-action-box">
+              <a href="../dashboard/index.html#section-guardrail" class="btn btn-primary btn-sm btn-block">
+                <span class="material-symbols-rounded" style="font-size:16px;">calculate</span>
+                <span>Uji Simulasi Cicilan di Dashboard</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. RINCIAN 4 KOMPONEN SKOR -->
+        <section aria-label="Rincian Komponen Skor">
+          <div class="section-header-row">
+            <div>
+              <h2 class="section-title">Rincian Komponen Skor</h2>
+              <p class="section-subtitle">Empat faktor penilaian kelayakan keuangan usaha Anda</p>
+            </div>
+          </div>
+
+          <div class="komponen-grid">
+
+            <!-- Komponen 1: Konsistensi Pencatatan (Bobot 30) -->
+            <div class="komponen-card">
+              <div class="komponen-header">
+                <div class="komponen-icon-wrap bg-primary-soft">
+                  <span class="material-symbols-rounded text-primary">edit_calendar</span>
+                </div>
+                <div class="komponen-title-area">
+                  <h3 class="komponen-name">Konsistensi Pencatatan</h3>
+                  <span class="komponen-bobot">Bobot: 30 poin</span>
+                </div>
+                <div class="komponen-score-pill" id="k1-score">
+                  <span class="komponen-score-val tabular-nums">30</span>
+                  <span class="komponen-score-max">/30</span>
+                </div>
+              </div>
+              <p class="komponen-desc">Jumlah bulan yang memiliki catatan transaksi dari 6 bulan terakhir.</p>
+              <div class="komponen-meter">
+                <div class="meter-track">
+                  <div class="meter-fill bg-primary" id="k1-bar" style="width: 100%;"></div>
+                </div>
+                <div class="meter-detail">
+                  <span class="tabular-nums" id="k1-detail">6 dari 6 bulan tercatat</span>
+                  <span class="komponen-pct tabular-nums" id="k1-pct">100%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Komponen 2: Tren Pemasukan (Bobot 25) -->
+            <div class="komponen-card">
+              <div class="komponen-header">
+                <div class="komponen-icon-wrap bg-emerald-soft">
+                  <span class="material-symbols-rounded text-emerald">trending_up</span>
+                </div>
+                <div class="komponen-title-area">
+                  <h3 class="komponen-name">Tren Pemasukan</h3>
+                  <span class="komponen-bobot">Bobot: 25 poin</span>
+                </div>
+                <div class="komponen-score-pill" id="k2-score">
+                  <span class="komponen-score-val tabular-nums">25</span>
+                  <span class="komponen-score-max">/25</span>
+                </div>
+              </div>
+              <p class="komponen-desc">Perbandingan total pemasukan 3 bulan terakhir (Ags-Okt) dengan 3 bulan sebelumnya (Mei-Jul).</p>
+              <div class="komponen-meter">
+                <div class="meter-track">
+                  <div class="meter-fill bg-emerald" id="k2-bar" style="width: 100%;"></div>
+                </div>
+                <div class="meter-detail">
+                  <span id="k2-detail">Pemasukan naik: Rp 67,3M vs Rp 49,1M</span>
+                  <span class="komponen-pct tabular-nums" id="k2-pct">100%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Komponen 3: Profitabilitas (Bobot 25) -->
+            <div class="komponen-card">
+              <div class="komponen-header">
+                <div class="komponen-icon-wrap bg-gold-soft">
+                  <span class="material-symbols-rounded text-gold">account_balance_wallet</span>
+                </div>
+                <div class="komponen-title-area">
+                  <h3 class="komponen-name">Profitabilitas</h3>
+                  <span class="komponen-bobot">Bobot: 25 poin</span>
+                </div>
+                <div class="komponen-score-pill" id="k3-score">
+                  <span class="komponen-score-val tabular-nums">14</span>
+                  <span class="komponen-score-max">/25</span>
+                </div>
+              </div>
+              <p class="komponen-desc">Margin laba bersih usaha. Skor penuh tercapai pada margin 20% atau lebih.</p>
+              <div class="komponen-meter">
+                <div class="meter-track">
+                  <div class="meter-fill bg-gold" id="k3-bar" style="width: 56%;"></div>
+                </div>
+                <div class="meter-detail">
+                  <span id="k3-detail">Margin laba bersih: 11,2% (target 20%)</span>
+                  <span class="komponen-pct tabular-nums" id="k3-pct">56%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Komponen 4: Stabilitas Arus Kas (Bobot 20) -->
+            <div class="komponen-card">
+              <div class="komponen-header">
+                <div class="komponen-icon-wrap bg-blue-soft">
+                  <span class="material-symbols-rounded text-blue">speed</span>
+                </div>
+                <div class="komponen-title-area">
+                  <h3 class="komponen-name">Stabilitas Arus Kas</h3>
+                  <span class="komponen-bobot">Bobot: 20 poin</span>
+                </div>
+                <div class="komponen-score-pill" id="k4-score">
+                  <span class="komponen-score-val tabular-nums">17</span>
+                  <span class="komponen-score-max">/20</span>
+                </div>
+              </div>
+              <p class="komponen-desc">Jumlah bulan dengan laba bersih positif dari 6 bulan terakhir.</p>
+              <div class="komponen-meter">
+                <div class="meter-track">
+                  <div class="meter-fill bg-blue" id="k4-bar" style="width: 83%;"></div>
+                </div>
+                <div class="meter-detail">
+                  <span class="tabular-nums" id="k4-detail">5 dari 6 bulan laba positif</span>
+                  <span class="komponen-pct tabular-nums" id="k4-pct">83%</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 3. TABEL RIWAYAT BULANAN + REKOMENDASI -->
+        <div class="skor-bottom-grid">
+
+          <!-- Riwayat Bulanan -->
+          <div class="dash-panel panel-riwayat">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Riwayat Keuangan Bulanan</h2>
+                <p class="panel-subtitle">Data yang mendasari perhitungan skor kelayakan usaha</p>
+              </div>
+              <div class="segmented-control" role="tablist">
+                <button type="button" class="seg-btn active" id="btn-view-table" aria-label="Tampilan tabel">Tabel</button>
+                <button type="button" class="seg-btn" id="btn-view-chart" aria-label="Tampilan grafik">Grafik</button>
+              </div>
+            </div>
+
+            <!-- Tampilan Tabel -->
+            <div class="table-responsive" id="riwayat-table-wrap">
+              <table class="data-table" id="table-riwayat">
+                <thead>
+                  <tr>
+                    <th style="min-width: 150px;">Bulan &amp; Periode</th>
+                    <th class="text-right">Pemasukan (Omzet)</th>
+                    <th class="text-right">Pengeluaran</th>
+                    <th class="text-right">Laba Bersih</th>
+                    <th class="text-right">Margin (%)</th>
+                    <th class="text-center" style="width: 120px;">Status Kas</th>
+                  </tr>
+                </thead>
+                <tbody id="riwayat-table-body">
+                  <!-- Generated by app.js -->
+                </tbody>
+                <tfoot id="riwayat-table-foot">
+                  <!-- Generated by app.js -->
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Tampilan Grafik -->
+            <div class="riwayat-chart-wrap" id="riwayat-chart-wrap" style="display:none;">
+              
+              <!-- Metric Strip Above Chart -->
+              <div class="chart-summary-strip">
+                <div class="chart-summary-stat">
+                  <span class="css-label">Total Pemasukan 6 Bulan</span>
+                  <span class="css-val text-primary">Rp 116.450.000</span>
+                </div>
+                <div class="chart-summary-stat">
+                  <span class="css-label">Akumulasi Laba Bersih</span>
+                  <span class="css-val text-emerald">+Rp 11.150.000</span>
+                </div>
+                <div class="chart-summary-stat">
+                  <span class="css-label">Rata-rata Margin Bersih</span>
+                  <span class="css-val">9.6% <small style="color:var(--text-muted); font-weight:500;">(Target 20%)</small></span>
+                </div>
+                <div class="chart-summary-stat">
+                  <span class="css-label">Tren Semester</span>
+                  <span class="css-val text-emerald">&uarr; +37.2% Naik</span>
+                </div>
+              </div>
+
+              <div class="chart-legend" style="margin: 12px 0 8px;">
+                <span class="legend-item"><span class="legend-dot dot-income"></span> Pemasukan (Omzet)</span>
+                <span class="legend-item"><span class="legend-dot dot-laba"></span> Laba Bersih (Surplus)</span>
+                <span class="legend-item"><span class="legend-dot dot-defisit"></span> Defisit Kas / Investasi</span>
+                <span class="legend-item legend-guide-item">
+                  <span class="dashed-guide-line"></span> Rata-rata Omzet: Rp 19,4 Jt/bln
+                </span>
+              </div>
+              
+              <div class="bar-chart-container" id="riwayat-chart-container">
+                <!-- Y-Axis Labels -->
+                <div class="chart-y-axis" aria-hidden="true">
+                  <span>25 Jt</span>
+                  <span>20 Jt</span>
+                  <span>15 Jt</span>
+                  <span>10 Jt</span>
+                  <span>5 Jt</span>
+                  <span>0</span>
+                </div>
+
+                <!-- Chart Main Stage -->
+                <div class="chart-stage">
+                  <div class="chart-grid-lines" aria-hidden="true">
+                    <div class="grid-line"></div>
+                    <div class="grid-line avg-line" title="Rata-rata Omzet: Rp 19,4 Jt"></div>
+                    <div class="grid-line"></div>
+                    <div class="grid-line"></div>
+                    <div class="grid-line"></div>
+                    <div class="grid-line"></div>
+                  </div>
+                  <div class="chart-columns" id="riwayat-chart-columns">
+                    <!-- Generated by app.js -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Rekomendasi Perbaikan -->
+          <div class="dash-panel panel-rekomendasi">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Rekomendasi Perbaikan</h2>
+                <p class="panel-subtitle">Langkah untuk menaikkan skor kelayakan</p>
+              </div>
+            </div>
+
+            <div class="rekomendasi-list" id="rekomendasi-list">
+              <!-- Generated by app.js based on score weaknesses -->
+            </div>
+
+            <!-- Rumus Referensi -->
+            <div class="rumus-card">
+              <div class="rumus-header">
+                <span class="material-symbols-rounded" style="font-size:16px; color: var(--text-muted);">functions</span>
+                <strong>Rumus Skor Kelayakan</strong>
+              </div>
+              <div class="rumus-formula">
+                Skor = 30 &times; (B<sub>catat</sub>/6) + 25 &times; min(1, R<sub>baru</sub>/R<sub>lama</sub>) + 25 &times; min(1, M/0,20) + 20 &times; (B<sub>laba</sub>/6)
+              </div>
+              <p class="rumus-note">Bobot, margin target 20%, dan batas kategori (40 dan 70) adalah asumsi yang disetujui kelompok.</p>
+            </div>
+
+            <!-- Status KUR -->
+            <div class="kur-status-card" id="kur-status-card">
+              <div class="kur-status-header">
+                <span class="material-symbols-rounded" style="font-size:18px;">account_balance</span>
+                <strong>Status Kelayakan KUR</strong>
+              </div>
+              <div class="kur-status-body" id="kur-status-body">
+                <!-- Generated by app.js -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

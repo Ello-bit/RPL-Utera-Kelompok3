@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const valPengeluaran = document.getElementById('val-pengeluaran');
   const valMaxCicilan = document.getElementById('val-max-cicilan');
   const valSkor = document.getElementById('val-skor');
-
+  const navPillSkor = document.getElementById('nav-pill-skor');
   // Modal Elements
   const modalBackdrop = document.getElementById('modal-tx-backdrop');
   const btnOpenModal = document.getElementById('btn-open-tx-modal');
@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (valSaldo) valSaldo.textContent = formatRupiah(netProfit);
     if (valMaxCicilan) valMaxCicilan.textContent = formatRupiah(maxInstallment30Pct) + ' / bln';
     if (valSkor) valSkor.textContent = score;
+    if (navPillSkor) navPillSkor.textContent = score;
     if (badgeTotalTx) badgeTotalTx.textContent = transactions.length;
   }
 
