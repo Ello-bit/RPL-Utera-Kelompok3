@@ -359,6 +359,7 @@
         const calc = calculateInstallment(state.plafon, prog.rate, state.tenorMonths, prog.method);
         const simData = {
           date: new Date().toISOString(),
+          programId: state.currentProgram,
           program: prog.name,
           plafon: state.plafon,
           tenor: state.tenorMonths,
@@ -421,20 +422,71 @@
     });
   }
 
-  // --- 7. INITIALIZATION ---
+  // --- 7. INITIALIZATION & DATA INTEGRATION ---
   function init() {
-    // Attempt to load net profit from shared Buku Kas Warung cache if available
+    // 1. Integrasi Satu Sumber Data dari Buku Kas Warung (UteraKas)
     try {
-      const storedKas = localStorage.getItem('utera_buku_kas_summary');
-      if (storedKas) {
-        const parsed = JSON.parse(storedKas);
-        if (parsed && parsed.netProfit && parsed.netProfit > 0) {
-          state.netProfit = parsed.netProfit;
+      if (window.UteraKas && typeof window.UteraKas.load === 'function') {
+        const allTx = window.UteraKas.load();
+        
+        // Update badge jumlah transaksi di sidebar
+        const sidebarBadge = document.getElementById('sidebar-badge-tx');
+        if (sidebarBadge && allTx.length > 0) {
+          sidebarBadge.textContent = allTx.length;
+        }
+
+        // Hitung rata-rata laba bersih bulanan riil dari catatan kas
+        if (allTx.length > 0) {
+          let inc = 0;
+          let exp = 0;
+          const monthsSet = new Set();
+
+          allTx.forEach(tx => {
+            if (tx.date && tx.date.length >= 7) {
+              monthsSet.add(tx.date.substring(0, 7)); // 'YYYY-MM'
+            }
+            if (tx.type === 'income') inc += (tx.amount || 0);
+            else if (tx.type === 'expense') exp += (tx.amount || 0);
+          });
+
+          const monthCount = Math.max(1, monthsSet.size);
+          const computedAvgProfit = Math.round((inc - exp) / monthCount);
+
+          if (computedAvgProfit > 1000000) {
+            state.netProfit = computedAvgProfit;
+          }
         }
       }
     } catch (e) {
-      // Use default fallback
+      console.warn('Gagal membaca data live Buku Kas:', e);
     }
+
+    // 2. Pulihkan simulasi terakhir yang tersimpan di browser jika ada
+    try {
+      const savedRaw = localStorage.getItem('utera_saved_guardrail');
+      if (savedRaw) {
+        const saved = JSON.parse(savedRaw);
+        if (saved.plafon && saved.tenor) {
+          state.plafon = saved.plafon;
+          state.tenorMonths = saved.tenor;
+          if (saved.programId && PROGRAMS[saved.programId]) {
+            state.currentProgram = saved.programId;
+          }
+        }
+      }
+    } catch (e) {
+      // Gunakan default
+    }
+
+    // Sinkronkan tab program yang aktif
+    document.querySelectorAll('.program-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.program === state.currentProgram);
+    });
+
+    // Sinkronkan pill tenor yang aktif
+    document.querySelectorAll('.tenor-pill').forEach(pill => {
+      pill.classList.toggle('active', parseInt(pill.dataset.months, 10) === state.tenorMonths);
+    });
 
     setupEvents();
     updateUI();

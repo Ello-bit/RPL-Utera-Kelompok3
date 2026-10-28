@@ -301,21 +301,36 @@ document.addEventListener('DOMContentLoaded', () => {
     window.print();
   });
 
-  // Quick Simulation Alert
-  const btnQuickSim = document.getElementById('btn-quick-simulasi');
-  btnQuickSim?.addEventListener('click', () => {
-    const inputPlaf = prompt('Masukkan rencana plafon pinjaman usaha (Rp):', '50000000');
-    if (inputPlaf) {
-      const plaf = Number(inputPlaf);
-      const estCicilan = Math.round((plaf * 1.06) / 24);
-      const max30 = Math.round(18450000 * 0.30);
-      const isSafe = estCicilan <= max30;
-      alert(`Hasil Uji Guardrail Kas UTERA:\n\n• Plafon: ${formatRupiah(plaf)}\n• Estimasi Angsuran (Tenor 24 bln, Bunga 6%): ${formatRupiah(estCicilan)}/bln\n• Batas Aman 30% Kas Anda: ${formatRupiah(max30)}/bln\n\nStatus: ${isSafe ? '✅ AMAN (Beban cicilan di bawah 30% laba)' : '⚠️ MELEBIHI GUARDRAIL (Risiko mengganggu kasir operasional)'}`);
+  // Sinkronisasi Hasil Simulasi Guardrail Terakhir (jika tersimpan dari modul /guardrail/)
+  function syncSavedGuardrail() {
+    try {
+      const savedRaw = localStorage.getItem('utera_saved_guardrail');
+      if (!savedRaw) return;
+      const parsed = JSON.parse(savedRaw);
+      const firstCard = document.querySelector('.panel-guardrail .loan-option-card:first-child');
+      if (firstCard && parsed.program) {
+        const strongTitle = firstCard.querySelector('.loan-info strong');
+        const spanSub = firstCard.querySelector('.loan-info span');
+        const spanInstallment = firstCard.querySelector('.loan-installment');
+        const spanStatus = firstCard.querySelector('.loan-status');
+
+        if (strongTitle) strongTitle.textContent = parsed.program + ' (Hasil Uji)';
+        if (spanSub) spanSub.textContent = `Plafon ${formatRupiah(parsed.plafon)} • Tenor ${parsed.tenor} Bln`;
+        if (spanInstallment) spanInstallment.textContent = `${formatRupiah(parsed.installment)}/bln`;
+        if (spanStatus) {
+          const isSafe = (parsed.ratio || 0) <= 30;
+          spanStatus.className = `loan-status ${isSafe ? 'text-emerald' : 'text-terracotta'}`;
+          spanStatus.textContent = isSafe ? '✓ Lolos Batas 30% Kas' : '⚠️ Melebihi Batas Kas';
+        }
+      }
+    } catch (e) {
+      // Abaikan jika tidak ada data tersimpan
     }
-  });
+  }
 
   // Initial Boot
   fillModalCategories('income');
   renderTransactions();
   recalculateMetrics();
+  syncSavedGuardrail();
 });
