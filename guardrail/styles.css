@@ -613,32 +613,44 @@ body.dashboard-body {
 }
 
 .badge-status-safe {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   background: var(--emerald-soft);
   color: var(--emerald);
   border: 1px solid var(--emerald-border);
   font-size: 0.6875rem;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--r-pill);
 }
 
 .badge-status-warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   background: var(--gold-soft);
   color: var(--gold);
   border: 1px solid var(--gold-border);
   font-size: 0.6875rem;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--r-pill);
 }
 
 .badge-status-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   background: var(--terracotta-soft);
   color: var(--terracotta);
   border: 1px solid var(--terracotta-border);
   font-size: 0.6875rem;
   font-weight: 700;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--r-pill);
 }
 
@@ -1418,39 +1430,98 @@ body.dashboard-body {
    3. BOTTOM GRID: COMPARISON TABLE & KUR PLANNER
    ========================================================================== */
 .dash-bottom-grid {
-  display: grid;
-  grid-template-columns: 1.25fr 0.95fr;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.panel-comparison {
+  width: 100%;
 }
 
 /* Data Table */
 .table-responsive {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--r-md);
   border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #F1F4F1;
+  border-radius: 999px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 .data-table {
   width: 100%;
+  min-width: 920px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.8125rem;
 }
 
 .data-table th {
-  background: var(--bg-app);
-  padding: 12px 14px;
+  background: #F8FAF8;
+  padding: 13px 18px;
   font-weight: 700;
   color: var(--text-muted);
   font-size: 0.75rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
 }
 
 .data-table td {
-  padding: 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-body);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  min-width: 260px;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  min-width: 130px;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  min-width: 110px;
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+  min-width: 100px;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+  min-width: 140px;
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  min-width: 180px;
 }
 
 .data-table tbody tr:last-child td {
@@ -1468,33 +1539,41 @@ body.dashboard-body {
 .institution-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  white-space: nowrap;
 }
 
 .inst-icon {
-  font-size: 22px;
+  font-size: 24px;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .institution-meta strong {
   display: block;
   font-weight: 700;
   color: var(--text-main);
+  white-space: nowrap;
+  font-size: 0.84rem;
 }
 
 .institution-meta small {
   display: block;
-  font-size: 0.6875rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 2px;
 }
 
 .badge-rate {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
   font-weight: 700;
   font-size: 0.75rem;
   background: var(--bg-app);
   border: 1px solid var(--border-subtle);
-  padding: 2px 7px;
+  padding: 3px 10px;
   border-radius: var(--r-pill);
   color: var(--text-body);
 }
@@ -1509,6 +1588,11 @@ body.dashboard-body {
   background: var(--terracotta-soft);
   color: var(--terracotta);
   border-color: var(--terracotta-border);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .text-right {
@@ -1547,6 +1631,26 @@ body.dashboard-body {
 }
 
 /* KUR Planner Column */
+.planner-grid-content {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.planner-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .planner-grid-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
 .planner-allocations-wrap {
   display: flex;
   flex-direction: column;

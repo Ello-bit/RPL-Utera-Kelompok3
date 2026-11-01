@@ -24,7 +24,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="styles.css?v=20261028_01">
+  <link rel="stylesheet" href="styles.css?v=20261101_01">
 </head>
 <body class="dashboard-body">
 
@@ -561,55 +561,59 @@
               </div>
             </div>
 
-            <div class="planner-allocations-wrap">
-              <div class="allocation-item">
-                <div class="alloc-header">
-                  <span>Modal Belanja Stok Bahan Baku (Kulakan)</span>
-                  <strong class="tabular-nums" id="alloc-val-1">Rp 30.000.000 (60%)</strong>
+            <div class="planner-grid-content">
+              <div class="planner-allocations-wrap">
+                <div class="allocation-item">
+                  <div class="alloc-header">
+                    <span>Modal Belanja Stok Bahan Baku (Kulakan)</span>
+                    <strong class="tabular-nums" id="alloc-val-1">Rp 30.000.000 (60%)</strong>
+                  </div>
+                  <div class="alloc-track">
+                    <div class="alloc-fill bg-emerald" style="width: 60%;"></div>
+                  </div>
                 </div>
-                <div class="alloc-track">
-                  <div class="alloc-fill bg-emerald" style="width: 60%;"></div>
+
+                <div class="allocation-item">
+                  <div class="alloc-header">
+                    <span>Peremajaan Alat Kasir &amp; Mesin Kopi</span>
+                    <strong class="tabular-nums" id="alloc-val-2">Rp 15.000.000 (30%)</strong>
+                  </div>
+                  <div class="alloc-track">
+                    <div class="alloc-fill bg-primary" style="width: 30%;"></div>
+                  </div>
+                </div>
+
+                <div class="allocation-item">
+                  <div class="alloc-header">
+                    <span>Cadangan Likuiditas / Dana Darurat</span>
+                    <strong class="tabular-nums" id="alloc-val-3">Rp 5.000.000 (10%)</strong>
+                  </div>
+                  <div class="alloc-track">
+                    <div class="alloc-fill bg-gold" style="width: 10%;"></div>
+                  </div>
                 </div>
               </div>
 
-              <div class="allocation-item">
-                <div class="alloc-header">
-                  <span>Peremajaan Alat Kasir &amp; Mesin Kopi</span>
-                  <strong class="tabular-nums" id="alloc-val-2">Rp 15.000.000 (30%)</strong>
+              <!-- Syarat Kelayakan Bank Himbara Checklist & CTA -->
+              <div class="planner-side-col">
+                <div class="eligibility-box">
+                  <div class="eligibility-title">
+                    <span class="material-symbols-rounded" style="color:var(--primary); font-size:18px;">verified_user</span>
+                    <strong>Validasi Skor &amp; Guardrail Siap Bank</strong>
+                  </div>
+                  <ul class="eligibility-checklist">
+                    <li class="pass">✓ Skor Kelayakan 84/100 (Melampaui syarat min. 70)</li>
+                    <li class="pass">✓ Rasio Beban Cicilan di bawah batas aman 30%</li>
+                    <li class="pass">✓ Konsistensi pencatatan kas harian aktif > 3 bulan</li>
+                  </ul>
                 </div>
-                <div class="alloc-track">
-                  <div class="alloc-fill bg-primary" style="width: 30%;"></div>
-                </div>
-              </div>
 
-              <div class="allocation-item">
-                <div class="alloc-header">
-                  <span>Cadangan Likuiditas / Dana Darurat</span>
-                  <strong class="tabular-nums" id="alloc-val-3">Rp 5.000.000 (10%)</strong>
-                </div>
-                <div class="alloc-track">
-                  <div class="alloc-fill bg-gold" style="width: 10%;"></div>
-                </div>
+                <button type="button" class="btn btn-primary btn-block" id="btn-save-simulation">
+                  <span class="material-symbols-rounded btn-icon">bookmark</span>
+                  <span>Simpan Simulasi ke Portofolio</span>
+                </button>
               </div>
             </div>
-
-            <!-- Syarat Kelayakan Bank Himbara Checklist -->
-            <div class="eligibility-box">
-              <div class="eligibility-title">
-                <span class="material-symbols-rounded" style="color:var(--primary); font-size:18px;">verified_user</span>
-                <strong>Validasi Skor &amp; Guardrail Siap Bank</strong>
-              </div>
-              <ul class="eligibility-checklist">
-                <li class="pass">✓ Skor Kelayakan 84/100 (Melampaui syarat min. 70)</li>
-                <li class="pass">✓ Rasio Beban Cicilan di bawah batas aman 30%</li>
-                <li class="pass">✓ Konsistensi pencatatan kas harian aktif > 3 bulan</li>
-              </ul>
-            </div>
-
-            <button type="button" class="btn btn-primary btn-block" id="btn-save-simulation">
-              <span class="material-symbols-rounded btn-icon">bookmark</span>
-              <span>Simpan Simulasi ke Portofolio</span>
-            </button>
           </div>
 
         </div>
