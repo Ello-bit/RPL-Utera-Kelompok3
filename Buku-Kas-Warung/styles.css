@@ -94,6 +94,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
@@ -972,6 +976,10 @@ button, input, select {
 }
 
 /* Floating Chart Tooltip */
+.chart-floating-tooltip[hidden] {
+  display: none !important;
+}
+
 .chart-floating-tooltip {
   position: absolute;
   top: 10px;
@@ -1309,6 +1317,10 @@ button, input, select {
 }
 
 /* Floating Dropdown Popover */
+.dropdown-popover[hidden] {
+  display: none !important;
+}
+
 .dropdown-popover {
   position: absolute;
   top: calc(100% + 8px);
@@ -1770,6 +1782,10 @@ button, input, select {
 /* ==========================================================================
    TOAST POPUP & NOTICES
    ========================================================================== */
+
+.toast-popup[hidden] {
+  display: none !important;
+}
 
 .toast-popup {
   position: fixed;
