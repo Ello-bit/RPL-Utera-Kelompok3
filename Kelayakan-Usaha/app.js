@@ -272,8 +272,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var duration = 900;
     var startTime = null;
 
-    // Arc length for r=78 semi-circle: C = PI * 78 ~ 245.04
-    var arcLength = 245.04;
+    // Arc length for r=95 semi-circle: C = PI * 95 ~ 298.45
+    var arcLength = 298.45;
     var targetOffset = arcLength * (1 - (targetScore / 100));
 
     function step(timestamp) {

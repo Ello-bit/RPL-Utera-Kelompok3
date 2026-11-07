@@ -558,7 +558,7 @@ button, input, select {
 
 .gauge-svg-container {
   position: relative;
-  width: 220px;
+  width: 250px;
   height: 155px;
   display: flex;
   align-items: center;
@@ -568,52 +568,48 @@ button, input, select {
 .score-arc-svg {
   width: 100%;
   height: 100%;
-  transform: rotate(0deg);
+  overflow: visible;
 }
 
 .gauge-bg-track {
   fill: none;
   stroke: var(--border-subtle);
-  stroke-width: 12;
+  stroke-width: 11;
   stroke-linecap: round;
 }
 
 .gauge-fill-arc {
   fill: none;
   stroke: url(#scoreEmeraldGradient);
-  stroke-width: 12;
+  stroke-width: 11;
   stroke-linecap: round;
   transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gauge-center-content {
-  position: absolute;
-  top: 48px;
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.gauge-score-value {
-  font-family: var(--font-serif);
-  font-size: 64px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-main);
+.gauge-svg-number {
+  font-family: var(--font-family);
+  font-size: 52px;
+  font-weight: 800;
+  fill: var(--text-main);
   letter-spacing: -2px;
-  display: inline-block;
   font-variant-numeric: tabular-nums;
 }
 
-.gauge-score-denom {
-  font-size: 13px;
+.gauge-svg-denom {
+  font-family: var(--font-family);
+  font-size: 11px;
   font-weight: 700;
-  color: var(--text-light);
-  letter-spacing: 0.5px;
-  margin-top: 2px;
+  fill: var(--text-light);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.gauge-scale-text {
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text-light);
+  text-anchor: middle;
 }
 
 .gauge-bottom-meta {
@@ -621,7 +617,7 @@ button, input, select {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-top: 6px;
+  margin-top: 10px;
   width: 100%;
 }
 

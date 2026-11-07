@@ -161,7 +161,7 @@
           <!-- Col 1: Curved Modern Gauge -->
           <div class="hero-gauge-col">
             <div class="gauge-svg-container">
-              <svg viewBox="0 0 220 155" class="score-arc-svg" aria-hidden="true">
+              <svg viewBox="0 0 260 160" class="score-arc-svg" aria-hidden="true">
                 <defs>
                   <linearGradient id="scoreEmeraldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#10B981"/>
@@ -169,17 +169,20 @@
                     <stop offset="100%" stop-color="#059669"/>
                   </linearGradient>
                 </defs>
-                <!-- Background Arc Track (r=78, length approx 245.04) -->
-                <path d="M 32 135 A 78 78 0 0 1 188 135" class="gauge-bg-track"/>
+                <!-- Background Arc Track (r=95, length approx 298.45) -->
+                <path d="M 35 135 A 95 95 0 0 1 225 135" class="gauge-bg-track"/>
                 <!-- Animated Active Arc Fill -->
-                <path d="M 32 135 A 78 78 0 0 1 188 135" class="gauge-fill-arc" id="gauge-arc-fill"
-                      stroke-dasharray="245.04" stroke-dashoffset="39.2"/>
-              </svg>
+                <path d="M 35 135 A 95 95 0 0 1 225 135" class="gauge-fill-arc" id="gauge-arc-fill"
+                      stroke-dasharray="298.45" stroke-dashoffset="47.75"/>
+                
+                <!-- End scale tick labels -->
+                <text x="35" y="152" class="gauge-scale-text">0</text>
+                <text x="225" y="152" class="gauge-scale-text">100</text>
 
-              <div class="gauge-center-content">
-                <span class="gauge-score-value" id="gauge-score-val">84</span>
-                <span class="gauge-score-denom">SKOR / 100</span>
-              </div>
+                <!-- Center Score Number and Denominator inside SVG for rock-solid alignment -->
+                <text x="130" y="106" text-anchor="middle" class="gauge-svg-number" id="gauge-score-val">84</text>
+                <text x="130" y="126" text-anchor="middle" class="gauge-svg-denom">SKOR / 100</text>
+              </svg>
             </div>
 
             <div class="gauge-bottom-meta">
