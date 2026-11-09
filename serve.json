@@ -13,6 +13,7 @@
     { "source": "/simulasi-kur/", "destination": "/simulasi-kur/index.html" },
     { "source": "/Simulasi-KUR/", "destination": "/simulasi-kur/index.html" },
     { "source": "/profil-usaha/", "destination": "/profil-usaha/index.html" },
-    { "source": "/legalitas-&-nib/", "destination": "/legalitas-&-nib/index.html" }
+    { "source": "/legalitas-&-nib/", "destination": "/legalitas-&-nib/index.html" },
+    { "source": "/laporan-siap-bank/", "destination": "/laporan-siap-bank/index.html" }
   ]
 }
