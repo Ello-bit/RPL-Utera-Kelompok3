@@ -183,14 +183,41 @@
             <span>Catat Kas</span>
           </button>
 
-          <!-- User Topbar Profile -->
-          <a href="../profil-usaha/index.html" class="user-top-profile" style="text-decoration:none;" title="Lihat Profil Usaha">
-            <div class="user-avatar-circle">BR</div>
-            <div class="user-meta-top">
-              <span class="user-name-label">Bryan</span>
-              <small class="user-role-label">Pemilik Warung</small>
+          <!-- User Topbar Profile with Dropdown -->
+          <div class="user-top-profile-wrap" style="position:relative;">
+            <button type="button" class="user-top-profile" id="btn-user-dropdown" title="Menu Akun & Profil" aria-expanded="false" style="background:none; border:none; cursor:pointer; text-align:left;">
+              <div class="user-avatar-circle" id="user-top-avatar">BR</div>
+              <div class="user-meta-top">
+                <span class="user-name-label" id="user-top-name">Bryan</span>
+                <small class="user-role-label">Pemilik Warung</small>
+              </div>
+              <span class="material-symbols-rounded" style="font-size:18px; color:var(--text-muted); margin-left:4px;">expand_more</span>
+            </button>
+            <div class="user-dropdown-menu" id="user-dropdown-menu">
+              <div class="dropdown-header">
+                <strong id="dropdown-user-name">Bryan</strong>
+                <span id="dropdown-user-email">nama@usaha.com</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="../profil-usaha/index.html" class="dropdown-link">
+                <span class="material-symbols-rounded">storefront</span>
+                <span>Profil Usaha</span>
+              </a>
+              <a href="../Buku-Kas-Warung/index.html" class="dropdown-link">
+                <span class="material-symbols-rounded">receipt_long</span>
+                <span>Buku Kas Warung</span>
+              </a>
+              <a href="../Skor-Kelayakan/index.html" class="dropdown-link">
+                <span class="material-symbols-rounded">verified</span>
+                <span>Skor Kelayakan</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-link text-danger" id="topbar-btn-logout">
+                <span class="material-symbols-rounded">logout</span>
+                <span>Keluar (Logout)</span>
+              </button>
             </div>
-          </a>
+          </div>
         </div>
       </header>
 

@@ -590,6 +590,209 @@ body {
 }
 
 /* ==========================================================================
+   PASSWORD CONFIRMATION & OTP VERIFICATION MODAL
+   ========================================================================== */
+.input-hint {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  display: block;
+  font-weight: 600;
+}
+.input-hint.valid {
+  color: #16A34A;
+}
+.input-hint.invalid {
+  color: #DC2626;
+}
+
+/* OTP Verification Modal Overlay */
+.verify-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 34, 29, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.verify-modal-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 28px;
+  box-shadow: 0 25px 50px -12px rgba(25, 34, 29, 0.25);
+  border: 1px solid rgba(31, 107, 79, 0.15);
+  text-align: center;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.verify-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #EAF4EF;
+  color: #1F6B4F;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.verify-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 8px;
+}
+
+.verify-desc {
+  font-size: 0.875rem;
+  color: var(--neutral-600);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.otp-simulated-banner {
+  background: #F0FDF4;
+  border: 1px dashed #86EFAC;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #166534;
+}
+
+.otp-simulated-banner strong {
+  font-size: 1.05rem;
+  letter-spacing: 3px;
+  color: #15803D;
+  margin-left: 4px;
+}
+
+.btn-copy-otp {
+  background: #DCFCE7;
+  border: 1px solid #86EFAC;
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-copy-otp:hover {
+  background: #BBF7D0;
+}
+
+.otp-inputs-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.otp-digit {
+  width: 46px;
+  height: 54px;
+  border: 2px solid var(--neutral-300);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--neutral-900);
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: #FAFAFA;
+}
+
+.otp-digit:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.otp-resend-row {
+  font-size: 0.8125rem;
+  color: var(--neutral-500);
+  margin-bottom: 22px;
+}
+
+.btn-resend-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+.btn-resend-link:disabled {
+  color: var(--neutral-400);
+  cursor: not-allowed;
+}
+
+.verify-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-verify-cancel {
+  flex: 1;
+  height: 46px;
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+  border-radius: 12px;
+  font-weight: 600;
+  color: var(--neutral-700);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-verify-cancel:hover {
+  background: var(--neutral-200);
+}
+
+.btn-verify-submit {
+  flex: 1.4;
+  height: 46px;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.btn-verify-submit:hover {
+  background: var(--primary-hover);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 @media (max-width: 960px) {

@@ -562,6 +562,85 @@ body.dashboard-body {
   color: var(--text-muted);
 }
 
+/* User Profile Topbar Dropdown */
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--bg-card, #FFFFFF);
+  border: 1px solid var(--border-subtle, #E2E8F0);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12);
+  padding: 8px 0;
+  display: none;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+.user-dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-header {
+  padding: 10px 16px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-header strong {
+  font-size: 0.875rem;
+  color: var(--text-heading, #1E293B);
+}
+
+.dropdown-header span {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748B);
+  word-break: break-all;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border-subtle, #E2E8F0);
+  margin: 6px 0;
+}
+
+.dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-body, #334155);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.dropdown-link:hover {
+  background: var(--primary-soft, #EEF7F2);
+  color: var(--primary, #1F6B4F);
+}
+
+.dropdown-link .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.dropdown-link.text-danger {
+  color: #DC2626;
+}
+
+.dropdown-link.text-danger:hover {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
 /* ==========================================================================
    BUTTONS & BADGES
    ========================================================================== */

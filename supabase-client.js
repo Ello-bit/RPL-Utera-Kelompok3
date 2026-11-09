@@ -16,17 +16,54 @@ if (typeof window !== 'undefined' && window.supabase) {
   console.warn('⚠️ Supabase JS SDK belum dimuat. Pastikan menyertakan tag script CDN Supabase.');
 }
 
-// Helper untuk mengecek koneksi aktif
-async function checkSupabaseConnection() {
-  if (!uteraSupabase) {
-    return { success: false, message: 'Supabase client belum diinisialisasi.' };
+// Helper logout universal untuk seluruh modul UTERA
+async function uteraLogout(redirectUrl) {
+  var targetUrl = redirectUrl || '../landing-page/index.html';
+  if (!confirm('Apakah Anda yakin ingin keluar dari akun UTERA?')) {
+    return false;
   }
   try {
-    const { data, error } = await uteraSupabase.from('profil_usaha').select('id').limit(1);
-    if (error) throw error;
-    return { success: true, message: 'Koneksi database Supabase berhasil!' };
+    if (uteraSupabase && uteraSupabase.auth) {
+      await uteraSupabase.auth.signOut();
+    }
   } catch (err) {
-    return { success: false, message: err.message };
+    console.warn('Supabase signOut error:', err);
   }
+  try {
+    localStorage.removeItem('utera_user_email');
+    localStorage.removeItem('utera_user_name');
+    localStorage.removeItem('utera_nama_usaha');
+    localStorage.removeItem('utera_profil_usaha');
+    localStorage.removeItem('utera.kas.transaksi.v1');
+    localStorage.removeItem('utera_saved_guardrail');
+    // Clear Supabase token storage keys
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && (k.indexOf('sb-') === 0 || k.indexOf('supabase.') === 0)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(function (k) { localStorage.removeItem(k); });
+  } catch (e) {}
+
+  alert('Anda telah berhasil keluar (logout).');
+  window.location.href = targetUrl;
+  return true;
 }
+
+if (typeof window !== 'undefined') {
+  window.uteraLogout = uteraLogout;
+  // Pasang listener otomatis pada semua tombol keluar di seluruh halaman
+  document.addEventListener('DOMContentLoaded', function () {
+    var logoutButtons = document.querySelectorAll('.btn-logout, #btn-logout, [data-action="logout"]');
+    logoutButtons.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        uteraLogout('../auth/index.html?mode=login');
+      });
+    });
+  });
+}
+
 

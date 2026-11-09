@@ -180,6 +180,21 @@
             </div>
           </div>
 
+          <!-- Collapsible Field: Konfirmasi Kata Sandi (Visible only in Register Mode) -->
+          <div class="form-group form-group-collapsible" id="group-confirm-password">
+            <label for="input-password-confirm" class="form-label">Konfirmasi Kata Sandi</label>
+            <div class="input-wrap">
+              <input type="password" id="input-password-confirm" class="form-input" placeholder="••••••••••••" autocomplete="new-password">
+              <button type="button" class="btn-toggle-pw" id="btn-toggle-confirm-pw" aria-label="Lihat konfirmasi kata sandi">
+                <svg id="eye-icon-confirm" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <small id="password-match-hint" class="input-hint" style="display:none;"></small>
+          </div>
+
           <!-- Terms Disclaimer -->
           <p class="form-terms" id="form-terms">
             Dengan mendaftar, Anda menyetujui <a href="#">Kebijakan Privasi</a> dan <a href="#">Syarat Layanan</a> UTERA.
@@ -199,6 +214,55 @@
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       SECURITY VERIFICATION MODAL (OTP 6-Digit for Register & Login)
+       ==================================================================== -->
+  <div class="verify-modal-backdrop" id="verify-modal" style="display:none;">
+    <div class="verify-modal-card">
+      <div class="verify-icon-wrap">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+      </div>
+
+      <h3 class="verify-title" id="verify-modal-title">Verifikasi Keamanan Akun</h3>
+      <p class="verify-desc" id="verify-modal-desc">
+        Masukkan 6 digit kode keamanan yang dikirimkan ke <strong id="verify-email-target">email</strong> untuk melanjutkan.
+      </p>
+
+      <!-- Simulated OTP Code Box (Friendly for instant verification & testing) -->
+      <div class="otp-simulated-banner">
+        <div>
+          <span>Kode Keamanan: </span>
+          <strong id="otp-display-code">------</strong>
+        </div>
+        <button type="button" class="btn-copy-otp" id="btn-copy-otp" title="Tempel otomatis kode ini">Isi Otomatis</button>
+      </div>
+
+      <!-- 6-digit OTP Inputs Row -->
+      <div class="otp-inputs-row" id="otp-inputs-row">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="0" inputmode="numeric" autocomplete="one-time-code">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="1" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="2" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="3" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="4" inputmode="numeric">
+        <input type="text" maxlength="1" class="otp-digit" data-idx="5" inputmode="numeric">
+      </div>
+
+      <div class="otp-resend-row">
+        <span>Belum menerima kode? </span>
+        <button type="button" class="btn-resend-link" id="btn-resend-otp">Kirim Ulang (<span id="otp-countdown">45</span>s)</button>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="verify-actions">
+        <button type="button" class="btn-verify-cancel" id="btn-cancel-verify">Batal</button>
+        <button type="button" class="btn-verify-submit" id="btn-confirm-verify">Verifikasi &amp; Lanjutkan</button>
+      </div>
     </div>
   </div>
 

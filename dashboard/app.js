@@ -420,10 +420,46 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    const dropName = document.getElementById('dropdown-user-name');
+    if (dropName) dropName.textContent = userName || 'Pemilik Usaha';
+    const dropEmail = document.getElementById('dropdown-user-email');
+    if (dropEmail) dropEmail.textContent = userEmail || 'Akun Tamu (Demo)';
+
     if (bizName) {
       const elBizName = document.getElementById('sidebar-business-name');
       if (elBizName) elBizName.textContent = bizName;
     }
+  }
+
+  // User Topbar Dropdown Toggle
+  const btnUserDropdown = document.getElementById('btn-user-dropdown');
+  const userDropdownMenu = document.getElementById('user-dropdown-menu');
+
+  if (btnUserDropdown && userDropdownMenu) {
+    btnUserDropdown.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userDropdownMenu.classList.toggle('show');
+      btnUserDropdown.setAttribute('aria-expanded', userDropdownMenu.classList.contains('show'));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!userDropdownMenu.contains(e.target) && !btnUserDropdown.contains(e.target)) {
+        userDropdownMenu.classList.remove('show');
+        btnUserDropdown.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // Topbar direct logout button
+  const topbarLogout = document.getElementById('topbar-btn-logout');
+  if (topbarLogout) {
+    topbarLogout.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.uteraLogout) {
+        window.uteraLogout('../auth/index.html?mode=login');
+      }
+    });
+  }
   }
 
   // Initial Boot
