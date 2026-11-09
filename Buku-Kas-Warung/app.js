@@ -88,10 +88,15 @@ document.addEventListener('DOMContentLoaded', function () {
     toastText: $('toast-text'),
     toastAction: $('toast-action'),
 
-    // Mobile dock
-    dock: $('icon-dock'),
-    dockBackdrop: $('dock-backdrop'),
-    btnDockToggle: $('btn-dock-toggle'),
+    // Sidebar & Mobile Nav
+    sidebar: $('app-sidebar'),
+    sidebarBackdrop: $('sidebar-backdrop'),
+    btnMobileMenu: $('btn-mobile-menu'),
+    btnCollapseSidebar: $('btn-collapse-sidebar'),
+    sidebarBizName: $('sidebar-business-name'),
+    sidebarBizBadge: $('sidebar-business-badge'),
+    sidebarBizIcon: $('sidebar-biz-icon'),
+    btnTopCatat: $('btn-top-catat'),
 
     // Dropdown Selectors
     cardBiz: $('card-dropdown-business'),
@@ -259,6 +264,9 @@ document.addEventListener('DOMContentLoaded', function () {
     el.activeBizIcon.textContent = found.icon;
     el.activeBizIcon.className = 'material-symbols-rounded ' + found.iconColor;
     el.activeBizIconWrap.className = 'selector-icon-wrap ' + found.iconBg;
+    if (el.sidebarBizName) el.sidebarBizName.textContent = found.name;
+    if (el.sidebarBizBadge) el.sidebarBizBadge.textContent = found.desc.split('•')[1] ? found.desc.split('•')[1].trim() : 'UMKM Mandiri';
+    if (el.sidebarBizIcon) el.sidebarBizIcon.textContent = found.icon;
     closeAllDropdowns();
     renderBusinessOptions();
     if (!state.editingId) {
@@ -1234,19 +1242,34 @@ document.addEventListener('DOMContentLoaded', function () {
   el.exportCsv.addEventListener('click', exportCsvFile);
   if (el.miniExport) el.miniExport.addEventListener('click', exportCsvFile);
 
-  // Mobile Dock Drawer
-  if (el.btnDockToggle && el.dock) {
-    el.btnDockToggle.addEventListener('click', function () {
-      el.dock.classList.toggle('is-open');
-      if (el.dockBackdrop) el.dockBackdrop.hidden = !el.dock.classList.contains('is-open');
+  // Mobile Sidebar Drawer
+  if (el.btnMobileMenu && el.sidebar) {
+    el.btnMobileMenu.addEventListener('click', function () {
+      el.sidebar.classList.add('mobile-open');
+      if (el.sidebarBackdrop) el.sidebarBackdrop.classList.add('mobile-open');
     });
 
-    if (el.dockBackdrop) {
-      el.dockBackdrop.addEventListener('click', function () {
-        el.dock.classList.remove('is-open');
-        el.dockBackdrop.hidden = true;
+    if (el.sidebarBackdrop) {
+      el.sidebarBackdrop.addEventListener('click', function () {
+        el.sidebar.classList.remove('mobile-open');
+        el.sidebarBackdrop.classList.remove('mobile-open');
       });
     }
+
+    if (el.btnCollapseSidebar) {
+      el.btnCollapseSidebar.addEventListener('click', function () {
+        el.sidebar.classList.remove('mobile-open');
+        if (el.sidebarBackdrop) el.sidebarBackdrop.classList.remove('mobile-open');
+      });
+    }
+  }
+
+  // Topbar quick "Catat Kas" button
+  if (el.btnTopCatat) {
+    el.btnTopCatat.addEventListener('click', function () {
+      el.entryPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      el.amount.focus();
+    });
   }
 
   /* ==========================================================================
