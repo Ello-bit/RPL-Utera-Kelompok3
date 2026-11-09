@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profil Usaha — UTERA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- =========================================================
+       SIDEBAR
+       ========================================================= -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-mark">U</div>
+      <div class="logo-text">
+        <strong>UTERA</strong>
+        <span>UMKM Sejahtera</span>
+      </div>
+    </div>
+
+    <!-- UTAMA -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Utama</div>
+      <a class="nav-item" href="../dashboard/index.html">
+        <span class="material-symbols-rounded">dashboard</span>
+        Ringkasan Kas
+      </a>
+      <a class="nav-item" href="../Buku-Kas-Warung/index.html">
+        <span class="material-symbols-rounded">menu_book</span>
+        Buku Kas Warung
+        <span class="nav-badge" id="kas-badge" style="display:none">0</span>
+      </a>
+      <a class="nav-item" href="../Skor-Kelayakan/index.html">
+        <span class="material-symbols-rounded">bar_chart</span>
+        Skor Kelayakan
+      </a>
+      <a class="nav-item" href="../guardrail/index.html">
+        <span class="material-symbols-rounded">shield</span>
+        Guardrail 30% Kas
+      </a>
+    </div>
+
+    <!-- LAYANAN & BANK -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Layanan &amp; Bank</div>
+      <a class="nav-item" href="../simulasi-kur/index.html">
+        <span class="material-symbols-rounded">calculate</span>
+        Simulasi KUR 2026
+      </a>
+      <a class="nav-item" href="../landing-page/index.html">
+        <span class="material-symbols-rounded">verified</span>
+        Legalitas &amp; NIB
+      </a>
+      <a class="nav-item" href="#section-laporan">
+        <span class="material-symbols-rounded">description</span>
+        Laporan Siap Bank
+      </a>
+    </div>
+
+    <!-- PENGATURAN -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pengaturan</div>
+      <a class="nav-item active" href="index.html">
+        <span class="material-symbols-rounded">store</span>
+        Profil Usaha
+      </a>
+      <a class="nav-item" href="../landing-page/index.html">
+        <span class="material-symbols-rounded">home</span>
+        Halaman Utama
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebar-user-avatar">U</div>
+        <div class="user-info">
+          <strong id="sidebar-user-name">Pemilik Usaha</strong>
+          <span>Kelola profil</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================
+       APP WRAPPER
+       ========================================================= -->
+  <div class="app-wrapper">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left" style="display:flex;flex-direction:row;align-items:center;gap:10px;">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu">
+          <span class="material-symbols-rounded">menu</span>
+        </button>
+        <div>
+          <div class="topbar-title">Profil Usaha</div>
+          <div class="breadcrumb">
+            <span>F3 PRD</span>
+            <span style="color:var(--text-hint)">·</span>
+            <span style="color:var(--text-muted)">Pilar Data Usaha</span>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-icon" title="Simpan (Ctrl+S)" onclick="document.getElementById('btn-save').click()">
+          <span class="material-symbols-rounded">save</span>
+        </button>
+        <button class="btn-icon" title="Ekspor PDF" onclick="document.getElementById('btn-export').click()">
+          <span class="material-symbols-rounded">picture_as_pdf</span>
+        </button>
+        <button class="btn-icon" title="Ke Dashboard" onclick="window.location.href='../dashboard/index.html'">
+          <span class="material-symbols-rounded">grid_view</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div class="page-header-top">
+          <div>
+            <h1 class="page-title">Profil Usaha</h1>
+            <p class="page-subtitle">Kelola identitas dan legalitas usaha Anda sebagai dasar semua fitur UTERA</p>
+          </div>
+          <span class="prd-badge">
+            <span class="material-symbols-rounded" style="font-size:13px">verified_user</span>
+            F3 · F14 PRD UTERA
+          </span>
+        </div>
+
+        <!-- Kelengkapan Profil -->
+        <div style="margin-top:12px;">
+          <div class="completeness-label" id="completeness-label">Memuat...</div>
+          <div class="completeness-bar-wrap">
+            <div class="completeness-bar">
+              <div class="completeness-fill" id="completeness-fill" style="width:0%"></div>
+            </div>
+            <div class="completeness-pct" id="completeness-pct">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE HEADER CARD -->
+      <div class="profile-header-card">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="profile-initials">U</div>
+          <div class="profile-avatar-edit" title="Ganti foto profil">
+            <span class="material-symbols-rounded">edit</span>
+          </div>
+        </div>
+
+        <div class="profile-header-info">
+          <div class="profile-business-name" id="profile-business-name">Nama Usaha Belum Diisi</div>
+          <div class="profile-owner" id="profile-owner">Nama pemilik belum diisi</div>
+          <div class="profile-meta">
+            <span class="meta-chip sector" id="meta-sector">
+              <span class="material-symbols-rounded">category</span>
+              Belum dipilih
+            </span>
+            <span class="meta-chip duration" id="meta-duration">
+              <span class="material-symbols-rounded">schedule</span>
+              <span class="chip-text">Tanggal mulai belum diisi</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Multi-Profile Switcher -->
+        <div class="profile-switcher-wrap">
+          <div class="profile-switcher-label">Profil Aktif</div>
+          <select class="profile-switcher" id="profile-switcher" title="Pilih profil usaha"></select>
+          <button class="btn-add-profile" id="btn-add-profile">
+            <span class="material-symbols-rounded">add</span>
+            Tambah Profil
+          </button>
+        </div>
+      </div>
+
+      <!-- KUR ELIGIBILITY WIDGET -->
+      <div class="kur-eligibility-widget no-data" id="kur-eligibility-widget">
+        <div class="kur-elig-icon">
+          <span class="material-symbols-rounded" id="kur-elig-icon-sym">help</span>
+        </div>
+        <div class="kur-elig-info">
+          <div class="kur-elig-title" id="kur-elig-title">Kelayakan KUR Belum Dapat Dihitung</div>
+          <div class="kur-elig-desc" id="kur-elig-desc">Isi tanggal mulai usaha untuk melihat kelayakan KUR</div>
+        </div>
+        <button class="kur-elig-action" id="kur-elig-action" style="display:none">
+          <span class="material-symbols-rounded">calculate</span>
+          Simulasi KUR
+        </button>
+      </div>
+
+      <!-- =====================================================
+           SECTION 1: DATA USAHA
+           ===================================================== -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="material-symbols-rounded">store</span>
+            <div>
+              <h3>Data Usaha</h3>
+              <p>Informasi dasar identitas usaha Anda</p>
+            </div>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="form-grid">
+
+            <!-- Nama Usaha -->
+            <div class="form-group">
+              <label class="form-label" for="nama_usaha">
+                Nama Usaha <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="nama_usaha"
+                class="form-control"
+                placeholder="Contoh: Warung Makan Bu Sari"
+                maxlength="100"
+                autocomplete="organization"
+              />
+              <span class="form-hint">Nama resmi usaha yang digunakan untuk dokumen</span>
+              <span class="form-error">Nama usaha wajib diisi</span>
+            </div>
+
+            <!-- Nama Pemilik -->
+            <div class="form-group">
+              <label class="form-label" for="nama_pemilik">
+                Nama Pemilik <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="nama_pemilik"
+                class="form-control"
+                placeholder="Sesuai KTP"
+                maxlength="80"
+                autocomplete="name"
+              />
+              <span class="form-hint">Nama lengkap sesuai KTP pemilik usaha</span>
+              <span class="form-error">Nama pemilik wajib diisi</span>
+            </div>
+
+            <!-- Jenis Usaha -->
+            <div class="form-group">
+              <label class="form-label" for="jenis_usaha">
+                Jenis / Sektor Usaha <span class="required">*</span>
+              </label>
+              <select id="jenis_usaha" class="form-control">
+                <!-- Options populated by JS -->
+              </select>
+              <span class="form-hint">Kategori utama usaha Anda</span>
+              <span class="form-error">Jenis usaha wajib dipilih</span>
+            </div>
+
+            <!-- Tanggal Mulai Usaha -->
+            <div class="form-group">
+              <label class="form-label" for="tanggal_mulai_usaha">
+                Tanggal Mulai Usaha <span class="required">*</span>
+                <span class="label-hint">— kritis untuk KUR</span>
+              </label>
+              <input
+                type="date"
+                id="tanggal_mulai_usaha"
+                class="form-control"
+              />
+              <span class="form-hint">Usaha harus berjalan min. 6 bulan untuk mengajukan KUR</span>
+              <span class="form-error">Tanggal mulai usaha wajib diisi</span>
+            </div>
+
+            <!-- Nomor Telepon -->
+            <div class="form-group">
+              <label class="form-label" for="nomor_telepon">
+                Nomor Telepon / WhatsApp
+              </label>
+              <div class="input-with-icon">
+                <span class="material-symbols-rounded input-icon">phone</span>
+                <input
+                  type="tel"
+                  id="nomor_telepon"
+                  class="form-control"
+                  placeholder="08xx-xxxx-xxxx"
+                  maxlength="20"
+                  autocomplete="tel"
+                />
+              </div>
+              <span class="form-hint">Nomor yang dapat dihubungi pihak bank</span>
+              <span class="form-error">Format nomor telepon tidak valid</span>
+            </div>
+
+            <!-- Alamat Usaha -->
+            <div class="form-group span-2">
+              <label class="form-label" for="alamat_usaha">
+                Alamat Usaha <span class="required">*</span>
+              </label>
+              <textarea
+                id="alamat_usaha"
+                class="form-control"
+                placeholder="Jalan, RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi"
+                rows="2"
+                maxlength="300"
+              ></textarea>
+              <span class="form-hint">Alamat lengkap lokasi operasional usaha</span>
+              <span class="form-error">Alamat usaha wajib diisi</span>
+            </div>
+
+            <!-- Deskripsi Usaha -->
+            <div class="form-group span-2">
+              <label class="form-label" for="deskripsi_usaha">
+                Deskripsi Usaha
+                <span class="label-hint">— untuk narasi pengajuan kredit</span>
+              </label>
+              <textarea
+                id="deskripsi_usaha"
+                class="form-control"
+                placeholder="Contoh: Warung makan spesialis masakan Jawa yang melayani pelanggan sejak 2020. Menyediakan layanan makan di tempat dan pesan antar..."
+                rows="3"
+                maxlength="600"
+              ></textarea>
+              <span class="form-hint">Deskripsi singkat yang menggambarkan usaha Anda kepada bank (maks. 600 karakter)</span>
+              <span class="form-error"></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           SECTION 2: STATUS LEGALITAS (F14)
+           ===================================================== -->
+      <div class="section-card" id="section-laporan">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="material-symbols-rounded">gavel</span>
+            <div>
+              <h3>Status Legalitas</h3>
+              <p>F14 PRD — Dokumen legal yang mendukung pengajuan KUR</p>
+            </div>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="legalitas-grid">
+
+            <!-- NIB -->
+            <div class="legalitas-item no-doc" id="leg-item-nib">
+              <div class="legalitas-status-icon" id="leg-icon-nib">
+                <span class="material-symbols-rounded">pending</span>
+              </div>
+              <div class="legalitas-info">
+                <div class="legalitas-name">
+                  <span>Nomor Induk Berusaha (NIB)</span>
+                  <span class="legalitas-status-badge pending" id="leg-badge-nib">Belum Ada</span>
+                </div>
+                <div class="legalitas-desc">Dokumen wajib untuk pengajuan KUR di semua bank. Daftar gratis di OSS (oss.go.id)</div>
+                <div class="legalitas-input-wrap">
+                  <input
+                    type="text"
+                    class="legalitas-number-input"
+                    id="leg-nomor-nib"
+                    placeholder="Masukkan nomor NIB (13 digit)"
+                    maxlength="20"
+                  />
+                </div>
+              </div>
+              <div class="legalitas-toggle-wrap">
+                <label class="toggle-switch" title="Sudah punya NIB?">
+                  <input type="checkbox" id="leg-toggle-nib" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+                <span class="toggle-label">Punya</span>
+              </div>
+            </div>
+
+            <!-- NPWP -->
+            <div class="legalitas-item no-doc" id="leg-item-npwp">
+              <div class="legalitas-status-icon" id="leg-icon-npwp">
+                <span class="material-symbols-rounded">pending</span>
+              </div>
+              <div class="legalitas-info">
+                <div class="legalitas-name">
+                  <span>NPWP (Nomor Pokok Wajib Pajak)</span>
+                  <span class="legalitas-status-badge pending" id="leg-badge-npwp">Belum Ada</span>
+                </div>
+                <div class="legalitas-desc">Diperlukan untuk pinjaman di atas Rp 50 juta. Daftar di DJP Online (ereg.pajak.go.id)</div>
+                <div class="legalitas-input-wrap">
+                  <input
+                    type="text"
+                    class="legalitas-number-input"
+                    id="leg-nomor-npwp"
+                    placeholder="XX.XXX.XXX.X-XXX.XXX"
+                    maxlength="20"
+                  />
+                </div>
+              </div>
+              <div class="legalitas-toggle-wrap">
+                <label class="toggle-switch" title="Sudah punya NPWP?">
+                  <input type="checkbox" id="leg-toggle-npwp" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+                <span class="toggle-label">Punya</span>
+              </div>
+            </div>
+
+            <!-- SKU / IUMK -->
+            <div class="legalitas-item no-doc" id="leg-item-sku">
+              <div class="legalitas-status-icon" id="leg-icon-sku">
+                <span class="material-symbols-rounded">pending</span>
+              </div>
+              <div class="legalitas-info">
+                <div class="legalitas-name">
+                  <span>SKU / IUMK / Izin Usaha Lainnya</span>
+                  <span class="legalitas-status-badge pending" id="leg-badge-sku">Belum Ada</span>
+                </div>
+                <div class="legalitas-desc">Surat Keterangan Usaha dari kelurahan atau izin usaha mikro kecil. Meningkatkan kepercayaan bank</div>
+                <div class="legalitas-input-wrap">
+                  <input
+                    type="text"
+                    class="legalitas-number-input"
+                    id="leg-nomor-sku"
+                    placeholder="Nomor SKU / IUMK"
+                    maxlength="40"
+                  />
+                </div>
+              </div>
+              <div class="legalitas-toggle-wrap">
+                <label class="toggle-switch" title="Sudah punya SKU/IUMK?">
+                  <input type="checkbox" id="leg-toggle-sku" />
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+                <span class="toggle-label">Punya</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tips legalitas -->
+          <div style="margin-top:16px; padding:12px 16px; background:var(--gold-light); border:1.5px solid #EDD68A; border-radius:var(--radius-sm); font-size:12.5px; color:var(--gold); font-weight:600; display:flex; gap:8px; align-items:flex-start;">
+            <span class="material-symbols-rounded" style="font-size:17px;flex-shrink:0;margin-top:1px;">tips_and_updates</span>
+            <div>
+              <strong>Tips Legalitas:</strong> Usaha dengan NIB + NPWP memiliki peluang <strong>3x lebih tinggi</strong> untuk disetujui pengajuan KUR-nya.
+              NIB dapat dibuat gratis di <a href="https://oss.go.id" target="_blank" style="color:var(--gold);text-decoration:underline;">oss.go.id</a> dalam 30 menit.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =====================================================
+           ACTION BUTTONS
+           ===================================================== -->
+      <div class="section-card">
+        <div class="section-card-body">
+          <div class="action-row">
+            <button class="btn btn-primary" id="btn-save">
+              <span class="material-symbols-rounded">save</span>
+              Simpan Perubahan
+            </button>
+            <button class="btn btn-gold" id="btn-export">
+              <span class="material-symbols-rounded">picture_as_pdf</span>
+              Ekspor Profil PDF
+            </button>
+            <button class="btn btn-outline" onclick="window.location.href='../simulasi-kur/index.html'">
+              <span class="material-symbols-rounded">calculate</span>
+              Ke Simulasi KUR
+            </button>
+            <button class="btn btn-outline" onclick="window.location.href='../Skor-Kelayakan/index.html'">
+              <span class="material-symbols-rounded">bar_chart</span>
+              Cek Skor Kelayakan
+            </button>
+            <button class="btn btn-danger" id="btn-delete-profile" style="margin-left:auto;">
+              <span class="material-symbols-rounded">delete</span>
+              Hapus Profil Ini
+            </button>
+          </div>
+          <p style="font-size:11.5px; color:var(--text-hint); margin-top:10px;">
+            <span class="material-symbols-rounded" style="font-size:13px;vertical-align:middle;">keyboard</span>
+            Tekan <kbd style="background:var(--bg-app);border:1px solid var(--border-mid);border-radius:3px;padding:1px 5px;font-size:11px;">Ctrl+S</kbd> untuk menyimpan dengan cepat
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =========================================================
+       CONFIRMATION MODAL — Hapus Profil
+       ========================================================= -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <span class="material-symbols-rounded">delete_forever</span>
+      </div>
+      <h3 class="modal-title">Hapus Profil Usaha?</h3>
+      <p class="modal-desc">Profil usaha ini akan dihapus secara permanen dari perangkat Anda. Data tidak dapat dipulihkan. Lanjutkan?</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modal-cancel">Batal</button>
+        <button class="btn btn-danger" id="modal-confirm-delete">
+          <span class="material-symbols-rounded">delete</span>
+          Ya, Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

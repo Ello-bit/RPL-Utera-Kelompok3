@@ -13,6 +13,7 @@
     { "source": "/skor-kelayakan/", "destination": "/Kelayakan-Usaha/index.html" },
     { "source": "/guardrail/", "destination": "/guardrail/index.html" },
     { "source": "/simulasi-kur/", "destination": "/simulasi-kur/index.html" },
-    { "source": "/Simulasi-KUR/", "destination": "/simulasi-kur/index.html" }
+    { "source": "/Simulasi-KUR/", "destination": "/simulasi-kur/index.html" },
+    { "source": "/profil-usaha/", "destination": "/profil-usaha/index.html" }
   ]
 }
