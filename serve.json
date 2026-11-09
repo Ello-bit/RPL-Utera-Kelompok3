@@ -12,6 +12,7 @@
     { "source": "/guardrail/", "destination": "/guardrail/index.html" },
     { "source": "/simulasi-kur/", "destination": "/simulasi-kur/index.html" },
     { "source": "/Simulasi-KUR/", "destination": "/simulasi-kur/index.html" },
-    { "source": "/profil-usaha/", "destination": "/profil-usaha/index.html" }
+    { "source": "/profil-usaha/", "destination": "/profil-usaha/index.html" },
+    { "source": "/legalitas-&-nib/", "destination": "/legalitas-&-nib/index.html" }
   ]
 }
