@@ -106,6 +106,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (badgeTotalTx) {
       badgeTotalTx.textContent = allTx.length;
     }
+
+    // Skor status badge
+    const badgeSkorStatus = document.querySelector('.badge-status-good');
+    if (badgeSkorStatus) {
+      if (allTx.length === 0) {
+        badgeSkorStatus.textContent = 'Belum Ada Transaksi';
+        badgeSkorStatus.style.background = '#F1F5F9';
+        badgeSkorStatus.style.color = '#64748B';
+      } else if (score >= 70) {
+        badgeSkorStatus.textContent = 'Layak KUR Mikro';
+        badgeSkorStatus.style.background = '';
+        badgeSkorStatus.style.color = '';
+      } else {
+        badgeSkorStatus.textContent = 'Perlu Peningkatan';
+        badgeSkorStatus.style.background = '#FEF3C7';
+        badgeSkorStatus.style.color = '#B45309';
+      }
+    }
+
+    // Chart highlight number & bars for empty account
+    const chartHighlight = document.getElementById('chart-highlight-number');
+    if (chartHighlight) {
+      chartHighlight.textContent = formatRupiah(totalIncome);
+    }
+
+    if (allTx.length === 0) {
+      document.querySelectorAll('.col-bars .bar').forEach(bar => {
+        bar.style.height = '6px';
+      });
+      const healthIndicator = document.querySelector('.chart-footer-banner');
+      if (healthIndicator) {
+        healthIndicator.innerHTML = '<div class="health-indicator"><span class="status-circle" style="background:#94A3B8;"></span><strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.</div>';
+      }
+      const meterFill = document.querySelector('.meter-bar-fill');
+      if (meterFill) meterFill.style.width = '0%';
+      const meterActive = document.querySelector('.meter-labels .text-safe');
+      if (meterActive) meterActive.textContent = 'Cicilan Aktif: Rp 0';
+      const capFormula = document.querySelector('.capacity-formula');
+      if (capFormula) capFormula.textContent = '30% x Rata-rata Laba Bersih (Rp 0)';
+    }
   }
 
   // Render Table

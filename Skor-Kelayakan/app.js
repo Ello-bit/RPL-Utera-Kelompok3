@@ -15,16 +15,53 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // --- Monthly Financial Data (6 months: May–Oct 2026) ---
-  // Represents stored transaction aggregates per month
-  const monthlyData = [
-    { bulan: 'Mei',       pemasukan: 14200000, pengeluaran: 12600000, tercatat: true },
-    { bulan: 'Juni',      pemasukan: 16500000, pengeluaran: 14800000, tercatat: true },
-    { bulan: 'Juli',      pemasukan: 18400000, pengeluaran: 19100000, tercatat: true },
-    { bulan: 'Agustus',   pemasukan: 20400000, pengeluaran: 18100000, tercatat: true },
-    { bulan: 'September', pemasukan: 22100000, pengeluaran: 19600000, tercatat: true },
-    { bulan: 'Oktober',   pemasukan: 24850000, pengeluaran: 21100000, tercatat: true },
-  ];
+  // --- Monthly Financial Data ---
+  const isLoggedIn = !!(localStorage.getItem('utera_user_email'));
+  const storedTx = (typeof window.UteraKas !== 'undefined' && window.UteraKas.load) ? window.UteraKas.load() : [];
+
+  let monthlyData = [];
+
+  if (isLoggedIn && storedTx.length === 0) {
+    // Akun baru yang belum memiliki transaksi: skor 0
+    monthlyData = [
+      { bulan: 'Bulan 1', pemasukan: 0, pengeluaran: 0, tercatat: false },
+      { bulan: 'Bulan 2', pemasukan: 0, pengeluaran: 0, tercatat: false },
+      { bulan: 'Bulan 3', pemasukan: 0, pengeluaran: 0, tercatat: false },
+      { bulan: 'Bulan 4', pemasukan: 0, pengeluaran: 0, tercatat: false },
+      { bulan: 'Bulan 5', pemasukan: 0, pengeluaran: 0, tercatat: false },
+      { bulan: 'Bulan 6', pemasukan: 0, pengeluaran: 0, tercatat: false },
+    ];
+  } else if (storedTx.length > 0) {
+    // Kelompokkan 6 bulan terakhir dari transaksi riil pengguna
+    const monthsMap = {};
+    storedTx.forEach(tx => {
+      const key = tx.date ? tx.date.slice(0, 7) : '2026-10';
+      if (!monthsMap[key]) monthsMap[key] = { pemasukan: 0, pengeluaran: 0, count: 0 };
+      if (tx.type === 'income') monthsMap[key].pemasukan += tx.amount;
+      else monthsMap[key].pengeluaran += tx.amount;
+      monthsMap[key].count++;
+    });
+    const keys = Object.keys(monthsMap).sort();
+    monthlyData = keys.slice(-6).map(k => ({
+      bulan: k,
+      pemasukan: monthsMap[k].pemasukan,
+      pengeluaran: monthsMap[k].pengeluaran,
+      tercatat: monthsMap[k].count > 0
+    }));
+    while (monthlyData.length < 6) {
+      monthlyData.unshift({ bulan: `Bulan ${monthlyData.length + 1}`, pemasukan: 0, pengeluaran: 0, tercatat: false });
+    }
+  } else {
+    // Data percontohan mode demo/tamu
+    monthlyData = [
+      { bulan: 'Mei',       pemasukan: 14200000, pengeluaran: 12600000, tercatat: true },
+      { bulan: 'Juni',      pemasukan: 16500000, pengeluaran: 14800000, tercatat: true },
+      { bulan: 'Juli',      pemasukan: 18400000, pengeluaran: 19100000, tercatat: true },
+      { bulan: 'Agustus',   pemasukan: 20400000, pengeluaran: 18100000, tercatat: true },
+      { bulan: 'September', pemasukan: 22100000, pengeluaran: 19600000, tercatat: true },
+      { bulan: 'Oktober',   pemasukan: 24850000, pengeluaran: 21100000, tercatat: true },
+    ];
+  }
 
   function formatRupiah(number) {
     return 'Rp ' + Number(number).toLocaleString('id-ID');

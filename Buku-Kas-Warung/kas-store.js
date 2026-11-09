@@ -133,9 +133,15 @@
       if (!Array.isArray(parsed)) throw new Error('not an array');
       var list = parsed.filter(isValidTx);
 
-      // Jika pengguna sudah mendaftar/login, hormati transaksi riil mereka (jangan paksa masukkan data warung kopi lama)
+      // Jika pengguna sudah mendaftar/login, bersihkan seluruh data demo/seed lama
       if (isLoggedIn) {
-        return list;
+        var userOnly = list.filter(function (t) {
+          return !t.id.startsWith('tx_seed_') && !t.id.startsWith('tx_sembako_') && !t.id.startsWith('tx_kat_');
+        });
+        if (userOnly.length !== list.length) {
+          try { global.localStorage.setItem(STORAGE_KEY, JSON.stringify(userOnly)); } catch (e) {}
+        }
+        return userOnly;
       }
 
       // Ensure multi-business seed is populated if user only had the first seed
