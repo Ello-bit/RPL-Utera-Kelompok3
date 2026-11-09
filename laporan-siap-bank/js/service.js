@@ -89,6 +89,10 @@
   /* ---------------- Data Loader ---------------- */
 
   function loadProfile() {
+    const customOwner = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_user_name') : null;
+    const customBiz = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_nama_usaha') : null;
+    const customEmail = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_user_email') : null;
+
     try {
       const raw = safeStorage('localStorage').getItem(KEY_PROFILE);
       if (raw) {
@@ -101,20 +105,33 @@
         }
       }
     } catch (e) { /* ignore */ }
+
+    if (customBiz || customOwner) {
+      return {
+        ...DEFAULT_PROFILE,
+        nama_usaha: customBiz || ('Usaha ' + (customOwner || 'Mandiri')),
+        nama_pemilik: customOwner || (customEmail ? customEmail.split('@')[0] : 'Pemilik Usaha')
+      };
+    }
     return { ...DEFAULT_PROFILE };
   }
 
   function loadTransactions() {
+    const isLoggedIn = !!(typeof window !== 'undefined' && window.localStorage && (window.localStorage.getItem('utera_user_email') || window.localStorage.getItem('utera_user_name')));
+
     try {
       const raw = safeStorage('localStorage').getItem(KEY_KAS);
-      if (raw) {
+      if (raw !== null) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+        if (Array.isArray(parsed)) {
+          if (isLoggedIn) {
+            return parsed;
+          }
+          if (parsed.length > 0) return parsed;
         }
       }
     } catch (e) { /* ignore */ }
-    return DEFAULT_TRANSACTIONS.slice();
+    return isLoggedIn ? [] : DEFAULT_TRANSACTIONS.slice();
   }
 
   function loadLegalitas() {

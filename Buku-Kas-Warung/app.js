@@ -135,9 +135,27 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   // Multi-Usaha & Kantong Kas Data Model
+  var isUserLoggedIn = !!(typeof window !== 'undefined' && window.localStorage && (window.localStorage.getItem('utera_user_email') || window.localStorage.getItem('utera_user_name')));
   var customBiz = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_nama_usaha') : null;
+  var customOwner = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_user_name') : null;
 
-  var businessProfiles = [
+  var liveNetSaldo = 0;
+  state.all.forEach(function (tx) {
+    if (tx.type === 'income') liveNetSaldo += tx.amount;
+    else liveNetSaldo -= tx.amount;
+  });
+
+  var businessProfiles = isUserLoggedIn ? [
+    {
+      id: 'biz_kopi',
+      name: customBiz || (customOwner ? ('Usaha ' + customOwner) : 'Usaha Saya'),
+      desc: 'Usaha Aktif • UMKM Mandiri',
+      icon: 'storefront',
+      iconBg: 'bg-emerald-light',
+      iconColor: 'text-emerald',
+      omzet: 'Rp ' + Number(liveNetSaldo).toLocaleString('id-ID')
+    }
+  ] : [
     {
       id: 'biz_kopi',
       name: customBiz || 'Kopi Nusantara',
@@ -167,7 +185,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   ];
 
-  var walletAccounts = [
+  var walletAccounts = isUserLoggedIn ? [
+    {
+      id: 'wal_operasional',
+      name: 'Kas Operasional Warung',
+      desc: 'Kasir & Saldo Riil Usaha',
+      icon: 'account_balance_wallet',
+      iconBg: 'bg-emerald-light',
+      iconColor: 'text-emerald',
+      saldo: 'Rp ' + Number(liveNetSaldo).toLocaleString('id-ID')
+    }
+  ] : [
     {
       id: 'wal_operasional',
       name: 'Kas Operasional Warung',

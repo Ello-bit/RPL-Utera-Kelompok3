@@ -347,7 +347,76 @@ document.addEventListener('DOMContentLoaded', () => {
           });
 
           if (error) throw error;
-          alert(`Verifikasi Login Berhasil!\nSelamat datang kembali, ${email}.`);
+
+          // Ambil metadata dari user auth
+          const meta = (data.user && data.user.user_metadata) || {};
+          let resolvedNamaPemilik = meta.owner_name || meta.full_name || namaPemilik;
+          let resolvedNamaUsaha = meta.business_name || namaUsaha;
+
+          // Ambil profil usaha asli dari database Supabase
+          try {
+            const { data: profs } = await window.uteraSupabase
+              .from('profil_usaha')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (profs && profs.length > 0 && profs[0].nama_usaha) {
+              resolvedNamaUsaha = profs[0].nama_usaha;
+              if (profs[0].nama_pemilik) resolvedNamaPemilik = profs[0].nama_pemilik;
+              localStorage.setItem('utera_profil_usaha', JSON.stringify(profs));
+            } else {
+              const initialProfile = {
+                id: 'p_' + Date.now().toString(36),
+                nama_usaha: resolvedNamaUsaha,
+                nama_pemilik: resolvedNamaPemilik,
+                jenis_usaha: 'kuliner',
+                tanggal_mulai_usaha: new Date().toISOString().split('T')[0],
+                alamat_usaha: '',
+                nomor_telepon: '',
+                deskripsi_usaha: '',
+                nib: { punya: false, nomor: '' },
+                npwp: { punya: false, nomor: '' },
+                sku: { punya: false, nomor: '' }
+              };
+              localStorage.setItem('utera_profil_usaha', JSON.stringify([initialProfile]));
+            }
+          } catch (e) {
+            console.warn('Gagal memuat profil_usaha:', e);
+          }
+
+          // Sinkronkan transaksi kas riil milik akun ini dari database Supabase
+          try {
+            const { data: txList } = await window.uteraSupabase
+              .from('transaksi_kas')
+              .select('*')
+              .order('tanggal', { ascending: true });
+
+            if (txList && txList.length > 0) {
+              const mapped = txList.map(t => ({
+                id: 'tx_sup_' + t.id,
+                date: t.tanggal,
+                type: t.tipe === 'pemasukan' ? 'income' : 'expense',
+                category: t.kategori,
+                note: t.keterangan || '',
+                amount: Number(t.nominal),
+                synced: true
+              }));
+              localStorage.setItem('utera.kas.transaksi.v1', JSON.stringify(mapped));
+            } else {
+              localStorage.setItem('utera.kas.transaksi.v1', JSON.stringify([]));
+            }
+          } catch (e) {
+            localStorage.setItem('utera.kas.transaksi.v1', JSON.stringify([]));
+          }
+
+          localStorage.setItem('utera_user_email', email);
+          localStorage.setItem('utera_nama_usaha', resolvedNamaUsaha);
+          localStorage.setItem('utera_user_name', resolvedNamaPemilik);
+
+          alert(`Verifikasi Login Berhasil!\nSelamat datang kembali, ${resolvedNamaPemilik} (${resolvedNamaUsaha}).`);
+          window.location.href = '../dashboard/';
+          return;
         }
       } else {
         // Fallback lokal jika offline
@@ -357,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`${isRegister ? 'Pendaftaran & Verifikasi Berhasil!' : 'Verifikasi Login Berhasil!'}\nSelamat datang di UTERA Finansial, ${namaPemilik || email}.`);
       }
 
-      // Simpan data identitas profil aktif ke localStorage
+      // Simpan data identitas profil aktif ke localStorage untuk registrasi baru
       const initialProfile = {
         id: 'p_' + Date.now().toString(36),
         nama_usaha: namaUsaha,

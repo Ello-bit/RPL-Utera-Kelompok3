@@ -132,6 +132,9 @@ function saveProfiles() {
     if (profiles[activeIdx].nama_usaha) {
       localStorage.setItem('utera_nama_usaha', profiles[activeIdx].nama_usaha);
     }
+    if (profiles[activeIdx].nama_pemilik) {
+      localStorage.setItem('utera_user_name', profiles[activeIdx].nama_pemilik);
+    }
     // Sync to Supabase Cloud in background
     syncToSupabase(profiles[activeIdx]);
   } catch (e) {

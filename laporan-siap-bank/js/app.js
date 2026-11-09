@@ -274,14 +274,14 @@
           </div>
           <div class="doc-grid-2">
             <dl class="doc-dl">
-              <div><dt>Nama Resmi Usaha</dt><dd><strong>${esc(profile.nama_usaha || 'Kopi Nusantara')}</strong></dd></div>
-              <div><dt>Nama Pemilik / Pengelola</dt><dd>${esc(profile.nama_pemilik || 'Budi Santoso')}</dd></div>
-              <div><dt>Sektor / Jenis Usaha</dt><dd>${esc(profile.jenis_usaha || 'Kuliner & Makanan')}</dd></div>
+              <div><dt>Nama Resmi Usaha</dt><dd><strong>${esc(profile.nama_usaha || 'Usaha Saya')}</strong></dd></div>
+              <div><dt>Nama Pemilik / Pengelola</dt><dd>${esc(profile.nama_pemilik || 'Pemilik Usaha')}</dd></div>
+              <div><dt>Sektor / Jenis Usaha</dt><dd>${esc(profile.jenis_usaha || 'Kuliner / Perdagangan')}</dd></div>
             </dl>
             <dl class="doc-dl">
-              <div><dt>Tanggal Berdiri / Mulai Usaha</dt><dd>${L.formatDateIndo(profile.tanggal_mulai_usaha) || '10 Januari 2023'}</dd></div>
-              <div><dt>Kontak / No. Telepon</dt><dd>${esc(profile.nomor_telepon || '0812-3456-7890')}</dd></div>
-              <div><dt>Lokasi / Alamat Operasional</dt><dd class="doc-address">${esc(profile.alamat_usaha || 'Jl. Malioboro No. 42, Kota Yogyakarta')}</dd></div>
+              <div><dt>Tanggal Berdiri / Mulai Usaha</dt><dd>${L.formatDateIndo(profile.tanggal_mulai_usaha) || 'Belum diisi'}</dd></div>
+              <div><dt>Kontak / No. Telepon</dt><dd>${esc(profile.nomor_telepon || 'Belum diisi')}</dd></div>
+              <div><dt>Lokasi / Alamat Operasional</dt><dd class="doc-address">${esc(profile.alamat_usaha || 'Alamat operasional usaha')}</dd></div>
             </dl>
           </div>
         </section>
@@ -454,7 +454,7 @@
             <div class="sig-box">
               <span class="sig-title">Disusun secara mandiri oleh Pemilik Usaha:</span>
               <div class="sig-space"></div>
-              <strong class="sig-name">${esc(profile.nama_pemilik || 'Budi Santoso')}</strong>
+              <strong class="sig-name">${esc(profile.nama_pemilik || 'Pemilik Usaha')}</strong>
               <span class="sig-role">Pemilik / Penanggung Jawab Usaha</span>
             </div>
             <div class="sig-box text-right">

@@ -399,7 +399,7 @@
     const p = S.getProfile();
     let localName = '';
     try { localName = localStorage.getItem('utera_nama_usaha'); } catch (e) {}
-    const name = (p && p.nama_usaha) || localName || 'Kopi Nusantara';
+    const name = (p && p.nama_usaha) || localName || (localStorage.getItem('utera_user_name') ? ('Usaha ' + localStorage.getItem('utera_user_name')) : 'Usaha Saya');
     const sideEl = $('#sidebar-business-name');
     if (sideEl) sideEl.textContent = name;
     const words = name.trim().split(/\s+/);
@@ -428,7 +428,9 @@
       render();
     } catch (e) {
       console.warn('[legalitas] using initial complete state', e);
-      state = M.createInitialCompleteState('Kopi Nusantara', 'Budi Santoso');
+      const defOwner = localStorage.getItem('utera_user_name') || 'Pemilik Usaha';
+      const defBiz = localName || ('Usaha ' + defOwner);
+      state = M.createInitialCompleteState(defBiz, defOwner);
       render();
     }
   }

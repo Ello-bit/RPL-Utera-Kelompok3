@@ -179,12 +179,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // Verdict text
   const verdict = document.getElementById('skor-verdict');
   if (verdict) {
-    if (result.category === 'Baik') {
+    if (result.total === 0) {
+      verdict.textContent = 'Belum ada transaksi kas yang dicatat. Mulai catat transaksi harian usaha Anda di Buku Kas Warung untuk mengaktifkan analisis skor kelayakan KUR.';
+    } else if (result.category === 'Baik') {
       verdict.textContent = 'Keuangan usaha Anda menunjukkan pola yang konsisten dan sehat. Usaha ini siap untuk pengajuan KUR Mikro.';
     } else if (result.category === 'Cukup') {
       verdict.textContent = 'Keuangan usaha cukup stabil, tetapi ada beberapa area yang perlu diperbaiki sebelum pengajuan KUR.';
     } else {
       verdict.textContent = 'Keuangan usaha belum cukup konsisten. Perbaiki pencatatan dan stabilitas arus kas terlebih dahulu.';
+    }
+  }
+
+  // Benchmark tag & status pill dynamic update
+  const benchmarkTag = document.querySelector('.skor-benchmark-tag');
+  if (benchmarkTag) {
+    if (result.total === 0) {
+      benchmarkTag.innerHTML = '<span class="material-symbols-rounded" style="font-size:15px;">info</span> Belum Ada Riwayat Transaksi';
+    } else if (result.total >= 70) {
+      benchmarkTag.innerHTML = `<span class="material-symbols-rounded" style="font-size:15px;">verified</span> +${result.total - 70} Poin di Atas Standar Bank`;
+    } else {
+      benchmarkTag.innerHTML = `<span class="material-symbols-rounded" style="font-size:15px;">trending_up</span> ${70 - result.total} Poin Menuju Standar Bank (70)`;
+    }
+  }
+
+  const statusPill = document.querySelector('.skor-status-pill');
+  if (statusPill) {
+    if (result.total === 0) {
+      statusPill.innerHTML = '<span class="pulse-dot" style="background:#94A3B8;"></span> Mulai Pembukuan Kas';
+    } else if (result.total >= 70) {
+      statusPill.innerHTML = '<span class="pulse-dot"></span> Siap Pengajuan KUR';
+    } else {
+      statusPill.innerHTML = '<span class="pulse-dot" style="background:#F59E0B;"></span> Perlu Peningkatan';
     }
   }
 

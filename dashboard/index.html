@@ -373,53 +373,8 @@
 
             <!-- CSS Bar Visualization (Lightweight, No Bloat) -->
             <div class="bar-chart-container" id="bar-chart-container">
-              <div class="chart-columns">
-                <!-- Col 1: Juli -->
-                <div class="chart-col">
-                  <div class="col-bars">
-                    <div class="bar bar-income" style="height: 60%;" title="Pemasukan Juli: Rp 18.2M"></div>
-                    <div class="bar bar-expense" style="height: 38%;" title="Pengeluaran Juli: Rp 8.1M"></div>
-                  </div>
-                  <span class="col-label">Juli</span>
-                </div>
-
-                <!-- Col 2: Agustus -->
-                <div class="chart-col">
-                  <div class="col-bars">
-                    <div class="bar bar-income" style="height: 68%;" title="Pemasukan Ags: Rp 20.4M"></div>
-                    <div class="bar bar-expense" style="height: 42%;" title="Pengeluaran Ags: Rp 8.8M"></div>
-                  </div>
-                  <span class="col-label">Agustus</span>
-                </div>
-
-                <!-- Col 3: September -->
-                <div class="chart-col">
-                  <div class="col-bars">
-                    <div class="bar bar-income" style="height: 75%;" title="Pemasukan Sep: Rp 22.1M"></div>
-                    <div class="bar bar-expense" style="height: 40%;" title="Pengeluaran Sep: Rp 7.9M"></div>
-                  </div>
-                  <span class="col-label">September</span>
-                </div>
-
-                <!-- Col 4: Oktober (Current Active) -->
-                <div class="chart-col active-month">
-                  <div class="col-bars">
-                    <div class="bar bar-income highlight" style="height: 88%;" title="Pemasukan Okt: Rp 24.8M">
-                      <span class="bar-tooltip">Rp 24.850.000</span>
-                    </div>
-                    <div class="bar bar-expense" style="height: 32%;" title="Pengeluaran Okt: Rp 6.4M"></div>
-                  </div>
-                  <span class="col-label font-bold">Okt (Kini)</span>
-                </div>
-
-                <!-- Col 5: Proyeksi November -->
-                <div class="chart-col projected">
-                  <div class="col-bars">
-                    <div class="bar bar-income dashed" style="height: 94%;" title="Target Nov: Rp 26.5M"></div>
-                    <div class="bar bar-expense dashed" style="height: 35%;"></div>
-                  </div>
-                  <span class="col-label">Nov (Est.)</span>
-                </div>
+              <div class="chart-columns" id="dashboard-chart-columns">
+                <!-- Dynamically rendered by app.js based on live transactions -->
               </div>
             </div>
 
@@ -572,56 +527,13 @@
             </div>
 
             <!-- Visual Donut Distribution Breakdown -->
-            <div class="distribution-bars-wrap">
-              <div class="dist-row">
-                <div class="dist-info">
-                  <span class="dist-dot bg-emerald"></span>
-                  <span class="dist-name">Kopi &amp; Minuman Dingin</span>
-                  <span class="dist-pct">58%</span>
-                </div>
-                <div class="dist-track">
-                  <div class="dist-fill bg-emerald" style="width: 58%;"></div>
-                </div>
-                <span class="dist-amount tabular-nums">Rp 14.413.000</span>
-              </div>
-
-              <div class="dist-row">
-                <div class="dist-info">
-                  <span class="dist-dot bg-gold"></span>
-                  <span class="dist-name">Makanan Ringan &amp; Roti</span>
-                  <span class="dist-pct">26%</span>
-                </div>
-                <div class="dist-track">
-                  <div class="dist-fill bg-gold" style="width: 26%;"></div>
-                </div>
-                <span class="dist-amount tabular-nums">Rp 6.461.000</span>
-              </div>
-
-              <div class="dist-row">
-                <div class="dist-info">
-                  <span class="dist-dot bg-blue"></span>
-                  <span class="dist-name">Biji Kopi Kemasan (Retail)</span>
-                  <span class="dist-pct">16%</span>
-                </div>
-                <div class="dist-track">
-                  <div class="dist-fill bg-blue" style="width: 16%;"></div>
-                </div>
-                <span class="dist-amount tabular-nums">Rp 3.976.000</span>
-              </div>
+            <div class="distribution-bars-wrap" id="distribution-bars-wrap">
+              <!-- Dynamically rendered by app.js based on live categories -->
             </div>
 
             <!-- Kelayakan Dokumen Legalitas (Pilar 4 UTERA) -->
-            <div class="legalitas-status-card">
-              <div class="legalitas-header">
-                <strong>Status Kelengkapan Berkas KUR</strong>
-                <span class="badge-pill-progress">3 dari 4 Siap</span>
-              </div>
-              <ul class="checklist-legalitas">
-                <li class="checked">✓ NIB (Nomor Induk Berusaha) OSS RBA</li>
-                <li class="checked">✓ Riwayat Kas Warung &gt; 3 Bulan Terstruktur</li>
-                <li class="checked">✓ Rekening Bank Khusus Usaha Terpisah</li>
-                <li class="pending">○ Sertifikasi Halal / PIRT (Dalam Proses)</li>
-              </ul>
+            <div class="legalitas-status-card" id="legalitas-status-card">
+              <!-- Dynamically rendered by app.js based on user legalitas -->
             </div>
 
           </div>

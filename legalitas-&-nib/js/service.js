@@ -138,8 +138,10 @@
     } catch (e) { /* recreate fresh */ }
 
     const prof = readProfiles()[0];
-    const namaUsaha = (prof && prof.nama_usaha) || 'Kopi Nusantara';
-    const namaPemilik = (prof && prof.nama_pemilik) || 'Budi Santoso';
+    const localOwner = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_user_name') : null;
+    const localBiz = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_nama_usaha') : null;
+    const namaUsaha = (prof && prof.nama_usaha) || localBiz || 'Usaha Saya';
+    const namaPemilik = (prof && prof.nama_pemilik) || localOwner || 'Pemilik Usaha';
 
     const fresh = isDemo()
       ? Mock.scenarios[source].build(new Date())

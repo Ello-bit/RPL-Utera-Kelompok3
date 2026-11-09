@@ -707,6 +707,10 @@
         const elBizName = document.querySelector('.business-title');
         if (elBizName) elBizName.textContent = bizName;
       }
+      const propApplicant = document.getElementById('proposal-applicant-name');
+      if (propApplicant && userName) {
+        propApplicant.textContent = `${userName} (${bizName || 'UMKM Mandiri'})`;
+      }
     } catch (e) {}
   }
 
