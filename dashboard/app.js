@@ -71,34 +71,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Calculate & Update Metrics
   function recalculateMetrics() {
-    let baseIncome = 22975000;  // Base historical month income
-    let baseExpense = 5750000;  // Base historical month expense
+    const allTx = (typeof Kas !== 'undefined' && Kas.load) ? Kas.load() : [];
+    let totalIncome = 0;
+    let totalExpense = 0;
 
-    // Add recent ledger
-    transactions.forEach(tx => {
+    allTx.forEach(tx => {
       if (tx.type === 'income') {
-        baseIncome += tx.amount;
+        totalIncome += tx.amount;
       } else {
-        baseExpense += tx.amount;
+        totalExpense += tx.amount;
       }
     });
 
-    const netProfit = baseIncome - baseExpense;
-    const maxInstallment30Pct = Math.round(netProfit * 0.30);
+    const netProfit = totalIncome - totalExpense;
+    const maxInstallment30Pct = Math.max(0, Math.round(netProfit * 0.30));
 
     // Dynamic PRD Score Formula (Pillar 2: Consistency + Cashflow Health)
-    // 50 pts consistency + 34 pts profit margin ratio (caps at 100)
-    const marginRatio = netProfit / (baseIncome || 1);
-    const score = Math.min(96, Math.max(65, Math.round(50 + (marginRatio * 45))));
+    let score = 50;
+    if (totalIncome > 0) {
+      const marginRatio = netProfit / totalIncome;
+      score = Math.min(96, Math.max(40, Math.round(50 + (marginRatio * 45))));
+    } else {
+      score = allTx.length > 0 ? 60 : 50;
+    }
 
-    if (valPemasukan) valPemasukan.textContent = formatRupiah(baseIncome);
-    if (valPengeluaran) valPengeluaran.textContent = formatRupiah(baseExpense);
+    if (valPemasukan) valPemasukan.textContent = formatRupiah(totalIncome);
+    if (valPengeluaran) valPengeluaran.textContent = formatRupiah(totalExpense);
     if (valSaldo) valSaldo.textContent = formatRupiah(netProfit);
     if (valMaxCicilan) valMaxCicilan.textContent = formatRupiah(maxInstallment30Pct) + ' / bln';
     if (valSkor) valSkor.textContent = score;
     if (navPillSkor) navPillSkor.textContent = score;
     if (badgeTotalTx) {
-      badgeTotalTx.textContent = (typeof Kas !== 'undefined' && Kas.load) ? Kas.load().length : transactions.length;
+      badgeTotalTx.textContent = allTx.length;
     }
   }
 
@@ -328,7 +332,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Sinkronkan Nama Pemilik & Usaha Pengguna
+  function renderUserProfile() {
+    let userName = localStorage.getItem('utera_user_name');
+    let bizName = localStorage.getItem('utera_nama_usaha');
+    const userEmail = localStorage.getItem('utera_user_email');
+
+    try {
+      const profRaw = localStorage.getItem('utera_profil_usaha');
+      if (profRaw) {
+        const profs = JSON.parse(profRaw);
+        if (Array.isArray(profs) && profs[0]) {
+          if (profs[0].nama_pemilik) userName = profs[0].nama_pemilik;
+          if (profs[0].nama_usaha) bizName = profs[0].nama_usaha;
+        }
+      }
+    } catch (e) {}
+
+    if (!userName && userEmail) {
+      userName = userEmail.split('@')[0];
+    }
+
+    if (userName) {
+      const elUserName = document.querySelector('.user-name-label');
+      if (elUserName) elUserName.textContent = userName;
+
+      const elAvatar = document.querySelector('.user-avatar-circle');
+      if (elAvatar) {
+        const initials = userName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        elAvatar.textContent = initials || 'U';
+      }
+    }
+
+    if (bizName) {
+      const elBizName = document.getElementById('sidebar-business-name');
+      if (elBizName) elBizName.textContent = bizName;
+    }
+  }
+
   // Initial Boot
+  renderUserProfile();
   fillModalCategories('income');
   renderTransactions();
   recalculateMetrics();

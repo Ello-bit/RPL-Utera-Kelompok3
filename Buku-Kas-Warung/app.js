@@ -135,11 +135,13 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   // Multi-Usaha & Kantong Kas Data Model
+  var customBiz = (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem('utera_nama_usaha') : null;
+
   var businessProfiles = [
     {
       id: 'biz_kopi',
-      name: 'Kopi Nusantara',
-      desc: 'Usaha Aktif • UMKM Kuliner',
+      name: customBiz || 'Kopi Nusantara',
+      desc: customBiz ? 'Usaha Aktif • UMKM Mandiri' : 'Usaha Aktif • UMKM Kuliner',
       icon: 'local_cafe',
       iconBg: 'bg-emerald-light',
       iconColor: 'text-emerald',

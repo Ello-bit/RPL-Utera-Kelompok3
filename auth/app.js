@@ -144,6 +144,20 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Memproses...';
       }
 
+      let namaPemilik = '';
+      let namaUsaha = '';
+      if (fullname.includes('-')) {
+        const parts = fullname.split('-');
+        namaPemilik = parts[0].trim();
+        namaUsaha = parts.slice(1).join('-').trim();
+      } else if (fullname) {
+        namaPemilik = fullname;
+        namaUsaha = fullname;
+      } else {
+        namaPemilik = email.split('@')[0];
+        namaUsaha = 'Usaha ' + namaPemilik;
+      }
+
       try {
         if (window.uteraSupabase) {
           if (isRegisterMode) {
@@ -153,7 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
               password: password,
               options: {
                 data: {
-                  full_name: fullname
+                  full_name: fullname,
+                  business_name: namaUsaha,
+                  owner_name: namaPemilik
                 }
               }
             });
@@ -161,14 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
 
             // Buat record profil_usaha awal di database Supabase
-            if (fullname) {
-              await window.uteraSupabase.from('profil_usaha').insert([{
-                nama_usaha: fullname,
-                nama_pemilik: fullname.split('-')[0].trim() || fullname
-              }]);
-            }
+            await window.uteraSupabase.from('profil_usaha').insert([{
+              nama_usaha: namaUsaha,
+              nama_pemilik: namaPemilik,
+              jenis_usaha: 'kuliner',
+              tanggal_mulai_usaha: new Date().toISOString().split('T')[0]
+            }]);
 
-            alert(`Pendaftaran Akun Berhasil!\nSelamat datang di UTERA Finansial, ${email}. Akun Anda telah terdaftar di Supabase Cloud.`);
+            // Untuk akun baru yang baru didaftarkan, mulai pembukuan kas baru (kosongkan transaksi warung lama)
+            localStorage.setItem('utera.kas.transaksi.v1', JSON.stringify([]));
+
+            alert(`Pendaftaran Akun Berhasil!\nSelamat datang di UTERA Finansial, ${namaPemilik} (${namaUsaha}). Akun Anda telah aktif di Supabase Cloud.`);
           } else {
             // Supabase Sign In
             const { data, error } = await window.uteraSupabase.auth.signInWithPassword({
@@ -181,11 +200,30 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } else {
           // Fallback lokal jika offline
-          alert(`${isRegisterMode ? 'Pendaftaran Akun Berhasil!' : 'Berhasil Masuk!'}\nSelamat datang di UTERA Finansial, ${email}.`);
+          if (isRegisterMode) {
+            localStorage.setItem('utera.kas.transaksi.v1', JSON.stringify([]));
+          }
+          alert(`${isRegisterMode ? 'Pendaftaran Akun Berhasil!' : 'Berhasil Masuk!'}\nSelamat datang di UTERA Finansial, ${namaPemilik || email}.`);
         }
 
+        // Simpan data identitas profil aktif ke localStorage
+        const initialProfile = {
+          id: 'p_' + Date.now().toString(36),
+          nama_usaha: namaUsaha,
+          nama_pemilik: namaPemilik,
+          jenis_usaha: 'kuliner',
+          tanggal_mulai_usaha: new Date().toISOString().split('T')[0],
+          alamat_usaha: '',
+          nomor_telepon: '',
+          deskripsi_usaha: '',
+          nib: { punya: false, nomor: '' },
+          npwp: { punya: false, nomor: '' },
+          sku: { punya: false, nomor: '' }
+        };
+        localStorage.setItem('utera_profil_usaha', JSON.stringify([initialProfile]));
         localStorage.setItem('utera_user_email', email);
-        if (fullname) localStorage.setItem('utera_nama_usaha', fullname);
+        localStorage.setItem('utera_nama_usaha', namaUsaha);
+        localStorage.setItem('utera_user_name', namaPemilik);
         window.location.href = '../dashboard/';
       } catch (err) {
         alert('Gagal: ' + (err.message || 'Terjadi kesalahan saat menghubungi server Supabase.'));

@@ -501,6 +501,35 @@
 
     setupEvents();
     updateUI();
+
+    // Dynamic User Profile Sync
+    try {
+      let userName = localStorage.getItem('utera_user_name');
+      let bizName = localStorage.getItem('utera_nama_usaha');
+      const userEmail = localStorage.getItem('utera_user_email');
+      const profRaw = localStorage.getItem('utera_profil_usaha');
+      if (profRaw) {
+        const profs = JSON.parse(profRaw);
+        if (Array.isArray(profs) && profs[0]) {
+          if (profs[0].nama_pemilik) userName = profs[0].nama_pemilik;
+          if (profs[0].nama_usaha) bizName = profs[0].nama_usaha;
+        }
+      }
+      if (!userName && userEmail) userName = userEmail.split('@')[0];
+      if (userName) {
+        const elUserName = document.querySelector('.user-name-label');
+        if (elUserName) elUserName.textContent = userName;
+        const elAvatar = document.querySelector('.user-avatar-circle');
+        if (elAvatar) {
+          const initials = userName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          elAvatar.textContent = initials || 'U';
+        }
+      }
+      if (bizName) {
+        const elBizName = document.querySelector('.business-title');
+        if (elBizName) elBizName.textContent = bizName;
+      }
+    } catch (e) {}
   }
 
   // Run on DOM ready
