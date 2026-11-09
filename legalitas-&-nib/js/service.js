@@ -245,6 +245,21 @@
       if (nibDoc) { nibDoc.nomor = check.value.nomor; nibDoc.diperbarui_pada = state.nib.diperbarui_pada; }
       writeState(state);
       syncNibToProfile(check.value.nomor);
+
+      // Sync NIB to Supabase Cloud Database
+      if (global.uteraSupabase) {
+        global.uteraSupabase.from('legalitas_dokumen').insert([{
+          kategori: 'nib',
+          nama_dokumen: 'Nomor Induk Berusaha (NIB)',
+          nomor_dokumen: check.value.nomor,
+          tanggal_terbit: input.tanggal_terbit || null
+        }]).then(function() {
+          console.log('☁️ NIB berhasil tersimpan di Supabase Cloud.');
+        }).catch(function(e) {
+          console.warn('Supabase NIB sync warning:', e);
+        });
+      }
+
       return clone(state);
     },
 
@@ -278,6 +293,21 @@
       doc.berlaku_hingga = input.berlaku_hingga || null;
       doc.diperbarui_pada = new Date().toISOString();
       writeState(state);
+
+      // Sync Document to Supabase Cloud Database
+      if (global.uteraSupabase) {
+        global.uteraSupabase.from('legalitas_dokumen').insert([{
+          kategori: doc.kategori || 'dokumen',
+          nama_dokumen: doc.nama || 'Dokumen Usaha',
+          nomor_dokumen: doc.nomor || null,
+          masa_berlaku: doc.berlaku_hingga || null
+        }]).then(function() {
+          console.log('☁️ Dokumen legalitas tersimpan di Supabase Cloud.');
+        }).catch(function(e) {
+          console.warn('Supabase document sync warning:', e);
+        });
+      }
+
       return clone(state);
     },
 

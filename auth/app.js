@@ -130,14 +130,71 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Form Submit Demonstration
+  // Form Submit Handler with Supabase Cloud Auth
   if (authForm) {
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('input-email').value;
-      const actionText = isRegisterMode ? 'Pendaftaran Akun Berhasil!' : 'Berhasil Masuk!';
-      alert(`${actionText}\nSelamat datang di UTERA Finansial, ${email}. Anda akan diarahkan ke dasbor.`);
-      window.location.href = '../dashboard/';
+      const email = document.getElementById('input-email').value.trim();
+      const password = document.getElementById('input-password').value;
+      const fullname = document.getElementById('input-fullname') ? document.getElementById('input-fullname').value.trim() : '';
+      const submitBtn = document.getElementById('btn-submit');
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Memproses...';
+      }
+
+      try {
+        if (window.uteraSupabase) {
+          if (isRegisterMode) {
+            // Supabase Sign Up
+            const { data, error } = await window.uteraSupabase.auth.signUp({
+              email: email,
+              password: password,
+              options: {
+                data: {
+                  full_name: fullname
+                }
+              }
+            });
+
+            if (error) throw error;
+
+            // Buat record profil_usaha awal di database Supabase
+            if (fullname) {
+              await window.uteraSupabase.from('profil_usaha').insert([{
+                nama_usaha: fullname,
+                nama_pemilik: fullname.split('-')[0].trim() || fullname
+              }]);
+            }
+
+            alert(`Pendaftaran Akun Berhasil!\nSelamat datang di UTERA Finansial, ${email}. Akun Anda telah terdaftar di Supabase Cloud.`);
+          } else {
+            // Supabase Sign In
+            const { data, error } = await window.uteraSupabase.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
+
+            if (error) throw error;
+            alert(`Berhasil Masuk!\nSelamat datang kembali, ${email}.`);
+          }
+        } else {
+          // Fallback lokal jika offline
+          alert(`${isRegisterMode ? 'Pendaftaran Akun Berhasil!' : 'Berhasil Masuk!'}\nSelamat datang di UTERA Finansial, ${email}.`);
+        }
+
+        localStorage.setItem('utera_user_email', email);
+        if (fullname) localStorage.setItem('utera_nama_usaha', fullname);
+        window.location.href = '../dashboard/';
+      } catch (err) {
+        alert('Gagal: ' + (err.message || 'Terjadi kesalahan saat menghubungi server Supabase.'));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRegisterMode ? 'Daftar Akun Baru' : 'Masuk ke Akun';
+        }
+      }
     });
   }
 });

@@ -546,6 +546,17 @@
           localStorage.setItem('utera_saved_kur_sim', JSON.stringify(simData));
           // Synchronize with shared guardrail storage for dashboard preview
           localStorage.setItem('utera_saved_guardrail', JSON.stringify(simData));
+          if (window.uteraSupabase) {
+            window.uteraSupabase.from('profil_usaha').select('id').limit(1).then(({ data }) => {
+              const profilId = data && data[0] ? data[0].id : null;
+              window.uteraSupabase.from('legalitas_dokumen').insert([{
+                profil_id: profilId,
+                kategori: 'simulasi_kur',
+                nama_dokumen: 'Simulasi KUR ' + simData.type + ' (Rp ' + simData.amount.toLocaleString('id-ID') + ')',
+                nomor_dokumen: 'KUR-' + Date.now().toString(36).toUpperCase()
+              }]).then(() => console.log('☁️ Simulasi KUR tersimpan di Supabase Cloud.')).catch(() => {});
+            }).catch(() => {});
+          }
         } catch (e) {
           console.warn('Storage save error:', e);
         }
