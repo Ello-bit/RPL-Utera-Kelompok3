@@ -285,7 +285,8 @@ function renderLegalitas(key, data) {
   const item = qs(`#leg-item-${key}`);
   const toggle = qs(`#leg-toggle-${key}`);
   const numInput = qs(`#leg-nomor-${key}`);
-  const icon = qs(`#leg-icon-${key}`);
+  const iconWrap = qs(`#leg-icon-${key}`);
+  const badge = qs(`#leg-badge-${key}`);
 
   if (!item || !toggle) return;
 
@@ -294,10 +295,22 @@ function renderLegalitas(key, data) {
 
   if (data.punya) {
     item.className = 'legalitas-item has-doc';
-    icon.textContent = 'verified';
+    if (iconWrap) {
+      iconWrap.innerHTML = '<span class="material-symbols-rounded">verified</span>';
+    }
+    if (badge) {
+      badge.textContent = 'Terverifikasi';
+      badge.className = 'legalitas-status-badge verified';
+    }
   } else {
     item.className = 'legalitas-item no-doc';
-    icon.textContent = 'pending';
+    if (iconWrap) {
+      iconWrap.innerHTML = '<span class="material-symbols-rounded">pending</span>';
+    }
+    if (badge) {
+      badge.textContent = 'Belum Ada';
+      badge.className = 'legalitas-status-badge pending';
+    }
   }
 }
 

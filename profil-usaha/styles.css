@@ -562,10 +562,12 @@ select.form-control {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 16px;
   border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-md);
   transition: border-color var(--transition), background var(--transition);
+  min-width: 0;
+  box-sizing: border-box;
 }
 .legalitas-item.has-doc { border-color: var(--border-mid); background: var(--primary-light); }
 .legalitas-item.no-doc { border-color: var(--border-subtle); background: #FAFAFA; }
@@ -576,18 +578,50 @@ select.form-control {
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   transition: all var(--transition);
+  overflow: hidden;
 }
 .has-doc .legalitas-status-icon { background: var(--emerald); color: #fff; }
 .no-doc .legalitas-status-icon { background: var(--border-subtle); color: var(--text-hint); }
-.legalitas-status-icon .material-symbols-rounded { font-size: 20px; }
+.legalitas-status-icon .material-symbols-rounded { font-size: 22px; line-height: 1; }
 
-.legalitas-info { flex: 1; }
+.legalitas-info {
+  flex: 1;
+  min-width: 0;
+}
 .legalitas-name {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-heading);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.legalitas-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.legalitas-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.legalitas-status-badge.verified {
+  background: rgba(16, 185, 129, 0.15);
+  color: #065F46;
+}
+.legalitas-status-badge.pending {
+  background: rgba(107, 126, 116, 0.12);
+  color: var(--text-muted);
+}
+.legalitas-desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+  word-break: break-word;
+}
 .legalitas-input-wrap {
   margin-top: 8px;
   display: none;
@@ -595,13 +629,14 @@ select.form-control {
 .has-doc .legalitas-input-wrap { display: block; }
 .legalitas-number-input {
   width: 100%;
-  padding: 7px 11px;
+  padding: 8px 12px;
   border: 1.5px solid var(--border-mid);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   color: var(--text-heading);
   background: var(--bg-card);
+  box-sizing: border-box;
 }
 .legalitas-number-input:focus { outline: none; border-color: var(--primary); }
 
