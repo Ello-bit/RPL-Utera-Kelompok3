@@ -31,43 +31,43 @@
         </button>
       </div>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" aria-label="Menu Utama Dashboard">
         <div class="nav-section">
-          <div class="nav-section-title">Utama</div>
+          <div class="nav-section-title">UTAMA</div>
           <ul class="nav-list">
-            <li><a href="../dashboard/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">grid_view</span><span>Ringkasan Kas</span></a></li>
-            <li><a href="../Buku-Kas-Warung/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span><span>Buku Kas Warung</span></a></li>
-            <li><a href="../Skor-Kelayakan/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">verified</span><span>Skor Kelayakan</span></a></li>
-            <li><a href="../guardrail/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">shield</span><span>Guardrail 30% Kas</span></a></li>
+            <li><a href="../dashboard/index.html" class="nav-item" data-page="ringkasan"><span class="material-symbols-rounded" aria-hidden="true">grid_view</span><span>Ringkasan Kas</span></a></li>
+            <li><a href="../Buku-Kas-Warung/index.html" class="nav-item" data-page="transaksi"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span><span>Buku Kas Warung</span><span class="nav-badge" id="badge-total-tx">0</span></a></li>
+            <li><a href="../Skor-Kelayakan/index.html" class="nav-item" data-page="skor"><span class="material-symbols-rounded" aria-hidden="true">verified</span><span>Skor Kelayakan</span><span class="nav-pill-good" id="nav-pill-skor">0</span></a></li>
+            <li><a href="../guardrail/index.html" class="nav-item" data-page="guardrail"><span class="material-symbols-rounded" aria-hidden="true">shield</span><span>Guardrail 30% Kas</span></a></li>
           </ul>
         </div>
         <div class="nav-section">
-          <div class="nav-section-title">Layanan &amp; Bank</div>
+          <div class="nav-section-title">LAYANAN &amp; BANK</div>
           <ul class="nav-list">
-            <li><a href="../simulasi-kur/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">account_balance</span><span>Simulasi KUR 2026</span></a></li>
-            <li><a href="index.html" class="nav-item active" aria-current="page"><span class="material-symbols-rounded" aria-hidden="true">description</span><span>Legalitas &amp; NIB</span></a></li>
-            <li><a href="../laporan-siap-bank/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">monitoring</span><span>Laporan Siap Bank</span></a></li>
+            <li><a href="../simulasi-kur/index.html" class="nav-item" data-page="kur"><span class="material-symbols-rounded" aria-hidden="true">account_balance</span><span>Simulasi KUR 2026</span></a></li>
+            <li><a href="#" class="nav-item active" data-page="legalitas" aria-current="page"><span class="material-symbols-rounded" aria-hidden="true">description</span><span>Legalitas &amp; NIB</span><span class="nav-pill-info">OSS RBA</span></a></li>
+            <li><a href="../laporan-siap-bank/index.html" class="nav-item" data-page="laporan"><span class="material-symbols-rounded" aria-hidden="true">monitoring</span><span>Laporan Siap Bank</span></a></li>
           </ul>
         </div>
         <div class="nav-section">
-          <div class="nav-section-title">Pengaturan</div>
+          <div class="nav-section-title">PENGATURAN</div>
           <ul class="nav-list">
-            <li><a href="../profil-usaha/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">storefront</span><span>Profil Usaha</span></a></li>
-            <li><a href="../landing-page/index.html" class="nav-item"><span class="material-symbols-rounded" aria-hidden="true">open_in_new</span><span>Halaman Utama</span></a></li>
+            <li><a href="../profil-usaha/index.html" class="nav-item" data-page="profil-usaha"><span class="material-symbols-rounded" aria-hidden="true">storefront</span><span>Profil Usaha</span></a></li>
+            <li><a href="../landing-page/index.html" class="nav-item" title="Kembali ke Beranda"><span class="material-symbols-rounded" aria-hidden="true">open_in_new</span><span>Halaman Utama</span></a></li>
           </ul>
         </div>
       </nav>
 
       <div class="sidebar-footer">
-        <a href="../profil-usaha/index.html" class="business-profile-card" title="Lihat Profil Usaha">
+        <a href="../profil-usaha/index.html" class="business-profile-card" style="text-decoration:none;" title="Lihat Profil Usaha">
           <div class="business-avatar" id="sidebar-initials" aria-hidden="true">U</div>
           <div class="business-details">
-            <span class="business-title" id="sidebar-business-name">Profil Usaha</span>
-            <span class="business-badge">Kelola profil</span>
+            <span class="business-title" id="sidebar-business-name">Kopi Nusantara</span>
+            <span class="business-badge">UMKM Kuliner Mandiri</span>
           </div>
         </a>
-        <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun" style="margin-top:8px; display:flex; align-items:center; gap:8px; padding:8px 12px; color:#DC2626; text-decoration:none; font-size:0.8125rem; font-weight:600; border-radius:8px;">
-          <span class="material-symbols-rounded" style="font-size:18px;">logout</span>
+        <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun">
+          <span class="material-symbols-rounded">logout</span>
           <span>Keluar</span>
         </a>
       </div>

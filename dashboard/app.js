@@ -140,14 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const meterActive = document.querySelector('.meter-labels .text-safe');
     const meterMax = document.querySelector('.meter-labels span:last-child');
 
+    let savedInstallment = 0;
+    try {
+      const savedRaw = localStorage.getItem('utera_saved_guardrail');
+      if (savedRaw) {
+        const s = JSON.parse(savedRaw);
+        if (s && s.installment) savedInstallment = Number(s.installment) || 0;
+      }
+    } catch (e) {}
+
     if (allTx.length === 0 || netProfit <= 0) {
       if (meterFill) meterFill.style.width = '0%';
       if (meterActive) meterActive.textContent = 'Cicilan Aktif: Rp 0';
       if (meterMax) meterMax.textContent = 'Maks Rp 0';
     } else {
-      if (meterFill) meterFill.style.width = '35%';
-      if (meterActive) meterActive.textContent = 'Cicilan Aktif: ' + formatRupiah(Math.round(maxInstallment30Pct * 0.35));
       if (meterMax) meterMax.textContent = 'Maks ' + formatRupiah(maxInstallment30Pct);
+      if (savedInstallment > 0) {
+        const fillPct = Math.min(100, Math.round((savedInstallment / maxInstallment30Pct) * 100));
+        if (meterFill) {
+          meterFill.style.width = fillPct + '%';
+          meterFill.className = fillPct <= 100 ? 'meter-bar-fill safe' : 'meter-bar-fill danger';
+        }
+        if (meterActive) meterActive.textContent = 'Simulasi Teruji: ' + formatRupiah(savedInstallment);
+      } else {
+        if (meterFill) meterFill.style.width = '0%';
+        if (meterActive) meterActive.textContent = 'Cicilan Aktif: Rp 0';
+      }
     }
 
     // Dynamic Guardrail Financing Status Cards
@@ -162,9 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
           briStatus.textContent = '○ Belum Ada Saldo Kas';
         } else if (maxInstallment30Pct >= 2216000) {
           briStatus.className = 'loan-status text-emerald';
+          briStatus.style.color = '';
           briStatus.textContent = '✓ Masuk Batas Kas';
         } else {
           briStatus.className = 'loan-status text-terracotta';
+          briStatus.style.color = '';
           briStatus.textContent = '⚠️ Melebihi Batas 30%';
         }
       }
@@ -178,9 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
           kopStatus.textContent = '○ Belum Ada Saldo Kas';
         } else if (maxInstallment30Pct >= 2291000) {
           kopStatus.className = 'loan-status text-emerald';
+          kopStatus.style.color = '';
           kopStatus.textContent = '✓ Masuk Batas Kas';
         } else {
           kopStatus.className = 'loan-status text-terracotta';
+          kopStatus.style.color = '';
           kopStatus.textContent = '⚠️ Melebihi Batas 30%';
         }
       }
@@ -196,6 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMonthlyCashflowChart(allTx, mode = 'omzet') {
     const container = document.getElementById('dashboard-chart-columns');
     if (!container) return;
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
     if (!allTx || allTx.length === 0) {
       container.innerHTML = `
@@ -228,21 +252,55 @@ document.addEventListener('DOMContentLoaded', () => {
       if (healthBanner) {
         healthBanner.innerHTML = '<div class="health-indicator"><span class="status-circle" style="background:#94A3B8;"></span><strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.</div>';
       }
+      const chartHighlight = document.getElementById('chart-highlight-number');
+      if (chartHighlight) chartHighlight.textContent = 'Rp 0';
       return;
     }
 
-    // Group by Month (YYYY-MM)
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const monthsMap = {};
+    // Determine 4-month timeline ending with current month
+    let refYear = 2026;
+    let refMonth = 10; // default October 2026 based on project context
+    
+    // Find latest transaction date
     allTx.forEach(tx => {
-      const key = tx.date ? tx.date.slice(0, 7) : '2026-10';
+      if (tx.date) {
+        const parts = tx.date.split('-');
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(y) && !isNaN(m)) {
+          if (y > refYear || (y === refYear && m > refMonth)) {
+            refYear = y;
+            refMonth = m;
+          }
+        }
+      }
+    });
+
+    // Build array of 4 consecutive months leading to (refYear, refMonth)
+    const displayKeys = [];
+    for (let offset = 3; offset >= 0; offset--) {
+      let dMonth = refMonth - offset;
+      let dYear = refYear;
+      while (dMonth <= 0) {
+        dMonth += 12;
+        dYear -= 1;
+      }
+      const key = `${dYear}-${String(dMonth).padStart(2, '0')}`;
+      displayKeys.push(key);
+    }
+
+    // Group actual transactions into monthsMap
+    const monthsMap = {};
+    displayKeys.forEach(k => {
+      monthsMap[k] = { key: k, income: 0, expense: 0 };
+    });
+
+    allTx.forEach(tx => {
+      const key = tx.date ? tx.date.slice(0, 7) : `${refYear}-${String(refMonth).padStart(2, '0')}`;
       if (!monthsMap[key]) monthsMap[key] = { key, income: 0, expense: 0 };
       if (tx.type === 'income') monthsMap[key].income += tx.amount;
       else monthsMap[key].expense += tx.amount;
     });
-
-    const sortedKeys = Object.keys(monthsMap).sort();
-    const displayKeys = sortedKeys.slice(-4);
 
     let maxVal = 100000;
     displayKeys.forEach(k => {
@@ -254,18 +312,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const m = monthsMap[k];
       const isLatest = idx === displayKeys.length - 1;
       const parts = k.split('-');
-      const mName = monthNames[parseInt(parts[1], 10) - 1] || k;
+      const mIdx = parseInt(parts[1], 10) - 1;
+      const mName = monthNames[mIdx] || k;
       const label = isLatest ? `${mName} (Kini)` : mName;
 
-      const incHeight = Math.max(8, Math.min(94, Math.round((m.income / maxVal) * 94)));
-      const expHeight = Math.max(8, Math.min(94, Math.round((m.expense / maxVal) * 94)));
       const net = m.income - m.expense;
       const displayVal = mode === 'omzet' ? m.income : net;
+
+      // Bar heights in percent (min 6% for zero so baseline is visible)
+      const incBarValue = mode === 'omzet' ? m.income : Math.max(0, net);
+      const incHeight = incBarValue > 0 ? Math.max(8, Math.min(94, Math.round((incBarValue / maxVal) * 94))) : 6;
+      const expHeight = m.expense > 0 ? Math.max(8, Math.min(94, Math.round((m.expense / maxVal) * 94))) : 6;
 
       return `
         <div class="chart-col ${isLatest ? 'active-month' : ''}">
           <div class="col-bars">
-            <div class="bar bar-income ${isLatest ? 'highlight' : ''}" style="height:${incHeight}%;" title="Pemasukan ${mName}: ${formatRupiah(m.income)}">
+            <div class="bar bar-income ${isLatest ? 'highlight' : ''}" style="height:${incHeight}%;" title="${mode === 'omzet' ? 'Pemasukan' : 'Laba Bersih'} ${mName}: ${formatRupiah(displayVal)}">
               ${isLatest ? `<span class="bar-tooltip">${formatRupiah(displayVal)}</span>` : ''}
             </div>
             <div class="bar bar-expense" style="height:${expHeight}%;" title="Pengeluaran ${mName}: ${formatRupiah(m.expense)}"></div>
@@ -276,45 +338,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('') + `
       <div class="chart-col projected">
         <div class="col-bars">
-          <div class="bar bar-income dashed" style="height: 50%;" title="Proyeksi Pertumbuhan"></div>
-          <div class="bar bar-expense dashed" style="height: 30%;"></div>
+          <div class="bar bar-income dashed" style="height: 52%;" title="Proyeksi Pertumbuhan Target"></div>
+          <div class="bar bar-expense dashed" style="height: 32%;"></div>
         </div>
         <span class="col-label">Target (Est.)</span>
       </div>
     `;
 
+    // Update Big Highlight Number
+    const latestMonth = monthsMap[displayKeys[displayKeys.length - 1]];
+    const chartHighlight = document.getElementById('chart-highlight-number');
+    if (chartHighlight) {
+      chartHighlight.textContent = formatRupiah(mode === 'omzet' ? latestMonth.income : (latestMonth.income - latestMonth.expense));
+    }
+
     // Trend Pill
     const trendPill = document.querySelector('.chart-summary-header .trend-pill');
     if (trendPill) {
-      if (displayKeys.length >= 2) {
-        const cur = monthsMap[displayKeys[displayKeys.length - 1]].income;
-        const prev = monthsMap[displayKeys[displayKeys.length - 2]].income;
-        if (prev > 0) {
-          const pct = Math.round(((cur - prev) / prev) * 100);
-          const isUp = pct >= 0;
-          trendPill.className = `trend-pill ${isUp ? 'trend-up' : 'trend-down'}`;
-          trendPill.innerHTML = `<span class="material-symbols-rounded trend-icon">${isUp ? 'trending_up' : 'trending_down'}</span><span>${isUp ? '+' : ''}${pct}% dibanding bulan lalu</span>`;
-        } else {
-          trendPill.innerHTML = '<span class="material-symbols-rounded trend-icon">trending_up</span><span>Omzet bulan pertama tercatat</span>';
-        }
+      const curVal = mode === 'omzet' ? latestMonth.income : (latestMonth.income - latestMonth.expense);
+      const prevMonth = monthsMap[displayKeys[displayKeys.length - 2]];
+      const prevVal = prevMonth ? (mode === 'omzet' ? prevMonth.income : (prevMonth.income - prevMonth.expense)) : 0;
+      const prevName = prevMonth ? (monthNames[parseInt(prevMonth.key.split('-')[1], 10) - 1] || 'bulan lalu') : 'bulan lalu';
+
+      if (prevVal > 0) {
+        const pct = Math.round(((curVal - prevVal) / prevVal) * 100);
+        const isUp = pct >= 0;
+        trendPill.className = `trend-pill ${isUp ? 'trend-up' : 'trend-down'}`;
+        trendPill.innerHTML = `<span class="material-symbols-rounded trend-icon">${isUp ? 'trending_up' : 'trending_down'}</span><span>${isUp ? '+' : ''}${pct}% dibanding ${prevName}</span>`;
+      } else if (curVal > 0) {
+        trendPill.className = 'trend-pill trend-up';
+        trendPill.innerHTML = `<span class="material-symbols-rounded trend-icon">trending_up</span><span>Omzet bulan aktif tercatat</span>`;
       } else {
-        trendPill.innerHTML = '<span class="material-symbols-rounded trend-icon">check</span><span>Data bulan aktif</span>';
+        trendPill.className = 'trend-pill';
+        trendPill.innerHTML = `<span class="material-symbols-rounded trend-icon">horizontal_rule</span><span>0% Belum ada transaksi</span>`;
       }
     }
 
     // Health Banner
     const healthBanner = document.querySelector('.chart-footer-banner');
-    if (healthBanner && displayKeys.length > 0) {
-      const latest = monthsMap[displayKeys[displayKeys.length - 1]];
-      const margin = latest.income > 0 ? Math.round(((latest.income - latest.expense) / latest.income) * 100) : 0;
-      const isHealthy = margin >= 20;
-      healthBanner.innerHTML = `
-        <div class="health-indicator">
-          <span class="status-circle" style="background:${isHealthy ? '#10B981' : (margin >= 0 ? '#F59E0B' : '#EF4444')};"></span>
-          <strong>${isHealthy ? 'Arus Kas Positif Sehat:' : (margin >= 0 ? 'Arus Kas Cukup Stabil:' : 'Arus Kas Defisit:')}</strong>
-          Margin laba bersih bulan ini mencapai <strong>${margin}%</strong>. ${isHealthy ? 'Memenuhi syarat kelayakan KUR Bank.' : 'Optimalkan efisiensi pengeluaran kas.'}
-        </div>
-      `;
+    if (healthBanner) {
+      if (latestMonth.income > 0) {
+        const margin = Math.round(((latestMonth.income - latestMonth.expense) / latestMonth.income) * 100);
+        const isHealthy = margin >= 20;
+        const isStable = margin >= 0;
+        healthBanner.innerHTML = `
+          <div class="health-indicator">
+            <span class="status-circle" style="background:${isHealthy ? '#10B981' : (isStable ? '#F59E0B' : '#EF4444')};"></span>
+            <strong>${isHealthy ? 'Arus Kas Positif Sehat:' : (isStable ? 'Arus Kas Cukup Stabil:' : 'Arus Kas Defisit:')}</strong>
+            Margin laba bersih bulan ini mencapai <strong>${margin}%</strong>. ${isHealthy ? 'Memenuhi syarat kelayakan KUR Bank.' : (isStable ? 'Tingkatkan efisiensi belanja kas.' : 'Kurangi beban operasional untuk memulihkan kas.')}
+          </div>
+        `;
+      } else {
+        healthBanner.innerHTML = `
+          <div class="health-indicator">
+            <span class="status-circle" style="background:#94A3B8;"></span>
+            <strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.
+          </div>
+        `;
+      }
     }
   }
 
@@ -415,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <li class="${hasHalalOrCert ? 'checked' : 'pending'}">${hasHalalOrCert ? '✓ Sertifikasi Produk / Halal / PIRT Lengkap' : '○ Sertifikasi Produk / PIRT / Halal (Opsional)'}</li>
       </ul>
     `;
-  }
   }
 
   // Render Table
@@ -723,7 +803,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.uteraLogout('../auth/index.html?mode=login');
       }
     });
-  }
   }
 
   // Initial Boot

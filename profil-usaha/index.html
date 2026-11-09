@@ -25,53 +25,55 @@
 
     <!-- UTAMA -->
     <div class="sidebar-section">
-      <div class="sidebar-label">Utama</div>
-      <a class="nav-item" href="../dashboard/index.html">
-        <span class="material-symbols-rounded">dashboard</span>
-        Ringkasan Kas
+      <div class="sidebar-label">UTAMA</div>
+      <a class="nav-item" href="../dashboard/index.html" data-page="ringkasan">
+        <span class="material-symbols-rounded">grid_view</span>
+        <span>Ringkasan Kas</span>
       </a>
-      <a class="nav-item" href="../Buku-Kas-Warung/index.html">
-        <span class="material-symbols-rounded">menu_book</span>
-        Buku Kas Warung
-        <span class="nav-badge" id="kas-badge" style="display:none">0</span>
+      <a class="nav-item" href="../Buku-Kas-Warung/index.html" data-page="transaksi">
+        <span class="material-symbols-rounded">receipt_long</span>
+        <span>Buku Kas Warung</span>
+        <span class="nav-badge" id="badge-total-tx">0</span>
       </a>
-      <a class="nav-item" href="../Skor-Kelayakan/index.html">
-        <span class="material-symbols-rounded">bar_chart</span>
-        Skor Kelayakan
+      <a class="nav-item" href="../Skor-Kelayakan/index.html" data-page="skor">
+        <span class="material-symbols-rounded">verified</span>
+        <span>Skor Kelayakan</span>
+        <span class="nav-pill-good" id="nav-pill-skor">0</span>
       </a>
-      <a class="nav-item" href="../guardrail/index.html">
+      <a class="nav-item" href="../guardrail/index.html" data-page="guardrail">
         <span class="material-symbols-rounded">shield</span>
-        Guardrail 30% Kas
+        <span>Guardrail 30% Kas</span>
       </a>
     </div>
 
     <!-- LAYANAN & BANK -->
     <div class="sidebar-section">
-      <div class="sidebar-label">Layanan &amp; Bank</div>
-      <a class="nav-item" href="../simulasi-kur/index.html">
-        <span class="material-symbols-rounded">calculate</span>
-        Simulasi KUR 2026
+      <div class="sidebar-label">LAYANAN &amp; BANK</div>
+      <a class="nav-item" href="../simulasi-kur/index.html" data-page="kur">
+        <span class="material-symbols-rounded">account_balance</span>
+        <span>Simulasi KUR 2026</span>
       </a>
-      <a class="nav-item" href="../legalitas-&-nib/index.html">
-        <span class="material-symbols-rounded">verified</span>
-        Legalitas &amp; NIB
-      </a>
-      <a class="nav-item" href="../laporan-siap-bank/index.html">
+      <a class="nav-item" href="../legalitas-&-nib/index.html" data-page="legalitas">
         <span class="material-symbols-rounded">description</span>
-        Laporan Siap Bank
+        <span>Legalitas &amp; NIB</span>
+        <span class="nav-pill-info">OSS RBA</span>
+      </a>
+      <a class="nav-item" href="../laporan-siap-bank/index.html" data-page="laporan">
+        <span class="material-symbols-rounded">monitoring</span>
+        <span>Laporan Siap Bank</span>
       </a>
     </div>
 
     <!-- PENGATURAN -->
     <div class="sidebar-section">
-      <div class="sidebar-label">Pengaturan</div>
-      <a class="nav-item active" href="index.html">
-        <span class="material-symbols-rounded">store</span>
-        Profil Usaha
+      <div class="sidebar-label">PENGATURAN</div>
+      <a class="nav-item active" href="index.html" data-page="profil-usaha">
+        <span class="material-symbols-rounded">storefront</span>
+        <span>Profil Usaha</span>
       </a>
-      <a class="nav-item" href="../landing-page/index.html">
-        <span class="material-symbols-rounded">home</span>
-        Halaman Utama
+      <a class="nav-item" href="../landing-page/index.html" title="Kembali ke Beranda">
+        <span class="material-symbols-rounded">open_in_new</span>
+        <span>Halaman Utama</span>
       </a>
     </div>
 
@@ -81,7 +83,7 @@
         <div class="user-avatar" id="sidebar-user-avatar">U</div>
         <div class="user-info">
           <strong id="sidebar-user-name">Pemilik Usaha</strong>
-          <span>Kelola profil</span>
+          <span id="sidebar-business-name">Kopi Nusantara</span>
         </div>
       </div>
       <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun" style="margin-top:10px; display:flex; align-items:center; gap:8px; padding:8px 12px; color:#DC2626; text-decoration:none; font-size:0.8125rem; font-weight:600; border-radius:8px; transition:background 0.15s ease;">

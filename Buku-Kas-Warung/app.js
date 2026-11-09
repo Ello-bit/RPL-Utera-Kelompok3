@@ -1311,6 +1311,9 @@ document.addEventListener('DOMContentLoaded', function () {
     renderVolumeChart();
     renderLedgerTable();
     renderBusinessOptions();
+    if (window.syncUteraSidebar) {
+      window.syncUteraSidebar();
+    }
   }
 
   // Initial Form & Categories Setup

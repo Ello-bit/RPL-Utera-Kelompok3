@@ -47,7 +47,7 @@
         </button>
       </div>
 
-      <nav class="sidebar-nav" aria-label="Menu Utama">
+      <nav class="sidebar-nav" aria-label="Menu Utama Dashboard">
         <!-- GENERAL -->
         <div class="nav-section">
           <div class="nav-section-title">UTAMA</div>
@@ -62,14 +62,14 @@
               <a href="../Buku-Kas-Warung/index.html" class="nav-item" data-page="transaksi">
                 <span class="material-symbols-rounded">receipt_long</span>
                 <span>Buku Kas Warung</span>
-                <span class="nav-badge" id="sidebar-badge-tx">5</span>
+                <span class="nav-badge" id="badge-total-tx">0</span>
               </a>
             </li>
             <li>
               <a href="../Skor-Kelayakan/index.html" class="nav-item" data-page="skor">
                 <span class="material-symbols-rounded">verified</span>
                 <span>Skor Kelayakan</span>
-                <span class="nav-pill-good">84</span>
+                <span class="nav-pill-good" id="nav-pill-skor">0</span>
               </a>
             </li>
             <li>
@@ -86,10 +86,9 @@
           <div class="nav-section-title">LAYANAN &amp; BANK</div>
           <ul class="nav-list">
             <li>
-              <a href="index.html" class="nav-item active" data-page="kur">
+              <a href="#" class="nav-item active" data-page="kur">
                 <span class="material-symbols-rounded">account_balance</span>
                 <span>Simulasi KUR 2026</span>
-                <span class="nav-pill-info">Subsidi 3-6%</span>
               </a>
             </li>
             <li>
@@ -113,13 +112,13 @@
           <div class="nav-section-title">PENGATURAN</div>
           <ul class="nav-list">
             <li>
-              <a href="../profil-usaha/index.html" class="nav-item">
+              <a href="../profil-usaha/index.html" class="nav-item" data-page="profil-usaha">
                 <span class="material-symbols-rounded">storefront</span>
                 <span>Profil Usaha</span>
               </a>
             </li>
             <li>
-              <a href="../landing-page/index.html" class="nav-item">
+              <a href="../landing-page/index.html" class="nav-item" title="Kembali ke Beranda">
                 <span class="material-symbols-rounded">open_in_new</span>
                 <span>Halaman Utama</span>
               </a>
@@ -130,16 +129,16 @@
 
       <!-- Bottom Profile -->
       <div class="sidebar-footer">
-        <div class="business-profile-card">
+        <a href="../profil-usaha/index.html" class="business-profile-card" style="text-decoration:none;" title="Lihat Profil Usaha">
           <div class="business-avatar" aria-hidden="true">
             <span class="material-symbols-rounded icon-coffee">local_cafe</span>
           </div>
           <div class="business-details">
-            <span class="business-title">Kopi Nusantara</span>
+            <span class="business-title" id="sidebar-business-name">Kopi Nusantara</span>
             <span class="business-badge">UMKM Kuliner Mandiri</span>
           </div>
-        </div>
-        <a href="../auth/index.html?mode=login" class="btn-logout" title="Keluar">
+        </a>
+        <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun">
           <span class="material-symbols-rounded">logout</span>
           <span>Keluar</span>
         </a>

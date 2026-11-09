@@ -159,8 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (skorNumber) skorNumber.textContent = result.total;
 
   // Nav pill
-  const navSkor = document.getElementById('nav-skor-value');
+  const navSkor = document.getElementById('nav-pill-skor') || document.getElementById('nav-skor-value');
   if (navSkor) navSkor.textContent = result.total;
+
+  if (window.syncUteraSidebar) {
+    window.syncUteraSidebar();
+  }
 
   // Spectrum pointer & tag
   const spectrumPointer = document.getElementById('spectrum-pointer');

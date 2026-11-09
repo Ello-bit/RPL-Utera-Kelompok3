@@ -55,14 +55,14 @@
               <a href="../Buku-Kas-Warung/index.html" class="nav-item" data-page="transaksi">
                 <span class="material-symbols-rounded">receipt_long</span>
                 <span>Buku Kas Warung</span>
-                <span class="nav-badge">5</span>
+                <span class="nav-badge" id="badge-total-tx">0</span>
               </a>
             </li>
             <li>
               <a href="#" class="nav-item active" data-page="skor">
                 <span class="material-symbols-rounded">verified</span>
                 <span>Skor Kelayakan</span>
-                <span class="nav-pill-good" id="nav-skor-value">84</span>
+                <span class="nav-pill-good" id="nav-pill-skor">0</span>
               </a>
             </li>
             <li>
@@ -109,7 +109,7 @@
               </a>
             </li>
             <li>
-              <a href="../landing-page/index.html" class="nav-item">
+              <a href="../landing-page/index.html" class="nav-item" title="Kembali ke Beranda">
                 <span class="material-symbols-rounded">open_in_new</span>
                 <span>Halaman Utama</span>
               </a>
@@ -119,16 +119,16 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="business-profile-card">
+        <a href="../profil-usaha/index.html" class="business-profile-card" style="text-decoration:none;" title="Lihat Profil Usaha">
           <div class="business-avatar" aria-hidden="true">
             <span class="material-symbols-rounded icon-coffee">local_cafe</span>
           </div>
           <div class="business-details">
-            <span class="business-title">Kopi Nusantara</span>
+            <span class="business-title" id="sidebar-business-name">Kopi Nusantara</span>
             <span class="business-badge">UMKM Kuliner Mandiri</span>
           </div>
-        </div>
-        <a href="../auth/index.html?mode=login" class="btn-logout" title="Keluar dari akun">
+        </a>
+        <a href="../auth/index.html?mode=login" class="btn-logout" id="btn-logout" title="Keluar dari akun">
           <span class="material-symbols-rounded">logout</span>
           <span>Keluar</span>
         </a>
@@ -663,6 +663,8 @@
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
