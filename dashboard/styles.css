@@ -1290,12 +1290,15 @@ body.dashboard-body {
   border-bottom: 1px solid var(--border-subtle);
   font-size: 0.75rem;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .data-table td {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-body);
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .data-table tbody tr:last-child td {
