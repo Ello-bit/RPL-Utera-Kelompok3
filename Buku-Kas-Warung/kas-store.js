@@ -38,7 +38,7 @@
   }
 
   function getInitialSeed() {
-    return [
+    var rawSeed = [
       // === BISNIS 1: Kopi Nusantara (biz_kopi) ===
       { id: 'tx_seed_01', bizId: 'biz_kopi', date: '2026-05-08', type: 'income', category: 'Penjualan', note: 'Rekap Penjualan Kopi & Toast', amount: 18200000, createdAt: 1778200000000 },
       { id: 'tx_seed_02', bizId: 'biz_kopi', date: '2026-05-15', type: 'expense', category: 'Bahan baku / kulakan', note: 'Kulakan Biji Kopi & Susu', amount: 6100000, createdAt: 1778800000000 },
@@ -100,13 +100,17 @@
       { id: 'tx_kat_15', bizId: 'biz_katering', date: '2026-10-25', type: 'income', category: 'Penjualan', note: 'Snack Box 150 Porsi Pengajian', amount: 2400000, createdAt: 1793000000000 },
       { id: 'tx_kat_16', bizId: 'biz_katering', date: '2026-10-27', type: 'expense', category: 'Operasional', note: 'Upah Asisten Masak Harian', amount: 1800000, createdAt: 1793170000000 }
     ];
+    return rawSeed.map(function(s) {
+      s.isSeed = true;
+      return s;
+    });
   }
 
   function load() {
     state.readError = null;
     if (memoryFallback) return memoryFallback.slice();
 
-    var isLoggedIn = !!(global.localStorage && global.localStorage.getItem('utera_user_email'));
+    var isLoggedIn = !!(global.localStorage && (global.localStorage.getItem('utera_user_email') || global.localStorage.getItem('utera_user_name')));
 
     if (!storageAvailable()) {
       state.readError = 'unavailable';
@@ -133,10 +137,20 @@
       if (!Array.isArray(parsed)) throw new Error('not an array');
       var list = parsed.filter(isValidTx);
 
-      // Jika pengguna sudah mendaftar/login, bersihkan seluruh data demo/seed lama
+      // Jika pengguna sudah mendaftar/login, bersihkan seluruh data demo/seed bawaan
       if (isLoggedIn) {
         var userOnly = list.filter(function (t) {
-          return !t.id.startsWith('tx_seed_') && !t.id.startsWith('tx_sembako_') && !t.id.startsWith('tx_kat_');
+          var isDemo = t.isSeed === true ||
+            t.bizId === 'biz_kopi' ||
+            t.bizId === 'biz_sembako' ||
+            t.bizId === 'biz_katering' ||
+            (t.id && (
+              t.id.indexOf('tx_seed_') === 0 ||
+              t.id.indexOf('tx_smb_') === 0 ||
+              t.id.indexOf('tx_sembako_') === 0 ||
+              t.id.indexOf('tx_kat_') === 0
+            ));
+          return !isDemo;
         });
         if (userOnly.length !== list.length) {
           try { global.localStorage.setItem(STORAGE_KEY, JSON.stringify(userOnly)); } catch (e) {}

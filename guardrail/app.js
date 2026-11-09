@@ -442,7 +442,7 @@
         
         // Update badge jumlah transaksi di sidebar
         const sidebarBadge = document.getElementById('sidebar-badge-tx');
-        if (sidebarBadge && allTx.length > 0) {
+        if (sidebarBadge) {
           sidebarBadge.textContent = allTx.length;
         }
 

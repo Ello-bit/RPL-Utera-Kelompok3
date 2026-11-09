@@ -134,7 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (allTx.length === 0) {
       document.querySelectorAll('.col-bars .bar').forEach(bar => {
         bar.style.height = '6px';
+        const tooltip = bar.querySelector('.bar-tooltip');
+        if (tooltip) tooltip.textContent = 'Rp 0';
       });
+      const chartTrendPill = document.querySelector('.chart-summary-header .trend-pill');
+      if (chartTrendPill) {
+        chartTrendPill.innerHTML = '<span class="material-symbols-rounded trend-icon">horizontal_rule</span><span>0% Belum ada data</span>';
+      }
       const healthIndicator = document.querySelector('.chart-footer-banner');
       if (healthIndicator) {
         healthIndicator.innerHTML = '<div class="health-indicator"><span class="status-circle" style="background:#94A3B8;"></span><strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.</div>';
@@ -143,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (meterFill) meterFill.style.width = '0%';
       const meterActive = document.querySelector('.meter-labels .text-safe');
       if (meterActive) meterActive.textContent = 'Cicilan Aktif: Rp 0';
+      const meterMax = document.querySelector('.meter-labels span:last-child');
+      if (meterMax) meterMax.textContent = 'Maks Rp 0';
       const capFormula = document.querySelector('.capacity-formula');
       if (capFormula) capFormula.textContent = '30% x Rata-rata Laba Bersih (Rp 0)';
     }
@@ -316,13 +324,19 @@ document.addEventListener('DOMContentLoaded', () => {
   btnChartOmzet?.addEventListener('click', () => {
     btnChartOmzet.classList.add('active');
     btnChartLaba?.classList.remove('active');
-    if (chartHighlightNumber) chartHighlightNumber.textContent = 'Rp 24.850.000';
+    const all = (typeof Kas !== 'undefined' && Kas.load) ? Kas.load() : [];
+    let inc = 0;
+    all.forEach(t => { if (t.type === 'income') inc += t.amount; });
+    if (chartHighlightNumber) chartHighlightNumber.textContent = formatRupiah(inc);
   });
 
   btnChartLaba?.addEventListener('click', () => {
     btnChartLaba.classList.add('active');
     btnChartOmzet?.classList.remove('active');
-    if (chartHighlightNumber) chartHighlightNumber.textContent = 'Rp 18.450.000';
+    const all = (typeof Kas !== 'undefined' && Kas.load) ? Kas.load() : [];
+    let inc = 0, exp = 0;
+    all.forEach(t => { if (t.type === 'income') inc += t.amount; else exp += t.amount; });
+    if (chartHighlightNumber) chartHighlightNumber.textContent = formatRupiah(inc - exp);
   });
 
   // Mobile Menu Drawer Toggle
