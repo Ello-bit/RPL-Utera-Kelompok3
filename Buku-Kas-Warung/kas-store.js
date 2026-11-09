@@ -153,6 +153,24 @@
     }
     try {
       global.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      // Sinkronkan transaksi terakhir ke Supabase Cloud jika ada
+      if (global.uteraSupabase && list.length > 0) {
+        var lastTx = list[list.length - 1];
+        if (lastTx && !lastTx.synced) {
+          global.uteraSupabase.from('transaksi_kas').insert([{
+            tipe: lastTx.type === 'income' ? 'pemasukan' : 'pengeluaran',
+            nominal: lastTx.amount,
+            kategori: lastTx.category,
+            tanggal: lastTx.date,
+            keterangan: lastTx.note || '',
+            metode_pembayaran: 'Tunai'
+          }]).then(function() {
+            console.log('☁️ Transaksi kas berhasil tersimpan di Supabase Cloud.');
+          }).catch(function(err) {
+            console.warn('Supabase sync warning:', err);
+          });
+        }
+      }
       return true;
     } catch (e) {
       state.writeError = e && e.name === 'QuotaExceededError' ? 'quota' : 'unknown';

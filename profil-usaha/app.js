@@ -132,8 +132,72 @@ function saveProfiles() {
     if (profiles[activeIdx].nama_usaha) {
       localStorage.setItem('utera_nama_usaha', profiles[activeIdx].nama_usaha);
     }
+    // Sync to Supabase Cloud in background
+    syncToSupabase(profiles[activeIdx]);
   } catch (e) {
     console.error('saveProfiles error:', e);
+  }
+}
+
+/* ============================================================
+   SUPABASE CLOUD SYNC
+   ============================================================ */
+async function syncToSupabase(p) {
+  if (!window.uteraSupabase) return;
+  try {
+    const payload = {
+      nama_usaha: p.nama_usaha || 'Tanpa Nama',
+      nama_pemilik: p.nama_pemilik || null,
+      jenis_usaha: p.jenis_usaha || null,
+      tanggal_mulai_usaha: p.tanggal_mulai_usaha || null,
+      alamat_usaha: p.alamat_usaha || null,
+      nomor_telepon: p.nomor_telepon || null,
+      deskripsi_usaha: p.deskripsi_usaha || null,
+      updated_at: new Date().toISOString()
+    };
+    if (p.supabase_id) {
+      await window.uteraSupabase.from('profil_usaha').update(payload).eq('id', p.supabase_id);
+    } else {
+      const { data, error } = await window.uteraSupabase.from('profil_usaha').insert([payload]).select('id');
+      if (data && data[0]) {
+        p.supabase_id = data[0].id;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+      }
+    }
+    console.log('☁️ Tersinkronisasi ke Supabase Cloud.');
+  } catch (err) {
+    console.warn('Sync to Supabase warning:', err);
+  }
+}
+
+async function fetchFromSupabase() {
+  if (!window.uteraSupabase) return;
+  try {
+    const { data, error } = await window.uteraSupabase.from('profil_usaha').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data && data.length > 0) {
+      const cloudProfiles = data.map(item => ({
+        ...cloneProfile(EMPTY_PROFILE),
+        supabase_id: item.id,
+        nama_usaha: item.nama_usaha || '',
+        nama_pemilik: item.nama_pemilik || '',
+        jenis_usaha: item.jenis_usaha || '',
+        tanggal_mulai_usaha: item.tanggal_mulai_usaha || '',
+        alamat_usaha: item.alamat_usaha || '',
+        nomor_telepon: item.nomor_telepon || '',
+        deskripsi_usaha: item.deskripsi_usaha || '',
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      profiles = cloudProfiles;
+      activeIdx = 0;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+      buildSwitcher();
+      renderForm();
+      console.log('☁️ Data profil dimuat dari Supabase Cloud.');
+    }
+  } catch (err) {
+    console.warn('Fetch from Supabase warning:', err);
   }
 }
 
@@ -590,6 +654,7 @@ function init() {
   attachSwitcherListeners();
   attachHamburger();
   updateNavBadge();
+  fetchFromSupabase(); // Sinkronkan data dari cloud Supabase jika ada
 
   // Set max date to today for tanggal_mulai_usaha
   const dateInput = qs('#tanggal_mulai_usaha');
