@@ -106,15 +106,21 @@
     state.readError = null;
     if (memoryFallback) return memoryFallback.slice();
 
+    var isLoggedIn = !!(global.localStorage && global.localStorage.getItem('utera_user_email'));
+
     if (!storageAvailable()) {
       state.readError = 'unavailable';
-      memoryFallback = getInitialSeed();
+      memoryFallback = isLoggedIn ? [] : getInitialSeed();
       return memoryFallback.slice();
     }
 
     var raw = global.localStorage.getItem(STORAGE_KEY);
     if (raw === null) {
-      // First boot: populate with realistic multi-business 6-month seed
+      if (isLoggedIn) {
+        try { global.localStorage.setItem(STORAGE_KEY, JSON.stringify([])); } catch (e) {}
+        return [];
+      }
+      // Mode demo pengunjung / tamu: gunakan data percontohan
       var seed = getInitialSeed();
       try {
         global.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
@@ -127,9 +133,14 @@
       if (!Array.isArray(parsed)) throw new Error('not an array');
       var list = parsed.filter(isValidTx);
 
+      // Jika pengguna sudah mendaftar/login, hormati transaksi riil mereka (jangan paksa masukkan data warung kopi lama)
+      if (isLoggedIn) {
+        return list;
+      }
+
       // Ensure multi-business seed is populated if user only had the first seed
       var hasSembako = list.some(function (t) { return t.bizId === 'biz_sembako'; });
-      if (!hasSembako) {
+      if (!hasSembako && list.length > 0) {
         var fullSeed = getInitialSeed();
         var extra = fullSeed.filter(function (s) { return s.bizId !== 'biz_kopi'; });
         list.forEach(function (t) { if (!t.bizId) t.bizId = 'biz_kopi'; });

@@ -87,12 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxInstallment30Pct = Math.max(0, Math.round(netProfit * 0.30));
 
     // Dynamic PRD Score Formula (Pillar 2: Consistency + Cashflow Health)
-    let score = 50;
+    let score = 0;
     if (totalIncome > 0) {
       const marginRatio = netProfit / totalIncome;
       score = Math.min(96, Math.max(40, Math.round(50 + (marginRatio * 45))));
+    } else if (allTx.length > 0) {
+      score = 50;
     } else {
-      score = allTx.length > 0 ? 60 : 50;
+      score = 0; // Akun baru yang belum memiliki transaksi
     }
 
     if (valPemasukan) valPemasukan.textContent = formatRupiah(totalIncome);
