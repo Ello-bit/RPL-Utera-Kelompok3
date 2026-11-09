@@ -1,0 +1,5 @@
+.agents/
+.gemini/
+.vscode/
+.idea/
+node_modules/
