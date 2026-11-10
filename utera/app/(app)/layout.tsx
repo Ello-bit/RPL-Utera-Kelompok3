@@ -22,7 +22,14 @@ export default async function AppShellLayout({
   let userEmail = user?.email || 'Tamu (Demo Mode)'
   let userName = (user?.user_metadata?.full_name as string) || ''
 
+  let isAdmin = false
   if (user) {
+    if (user.email?.toLowerCase().includes('admin') || user.user_metadata?.role === 'admin') {
+      isAdmin = true
+      businessName = 'Portal Admin UTERA'
+      userName = 'Administrator'
+    }
+
     // 1. Fetch live profil usaha
     const { data: profiles } = await supabase
       .from('profil_usaha')
@@ -81,6 +88,7 @@ export default async function AppShellLayout({
       skor={skor}
       userEmail={userEmail}
       userName={userName}
+      isAdmin={isAdmin}
     >
       {children}
     </AppShell>

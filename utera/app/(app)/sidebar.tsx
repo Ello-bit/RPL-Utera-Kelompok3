@@ -11,6 +11,7 @@ interface SidebarProps {
   skor: number
   userEmail: string
   userName: string
+  isAdmin?: boolean
   mobileOpen?: boolean
   onCloseMobile?: () => void
 }
@@ -35,6 +36,7 @@ export default function Sidebar({
   skor,
   userEmail,
   userName,
+  isAdmin = false,
   mobileOpen: controlledMobileOpen,
   onCloseMobile,
 }: SidebarProps) {
@@ -121,6 +123,21 @@ export default function Sidebar({
         },
       ],
     },
+    ...(isAdmin || userEmail.toLowerCase().includes('admin')
+      ? [
+          {
+            section: 'ADMINISTRATOR',
+            items: [
+              {
+                name: 'Dashboard Admin',
+                href: '/admin',
+                icon: 'admin_panel_settings',
+                infoPill: 'Superadmin',
+              },
+            ],
+          },
+        ]
+      : []),
   ]
 
   return (

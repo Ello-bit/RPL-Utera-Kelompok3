@@ -10,6 +10,7 @@ interface AppShellProps {
   skor: number
   userEmail: string
   userName: string
+  isAdmin?: boolean
   children: React.ReactNode
 }
 
@@ -19,6 +20,7 @@ export default function AppShell({
   skor,
   userEmail,
   userName,
+  isAdmin = false,
   children,
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -31,6 +33,7 @@ export default function AppShell({
         skor={skor}
         userEmail={userEmail}
         userName={userName}
+        isAdmin={isAdmin}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />

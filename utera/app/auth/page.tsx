@@ -92,8 +92,12 @@ function AuthContent() {
       })
     } else {
       startTransition(async () => {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
+        const normalizedEmail = email.trim().includes('@')
+          ? email.trim()
+          : `${email.trim()}@utera.id`
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
           password,
         })
 
@@ -102,7 +106,15 @@ function AuthContent() {
           return
         }
 
-        router.push(redirectTarget)
+        const isUserAdmin =
+          normalizedEmail.toLowerCase().includes('admin') ||
+          data?.user?.user_metadata?.role === 'admin'
+
+        if (isUserAdmin) {
+          router.push('/admin')
+        } else {
+          router.push(redirectTarget)
+        }
         router.refresh()
       })
     }
