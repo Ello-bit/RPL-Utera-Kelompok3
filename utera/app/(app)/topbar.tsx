@@ -32,161 +32,69 @@ interface NotificationItem {
 
 const DEFAULT_ADMIN_NOTIFS: NotificationItem[] = [
   {
-    id: 'adm-1',
-    title: 'Permohonan Verifikasi Kredibilitas Baru',
-    desc: 'Konveksi Berkah Makmur mengajukan audit NIB OSS dan validasi kredibilitas.',
-    category: 'Audit Kredibilitas',
-    fullMessage: 'UMKM Konveksi Berkah Makmur (Pemilik: Haji Ahmad) telah melengkapi profil usaha dan mengunggah dokumen NIB OSS. Perputaran omzet kas tercatat Rp 55.000.000 dengan skor PRD 74/100.',
-    recommendation: 'Lakukan verifikasi kredibilitas agar UMKM ini mendapatkan status "Terverifikasi Kredibel" dan berhak atas rekomendasi kredit bank mitra.',
-    time: '10 menit lalu',
-    icon: 'verified',
+    id: 'adm-welcome',
+    title: 'Selamat Datang di Pusat Pengawasan UTERA',
+    desc: 'Akun Super Administrator Anda telah aktif dan siap untuk pengawasan platform.',
+    category: 'Selamat Datang',
+    fullMessage: 'Selamat datang di Pusat Pengawasan & Audit UTERA! Sebagai Super Administrator, Anda memiliki wewenang penuh untuk memantau integritas kas mitra UMKM, mengesahkan status kredibilitas binaan, dan mengawasi kepatuhan batas beban cicilan pinjaman 30%.',
+    recommendation: 'Buka Direktori UMKM untuk meninjau data usaha yang terdaftar dan memeriksa status verifikasi mitra binaan.',
+    time: 'Baru saja',
+    icon: 'admin_panel_settings',
     iconBg: '#ECFDF5',
     iconColor: '#059669',
     href: '/admin?tab=direktori',
-    actionLabel: 'Buka Direktori & Verifikasi UMKM',
+    actionLabel: 'Buka Direktori UMKM',
     read: false,
     urgent: true,
   },
   {
-    id: 'adm-2',
-    title: 'Peringatan Guardrail Cicilan 30%',
-    desc: 'Bengkel Motor Sejahtera mendekati batas waspada angsuran pinjaman (24% dari laba).',
-    category: 'Pengawasan KUR',
-    fullMessage: 'Hasil evaluasi algoritma Guardrail 30% mendeteksi bahwa rasio cicilan pinjaman koperasi Bengkel Motor Sejahtera (Rp 1.490.000/bln) mencapai 24% dari laba operasionalnya (Rp 6.300.000).',
-    recommendation: 'Disarankan untuk meninjau restrukturisasi tenor atau menahan pinjaman baru guna menjaga ketahanan kas operasional bengkel.',
-    time: '1 jam lalu',
-    icon: 'warning',
-    iconBg: '#FEF3C7',
-    iconColor: '#D97706',
-    href: '/admin?tab=kur',
-    actionLabel: 'Tinjau Kepatuhan Guardrail KUR',
-    read: false,
-    urgent: true,
-  },
-  {
-    id: 'adm-3',
-    title: 'Ledger Audit: 18 Transaksi Kas Baru',
-    desc: 'Tercatat mutasi kas operasional baru di ekosistem binaan hari ini.',
-    category: 'Audit Mutasi Kas',
-    fullMessage: 'Arus kas masuk tercatat sebesar Rp 14.000.000 dan pengeluaran operasional Rp 5.850.000. Seluruh transaksi kasir tercatat secara kontinu tanpa anomali saldo.',
-    recommendation: 'Data mutasi telah sinkron dengan sistem ledger Supabase PostgreSQL RLS.',
-    time: '3 jam lalu',
-    icon: 'receipt_long',
+    id: 'adm-system',
+    title: 'Sistem Keamanan Database Multi-Tenant Beroperasi',
+    desc: 'Enkripsi data Row Level Security (RLS) Supabase aktif melindungi privasi usaha.',
+    category: 'Keamanan Sistem',
+    fullMessage: 'Pemeriksaan otomatis mengonfirmasi bahwa seluruh 5 tabel data pengguna terisolasi dengan aman menggunakan kebijakan Row Level Security (RLS) di cloud Supabase tanpa kebocoran data antar-warung.',
+    recommendation: 'Platform siap digunakan untuk audit pengawasan ekosistem UMKM secara berkala.',
+    time: 'Baru saja',
+    icon: 'security',
     iconBg: '#EFF6FF',
     iconColor: '#2563EB',
-    href: '/admin?tab=kas',
-    actionLabel: 'Periksa Audit Mutasi Kas Global',
-    read: false,
-  },
-  {
-    id: 'adm-4',
-    title: 'Pembaruan Skor Kelayakan Bank',
-    desc: 'Warung Berkah Jaya mencapai skor 88/100 (Kategori: Siap KUR Mikro s.d. Rp 100 Jt).',
-    category: 'Skor Kelayakan PRD',
-    fullMessage: 'Berdasarkan 4 pilar PRD (Konsistensi 30%, Pertumbuhan 25%, Margin 25%, Kestabilan 20%), Warung Berkah Jaya menunjukkan margin laba 44% dan pembukuan aktif lebih dari 6 bulan berturut-turut.',
-    recommendation: 'Rekomendasi bank: Sangat Layak untuk pengajuan KUR Mikro Bank Mandiri plafon hingga Rp 100 Juta.',
-    time: 'Kemarin',
-    icon: 'star',
-    iconBg: '#FEF7EC',
-    iconColor: '#C98A1B',
-    href: '/admin?tab=skor',
-    actionLabel: 'Buka Audit Skor & Kredibilitas',
-    read: true,
-  },
-  {
-    id: 'adm-5',
-    title: 'Pemeriksaan Integritas Sistem RLS',
-    desc: 'Seluruh isolasi database multi-tenant dan enkripsi cloud Supabase terverifikasi aman.',
-    category: 'Keamanan Sistem',
-    fullMessage: 'Audit otomatis keamanan infrastruktur mengonfirmasi bahwa seluruh 5 tabel data pengguna dilindungi oleh kebijakan Row Level Security (RLS) tanpa kebocoran data antar-entitas usaha.',
-    recommendation: 'Platform berjalan optimal dan siap memproses transaksi harian skala penuh.',
-    time: '2 hari lalu',
-    icon: 'security',
-    iconBg: '#F3F4F6',
-    iconColor: '#4B5563',
     href: '/admin?tab=sistem',
     actionLabel: 'Lihat Status Sistem & Log',
-    read: true,
+    read: false,
   },
 ]
 
 const DEFAULT_USER_NOTIFS: NotificationItem[] = [
   {
-    id: 'usr-1',
-    title: 'Skor Kelayakan Bank Meningkat!',
-    desc: 'Skor PRD Anda naik menjadi 79/100 (+5 poin) berkat pencatatan kas yang konsisten.',
-    category: 'Skor Kelayakan Bank',
-    fullMessage: 'Selamat! Kedisiplinan Anda dalam mencatat transaksi harian meningkatkan skor kelayakan kredit Anda menjadi 79/100. Rasio margin operasional warung Anda mencapai 65%, menempatkan usaha Anda dalam kategori "Layak KUR Mikro Bank BRI".',
-    recommendation: 'Pertahankan pembukuan harian minimal 2 transaksi per hari agar pilar K1 (Konsistensi Pencatatan) mencapai nilai maksimal 30 poin.',
-    time: '15 menit lalu',
-    icon: 'verified',
+    id: 'usr-welcome',
+    title: 'Selamat Datang di UTERA!',
+    desc: 'Selamat bergabung! Akun Anda telah aktif dan siap digunakan untuk pembukuan kas warung.',
+    category: 'Selamat Datang',
+    fullMessage: 'Halo! Selamat datang di UTERA (UMKM Sejahtera). Akun Anda telah berhasil dibuat. UTERA membantu warung dan usaha mikro mencatat arus kas harian secara transparan sesuai standar SAK EMKM dan menyiapkan kelayakan kredit perbankan secara otomatis.',
+    recommendation: 'Langkah pertama: Buka menu Profil Usaha untuk melengkapi nama usaha dan data pemilik, kemudian catat transaksi pertama Anda di Buku Kas Warung.',
+    time: 'Baru saja',
+    icon: 'waving_hand',
     iconBg: '#ECFDF5',
     iconColor: '#059669',
-    href: '/skor-kelayakan',
-    actionLabel: 'Buka Skor Kelayakan Saya',
+    href: '/profil-usaha',
+    actionLabel: 'Lengkapi Profil Usaha Saya',
     read: false,
     urgent: true,
   },
   {
-    id: 'usr-2',
-    title: 'Batas Cicilan Aman Terkalkulasi (Guardrail 30%)',
-    desc: 'Kapasitas angsuran aman maksimal warung Anda saat ini adalah Rp 16.905.000 / bln.',
-    category: 'Kapasitas Kredit',
-    fullMessage: 'Sesuai prinsip kehati-hatian perbankan (Guardrail 30%), batas maksimal cicilan kredit bulanan yang aman bagi keuangan warung Anda adalah Rp 16.905.000 (30% dari laba operasional kas Anda sebesar Rp 56.350.000).',
-    recommendation: 'Simulasi pinjaman KUR BRI Rp 50 Jt (cicilan Rp 2.216.000/bln) berada di batas sangat aman (12% dari laba bersih) dan minim risiko kredit macet.',
-    time: '2 jam lalu',
-    icon: 'account_balance',
+    id: 'usr-guide',
+    title: 'Panduan: 4 Pilar Kelayakan Kredit Bank',
+    desc: 'Pelajari bagaimana pembukuan kas Anda dinilai oleh analis bank mitra (K1–K4 SAK EMKM).',
+    category: 'Panduan Pemula',
+    fullMessage: 'Bank mitra UTERA menilai kelayakan kredit usaha Anda melalui 4 pilar utama: K1 Konsistensi Pencatatan Kas (30%), K2 Pertumbuhan Omzet (25%), K3 Margin Operasional (25%), dan K4 Kestabilan Kas (20%).',
+    recommendation: 'Cukup catat pemasukan dan pengeluaran setiap hari secara konsisten untuk membangun skor kelayakan kredit yang tinggi.',
+    time: 'Baru saja',
+    icon: 'school',
     iconBg: '#EFF6FF',
     iconColor: '#2563EB',
-    href: '/simulasi-kur',
-    actionLabel: 'Simulasikan Pinjaman KUR',
+    href: '/skor-kelayakan',
+    actionLabel: 'Pelajari Skor Kelayakan',
     read: false,
-    urgent: true,
-  },
-  {
-    id: 'usr-3',
-    title: 'Pengingat Pembukuan Kas Harian',
-    desc: 'Catat transaksi penjualan dan kulakan hari ini agar menjaga reputasi skor SAK EMKM Anda.',
-    category: 'Buku Kas Warung',
-    fullMessage: 'Pembukuan yang rapi dan berkala adalah kunci utama bagi analis bank untuk memvalidasi kelayakan usaha Anda. Jangan biarkan ada transaksi kasir atau belanja bahan baku yang terlewat.',
-    recommendation: 'Gunakan tombol "+ Catat Kas" untuk memasukkan penjualan tunai/QRIS maupun pengeluaran belanja warung.',
-    time: '5 jam lalu',
-    icon: 'receipt_long',
-    iconBg: '#FEF7EC',
-    iconColor: '#C98A1B',
-    href: '/buku-kas',
-    actionLabel: 'Buka Buku Kas Warung',
-    read: false,
-  },
-  {
-    id: 'usr-4',
-    title: 'Legalitas NIB OSS Terverifikasi',
-    desc: 'Dokumen Nomor Induk Berusaha (NIB) berbasis risiko OSS RBA aktif dan siap dilampirkan.',
-    category: 'Legalitas & Izin Usaha',
-    fullMessage: 'Legalitas resmi usaha Anda telah tercatat pada sistem Online Single Submission (OSS). NIB ini berfungsi sebagai identitas legal formal usaha Anda untuk pengajuan pembiayaan bank.',
-    recommendation: 'Pastikan data KBLI usaha Anda sesuai dengan operasional riil warung.',
-    time: 'Kemarin',
-    icon: 'description',
-    iconBg: '#FAF5FF',
-    iconColor: '#7C3AED',
-    href: '/legalitas',
-    actionLabel: 'Lihat Dokumen Legalitas NIB',
-    read: true,
-  },
-  {
-    id: 'usr-5',
-    title: 'Laporan Keuangan Siap Bank Tersedia',
-    desc: 'Laporan laba rugi dan arus kas format SAK EMKM periode berjalan siap diekspor ke PDF A4.',
-    category: 'Laporan Siap Bank',
-    fullMessage: 'Laporan keuangan terintegrasi siap diunduh dalam format standar perbankan nasional yang rapi dan siap cetak untuk diserahkan ke analis kredit BRI, Mandiri, atau BNI.',
-    recommendation: 'Unduh dokumen PDF A4 sebelum mendatangi kantor cabang bank mitra.',
-    time: '2 hari lalu',
-    icon: 'monitoring',
-    iconBg: '#ECFDF5',
-    iconColor: '#059669',
-    href: '/laporan-siap-bank',
-    actionLabel: 'Unduh Laporan Siap Bank',
-    read: true,
   },
 ]
 
@@ -223,12 +131,31 @@ export default function TopBar({
   )
   const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null)
 
-  // Sync notif dataset whenever role changes
+  // Sync notif dataset whenever role or email changes
   useEffect(() => {
     const defaultData = isUserAdmin ? DEFAULT_ADMIN_NOTIFS : DEFAULT_USER_NOTIFS
+    const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+
+    try {
+      const stored = localStorage.getItem(storageKey)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setNotifList(parsed)
+          setSelectedNotif(parsed[0] || null)
+          return
+        }
+      }
+    } catch (e) {
+      // ignore parse error
+    }
+
     setNotifList(defaultData)
     setSelectedNotif(defaultData[0] || null)
-  }, [isUserAdmin])
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(defaultData))
+    } catch (e) {}
+  }, [isUserAdmin, userEmail])
 
   const unreadCount = notifList.filter((n) => !n.read).length
 
@@ -238,14 +165,22 @@ export default function TopBar({
     return notifList
   }, [notifList, modalFilter])
 
+  const saveNotifList = (newList: NotificationItem[]) => {
+    setNotifList(newList)
+    const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(newList))
+    } catch (e) {}
+  }
+
   const handleMarkAllRead = () => {
-    setNotifList((prev) => prev.map((n) => ({ ...n, read: true })))
+    const updated = notifList.map((n) => ({ ...n, read: true }))
+    saveNotifList(updated)
   }
 
   const handleOpenItem = (item: NotificationItem) => {
-    setNotifList((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
-    )
+    const updated = notifList.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+    saveNotifList(updated)
     setSelectedNotif({ ...item, read: true })
     setNotifModalOpen(true)
     setNotifOpen(false)
