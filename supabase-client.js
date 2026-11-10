@@ -11,6 +11,7 @@ let uteraSupabase = null;
 
 if (typeof window !== 'undefined' && window.supabase) {
   uteraSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.uteraSupabase = uteraSupabase;
   console.log('✅ UTERA Supabase Client berhasil terhubung.');
 } else {
   console.warn('⚠️ Supabase JS SDK belum dimuat. Pastikan menyertakan tag script CDN Supabase.');
@@ -135,6 +136,7 @@ function syncUteraSidebar() {
 }
 
 if (typeof window !== 'undefined') {
+  window.uteraSupabase = uteraSupabase;
   window.uteraLogout = uteraLogout;
   window.syncUteraSidebar = syncUteraSidebar;
 
