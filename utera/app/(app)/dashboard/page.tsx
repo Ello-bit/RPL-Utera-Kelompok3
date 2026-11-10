@@ -550,32 +550,76 @@ export default function DashboardPage() {
 
       {/* UMKM Financial Insight & Notification Banner */}
       {!isAdmin && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: '#F0FDF4',
-          border: '1px solid #BBF7D0',
-          borderRadius: '12px',
-          padding: '12px 18px',
-          marginBottom: '20px',
-          fontSize: '0.85rem',
-          flexWrap: 'wrap',
-          gap: '10px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '20px' }}>
-              verified
-            </span>
-            <span>
-              <strong>Kabar Baik:</strong> Skor Kelayakan Bank Anda naik ke <strong>79/100</strong>. Kapasitas cicilan aman Guardrail 30% mencapai <strong>Rp 16.905.000/bln</strong>.
-            </span>
+        transactions.length === 0 ? (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: '#F0F9FF',
+            border: '1px solid #BAE6FD',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            fontSize: '0.85rem',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="material-symbols-rounded" style={{ color: '#0284C7', fontSize: '22px' }}>
+                info
+              </span>
+              <span style={{ color: '#0C4A6E', lineHeight: 1.5 }}>
+                <strong>Selamat Datang di UTERA!</strong> Anda belum mencatat transaksi kas. Mulai catat transaksi pertama Anda di <strong>Buku Kas Warung</strong> untuk mengaktifkan perhitungan Skor Kelayakan Bank &amp; batas aman Guardrail 30%.
+              </span>
+            </div>
+            <Link
+              href="/buku-kas"
+              style={{
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                background: 'var(--primary)',
+                color: '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>+ Catat Kas Sekarang</span>
+              <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>arrow_forward</span>
+            </Link>
           </div>
-          <Link href="/skor-kelayakan" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <span>Lihat Analisis Skor</span>
-            <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>arrow_forward</span>
-          </Link>
-        </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: '#F0FDF4',
+            border: '1px solid #BBF7D0',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            fontSize: '0.85rem',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '20px' }}>
+                verified
+              </span>
+              <span>
+                <strong>Kabar Baik:</strong> Skor Kelayakan Bank Anda saat ini <strong>{scorePRD}/100</strong>. Kapasitas cicilan aman Guardrail 30% mencapai <strong>{formatRupiah(maxInstallment30Pct)}/bln</strong>.
+              </span>
+            </div>
+            <Link href="/skor-kelayakan" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span>Lihat Analisis Skor</span>
+              <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>arrow_forward</span>
+            </Link>
+          </div>
+        )
       )}
 
       {/* ====================================================================
@@ -787,8 +831,21 @@ export default function DashboardPage() {
               <h2 className="panel-title">Guardrail Cicilan 30%</h2>
               <p className="panel-subtitle">Batas aman angsuran kredit kas UMKM</p>
             </div>
-            <span className={maxInstallment30Pct >= simulatedBriInstallment ? 'badge-status-safe' : 'badge-status-warning'}>
-              {maxInstallment30Pct >= simulatedBriInstallment ? 'Kondisi Aman' : 'Kapasitas Terbatas'}
+            <span
+              className={
+                transactions.length === 0
+                  ? 'badge-status-warning'
+                  : maxInstallment30Pct >= simulatedBriInstallment
+                  ? 'badge-status-safe'
+                  : 'badge-status-warning'
+              }
+              style={transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {transactions.length === 0
+                ? 'Belum Ada Transaksi'
+                : maxInstallment30Pct >= simulatedBriInstallment
+                ? 'Kondisi Aman'
+                : 'Kapasitas Terbatas'}
             </span>
           </div>
 
@@ -800,7 +857,9 @@ export default function DashboardPage() {
                 {formatRupiah(maxInstallment30Pct)} / bln
               </span>
               <span className="capacity-formula">
-                30% x Rata-rata Laba Bersih ({formatRupiah(kasSummary.netProfit)})
+                {transactions.length === 0
+                  ? 'Belum ada transaksi kas untuk menghitung laba bersih'
+                  : `30% x Rata-rata Laba Bersih (${formatRupiah(kasSummary.netProfit)})`}
               </span>
             </div>
 

@@ -98,8 +98,9 @@ export default function GuardrailPage() {
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
   const baseMonthlyProfit = useMemo(() => {
     if (kasSummary.netProfit > 0) return kasSummary.netProfit
-    return 18_450_000 // default fallback
-  }, [kasSummary])
+    if (isGuest) return 18_450_000
+    return 0
+  }, [kasSummary, isGuest])
 
   // Guardrail 30% Ceiling
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
@@ -190,6 +191,44 @@ export default function GuardrailPage() {
         </div>
       </div>
 
+      {/* Zero State Guidance Banner if no transactions */}
+      {transactions.length === 0 && !isGuest && (
+        <div style={{
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span className="material-symbols-rounded" style={{ color: '#2563EB', fontSize: '28px' }}>
+              info
+            </span>
+            <div>
+              <strong style={{ color: '#1E40AF', display: 'block', fontSize: '0.95rem' }}>
+                Mode Simulasi Awal — Belum Ada Catatan Kas Operasional
+              </strong>
+              <span style={{ color: '#1E3A8A', fontSize: '0.85rem' }}>
+                Laba bersih kas Anda saat ini masih Rp 0. Anda tetap dapat menggeser kalkulator simulasi di bawah untuk melihat estimasi angsuran, namun rasio Guardrail 30% akan aktif penuh setelah Anda mencatat transaksi di Buku Kas Warung.
+              </span>
+            </div>
+          </div>
+          <Link
+            href="/buku-kas"
+            className="btn btn-primary btn-sm"
+            style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
+            <span>Mulai Catat Kas</span>
+          </Link>
+        </div>
+      )}
+
       {/* ====================================================================
            1. TOP METRICS: CAPACITY & CASHFLOW FOUNDATION
            ==================================================================== */}
@@ -204,9 +243,14 @@ export default function GuardrailPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value" id="val-net-profit">{formatRupiah(baseMonthlyProfit)}</span>
-            <span className="trend-pill trend-up">
-              <span className="material-symbols-rounded trend-icon">trending_up</span>
-              <span>+14.2%</span>
+            <span
+              className={`trend-pill ${transactions.length > 0 ? 'trend-up' : ''}`}
+              style={transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              <span className="material-symbols-rounded trend-icon">
+                {transactions.length > 0 ? 'trending_up' : 'info'}
+              </span>
+              <span>{transactions.length > 0 ? '+14.2%' : 'Belum Ada Transaksi'}</span>
             </span>
           </div>
           <p className="metric-caption">Rata-rata dari catatan Buku Kas Warung aktif.</p>
@@ -222,7 +266,12 @@ export default function GuardrailPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value text-primary" id="val-guardrail-limit">{formatRupiah(guardrailLimit)}</span>
-            <span className="badge-status-safe">Batas Pagar Aman</span>
+            <span
+              className={transactions.length > 0 ? 'badge-status-safe' : 'badge-status-warning'}
+              style={transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {transactions.length > 0 ? 'Batas Pagar Aman' : 'Belum Dihitung'}
+            </span>
           </div>
           <p className="metric-caption">Batas tertinggi angsuran bulanan yang diizinkan sistem.</p>
         </div>
@@ -237,8 +286,12 @@ export default function GuardrailPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value" id="val-est-installment">{formatRupiah(calc.total)}</span>
-            <span className={`ratio-badge ${guard.isSafe ? 'text-emerald' : 'text-terracotta'}`} id="val-ratio-badge">
-              {guard.ratio.toFixed(1)}% dari laba
+            <span
+              className={`ratio-badge ${baseMonthlyProfit > 0 ? (guard.isSafe ? 'text-emerald' : 'text-terracotta') : ''}`}
+              id="val-ratio-badge"
+              style={baseMonthlyProfit === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {baseMonthlyProfit > 0 ? `${guard.ratio.toFixed(1)}% dari laba` : 'Estimasi Simulasi'}
             </span>
           </div>
           <p className="metric-caption" id="val-installment-sub">
@@ -256,7 +309,12 @@ export default function GuardrailPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value text-emerald" id="val-remaining-cash">{formatRupiah(remainingCash)}</span>
-            <span className="trend-pill trend-up">{remainingPct}% tersisa</span>
+            <span
+              className="trend-pill"
+              style={baseMonthlyProfit === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {baseMonthlyProfit > 0 ? `${remainingPct}% tersisa` : '0% (Belum Ada Kas)'}
+            </span>
           </div>
           <p className="metric-caption">Kas bebas untuk kulakan stok harian &amp; dana darurat warung.</p>
         </div>
@@ -399,26 +457,40 @@ export default function GuardrailPage() {
               <h2 className="panel-title">Visualisasi Beban Arus Kas</h2>
               <p className="panel-subtitle">Posisi cicilan terhadap ambang batas 30%</p>
             </div>
-            <span className={`status-indicator-chip ${guard.isSafe ? 'safe' : 'danger'}`} id="status-chip">
-              <span className="status-indicator-dot"></span>
-              <span id="status-chip-text">{guard.isSafe ? 'Kondisi Aman' : 'Peringatan Risiko'}</span>
-            </span>
+            {baseMonthlyProfit > 0 ? (
+              <span className={`status-indicator-chip ${guard.isSafe ? 'safe' : 'danger'}`} id="status-chip">
+                <span className="status-indicator-dot"></span>
+                <span id="status-chip-text">{guard.isSafe ? 'Kondisi Aman' : 'Peringatan Risiko'}</span>
+              </span>
+            ) : (
+              <span className="status-indicator-chip" style={{ background: '#F1F5F9', color: '#64748B' }} id="status-chip">
+                <span className="status-indicator-dot" style={{ background: '#94A3B8' }}></span>
+                <span id="status-chip-text">Simulasi Awal</span>
+              </span>
+            )}
           </div>
 
           {/* Big Gauge / Meter Box */}
           <div className="gauge-card">
             <div className="gauge-center-stat">
-              <span className="gauge-big-pct" id="gauge-pct">{guard.ratio.toFixed(1)}%</span>
-              <span className="gauge-sub-label">Rasio Beban terhadap Laba Kas</span>
+              <span className="gauge-big-pct" id="gauge-pct">
+                {baseMonthlyProfit > 0 ? `${guard.ratio.toFixed(1)}%` : '0.0%'}
+              </span>
+              <span className="gauge-sub-label">
+                {baseMonthlyProfit > 0 ? 'Rasio Beban terhadap Laba Kas' : 'Rasio Beban (Belum Ada Catatan Kas)'}
+              </span>
             </div>
 
             {/* Multi-segment Progress Bar */}
             <div className="guardrail-track-wrap">
               <div className="track-bar">
                 <div
-                  className={guard.isSafe ? 'track-fill-safe' : 'track-fill-danger'}
+                  className={baseMonthlyProfit > 0 ? (guard.isSafe ? 'track-fill-safe' : 'track-fill-danger') : ''}
                   id="track-fill"
-                  style={{ width: `${gaugeFillPct}%` }}
+                  style={{
+                    width: `${gaugeFillPct}%`,
+                    background: baseMonthlyProfit === 0 ? '#CBD5E1' : undefined
+                  }}
                 ></div>
                 {/* 30% Threshold Line */}
                 <div className="threshold-marker" style={{ left: '100%' }}>
@@ -434,20 +506,28 @@ export default function GuardrailPage() {
             </div>
 
             {/* Dynamic Risk Assessment Banner */}
-            <div className={`risk-banner ${guard.isSafe ? 'safe' : 'danger'}`} id="risk-banner">
+            <div
+              className={`risk-banner ${baseMonthlyProfit > 0 ? (guard.isSafe ? 'safe' : 'danger') : 'safe'}`}
+              id="risk-banner"
+              style={baseMonthlyProfit === 0 ? { background: '#F0F9FF', borderColor: '#BAE6FD' } : {}}
+            >
               <div className="risk-icon" id="risk-icon">
-                <span className="material-symbols-rounded">
-                  {guard.isSafe ? 'check_circle' : 'warning'}
+                <span className="material-symbols-rounded" style={baseMonthlyProfit === 0 ? { color: '#0284C7' } : {}}>
+                  {baseMonthlyProfit > 0 ? (guard.isSafe ? 'check_circle' : 'warning') : 'info'}
                 </span>
               </div>
               <div className="risk-copy">
-                <strong id="risk-title">
-                  {guard.isSafe ? 'Kapasitas Likuiditas Sangat Baik' : 'Cicilan Berisiko Defisit Kas'}
+                <strong id="risk-title" style={baseMonthlyProfit === 0 ? { color: '#0C4A6E' } : {}}>
+                  {baseMonthlyProfit > 0
+                    ? (guard.isSafe ? 'Kapasitas Likuiditas Sangat Baik' : 'Cicilan Berisiko Defisit Kas')
+                    : 'Kalkulasi Estimasi Angsuran Mandiri'}
                 </strong>
-                <p id="risk-desc">
-                  {guard.isSafe
-                    ? `Angsuran ${formatRupiah(calc.total)}/bulan hanya memakan ${guard.ratio.toFixed(1)}% laba bersih. Anda masih memiliki bantalan kas ${remainingPct}% untuk mengamankan operasional harian warung.`
-                    : `Angsuran ${formatRupiah(calc.total)}/bulan melampaui batas aman 30% laba bersih (${formatRupiah(guardrailLimit)}). Disarankan memperpanjang tenor atau menurunkan nominal pinjaman.`
+                <p id="risk-desc" style={baseMonthlyProfit === 0 ? { color: '#0369A1' } : {}}>
+                  {baseMonthlyProfit > 0
+                    ? (guard.isSafe
+                      ? `Angsuran ${formatRupiah(calc.total)}/bulan hanya memakan ${guard.ratio.toFixed(1)}% laba bersih. Anda masih memiliki bantalan kas ${remainingPct}% untuk mengamankan operasional harian warung.`
+                      : `Angsuran ${formatRupiah(calc.total)}/bulan melampaui batas aman 30% laba bersih (${formatRupiah(guardrailLimit)}). Disarankan memperpanjang tenor atau menurunkan nominal pinjaman.`)
+                    : `Simulasi angsuran ${formatRupiah(calc.total)}/bulan (Plafon ${formatRupiah(plafon)}, Tenor ${tenorMonths} bulan). Mulai catat transaksi di Buku Kas Warung untuk menguji apakah cicilan ini berada di dalam batas aman 30% laba bersih usaha Anda.`
                   }
                 </p>
               </div>

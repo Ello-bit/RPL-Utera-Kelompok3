@@ -78,7 +78,7 @@ export default function Sidebar({
           name: 'Skor Kelayakan',
           href: '/skor-kelayakan',
           icon: 'verified',
-          pill: skor,
+          pill: skor > 0 ? skor : undefined,
         },
         {
           name: 'Guardrail 30% Kas',

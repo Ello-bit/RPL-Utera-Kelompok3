@@ -101,8 +101,9 @@ export default function SimulasiKurPage() {
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
   const baseMonthlyProfit = useMemo(() => {
     if (kasSummary.netProfit > 0) return kasSummary.netProfit
-    return 18_450_000
-  }, [kasSummary])
+    if (isGuest) return 18_450_000
+    return 0
+  }, [kasSummary, isGuest])
 
   // Guardrail 30% limit
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
@@ -127,7 +128,7 @@ export default function SimulasiKurPage() {
   const totalSavings = monthlySavings * tenorMonths
 
   // Score estimate
-  const estimatedScore = transactions.length > 0 ? (kasSummary.marginPct >= 20 ? 84 : 65) : 84
+  const estimatedScore = transactions.length > 0 ? (kasSummary.marginPct >= 20 ? 84 : 65) : (isGuest ? 84 : 0)
 
   const handleTierChange = (tierId: string) => {
     setSelectedTierId(tierId)
@@ -210,6 +211,44 @@ export default function SimulasiKurPage() {
         </div>
       </div>
 
+      {/* Zero State Guidance Banner if no transactions */}
+      {transactions.length === 0 && !isGuest && (
+        <div style={{
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span className="material-symbols-rounded" style={{ color: '#2563EB', fontSize: '28px' }}>
+              info
+            </span>
+            <div>
+              <strong style={{ color: '#1E40AF', display: 'block', fontSize: '0.95rem' }}>
+                Mode Simulasi Estimasi — Perhitungan Angsuran Mandiri
+              </strong>
+              <span style={{ color: '#1E3A8A', fontSize: '0.85rem' }}>
+                Akun Anda belum memiliki transaksi kas operasional (Laba: Rp 0). Anda tetap dapat menggunakan kalkulator di bawah untuk menghitung simulasi angsuran KUR perbankan.
+              </span>
+            </div>
+          </div>
+          <Link
+            href="/buku-kas"
+            className="btn btn-primary btn-sm"
+            style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
+            <span>Mulai Catat Kas</span>
+          </Link>
+        </div>
+      )}
+
       {/* ====================================================================
            1. TOP METRICS: ELIGIBILITY & READINESS FOUNDATION
            ==================================================================== */}
@@ -226,9 +265,18 @@ export default function SimulasiKurPage() {
             <span className="metric-value text-emerald" id="val-skor-kur">
               {estimatedScore}<small className="score-denom">/100</small>
             </span>
-            <span className="badge-status-safe">Kategori Baik</span>
+            <span
+              className={estimatedScore >= 70 ? 'badge-status-safe' : 'badge-status-warning'}
+              style={estimatedScore === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {estimatedScore >= 70 ? 'Kategori Baik' : estimatedScore > 0 ? 'Kategori Cukup' : 'Belum Ada Data'}
+            </span>
           </div>
-          <p className="metric-caption">Melampaui batas minimum syarat bank (min. 70 poin).</p>
+          <p className="metric-caption">
+            {estimatedScore === 0
+              ? 'Mulai catat transaksi di Buku Kas untuk mengaktifkan skor.'
+              : 'Melampaui batas minimum syarat bank (min. 70 poin).'}
+          </p>
         </div>
 
         {/* Metric 2: Batas Beban Kas 30% */}
@@ -241,9 +289,18 @@ export default function SimulasiKurPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value text-primary" id="val-guardrail-kur">{formatRupiah(guardrailLimit)}</span>
-            <span className="ratio-badge">Dari Laba {formatRupiah(baseMonthlyProfit)}</span>
+            <span
+              className="ratio-badge"
+              style={baseMonthlyProfit === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              {baseMonthlyProfit > 0 ? `Dari Laba ${formatRupiah(baseMonthlyProfit)}` : 'Laba Belum Ada'}
+            </span>
           </div>
-          <p className="metric-caption">Maksimal beban angsuran bulanan yang aman bagi operasional.</p>
+          <p className="metric-caption">
+            {baseMonthlyProfit === 0
+              ? 'Batas 30% akan dihitung otomatis saat kas tercatat.'
+              : 'Maksimal beban angsuran bulanan yang aman bagi operasional.'}
+          </p>
         </div>
 
         {/* Metric 3: Estimasi Angsuran KUR Terpilih */}
@@ -256,9 +313,16 @@ export default function SimulasiKurPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value text-gold" id="val-cicilan-kur">{formatRupiah(calcKur.total)}</span>
-            <span className="trend-pill trend-up">
-              <span className="material-symbols-rounded trend-icon">check_circle</span>
-              <span id="val-ratio-kur">{guard.ratio.toFixed(1)}% Laba</span>
+            <span
+              className={`trend-pill ${baseMonthlyProfit > 0 ? 'trend-up' : ''}`}
+              style={baseMonthlyProfit === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+            >
+              <span className="material-symbols-rounded trend-icon">
+                {baseMonthlyProfit > 0 ? 'check_circle' : 'calculate'}
+              </span>
+              <span id="val-ratio-kur">
+                {baseMonthlyProfit > 0 ? `${guard.ratio.toFixed(1)}% Laba` : 'Simulasi Bebas'}
+              </span>
             </span>
           </div>
           <p className="metric-caption" id="val-sub-kur">
