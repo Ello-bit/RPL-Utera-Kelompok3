@@ -201,7 +201,13 @@ export default function Sidebar({
         <div className="sidebar-header">
           <Link href={isUserAdmin ? '/admin' : '/dashboard'} className="sidebar-brand">
             <div className="brand-symbol" style={isUserAdmin ? { background: '#14532D', color: '#FCD34D' } : {}}>
-              {isUserAdmin ? '🛡️' : 'U'}
+              {isUserAdmin ? (
+                <span className="material-symbols-rounded" style={{ fontSize: '22px', color: '#FCD34D' }}>
+                  admin_panel_settings
+                </span>
+              ) : (
+                'U'
+              )}
             </div>
             <div className="brand-text">
               <span className="brand-name">{isUserAdmin ? 'UTERA PENGAWAS' : 'UTERA'}</span>
