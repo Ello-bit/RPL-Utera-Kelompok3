@@ -82,11 +82,18 @@ export default function TopBar({
           <span className="dot-unread"></span>
         </div>
 
-        {/* Quick Action: Tambah Transaksi */}
-        <Link href="/buku-kas" className="btn btn-primary btn-sm" id="btn-open-tx-modal">
-          <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>add</span>
-          <span>Catat Kas</span>
-        </Link>
+        {/* Quick Action */}
+        {userEmail.toLowerCase().includes('admin') ? (
+          <Link href="/admin?tab=direktori" className="btn btn-primary btn-sm" id="btn-open-tx-modal" style={{ background: '#14532D', borderColor: '#14532D' }}>
+            <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>verified</span>
+            <span>Verifikasi UMKM</span>
+          </Link>
+        ) : (
+          <Link href="/buku-kas" className="btn btn-primary btn-sm" id="btn-open-tx-modal">
+            <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>add</span>
+            <span>Catat Kas</span>
+          </Link>
+        )}
 
         {/* User Topbar Profile with Dropdown */}
         <div className="user-top-profile-wrap" style={{ position: 'relative' }} ref={dropdownRef}>

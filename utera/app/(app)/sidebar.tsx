@@ -125,6 +125,67 @@ export default function Sidebar({
     },
   ]
 
+  const isUserAdmin = isAdmin || userEmail.toLowerCase().includes('admin')
+
+  const adminNavItems: NavSection[] = [
+    {
+      section: 'PENGAWASAN PLATFORM',
+      items: [
+        {
+          name: 'Pusat Pengawasan',
+          href: '/admin',
+          icon: 'shield',
+          infoPill: 'Pusat',
+        },
+        {
+          name: 'Direktori & Verifikasi UMKM',
+          href: '/admin?tab=direktori',
+          icon: 'storefront',
+          badge: 5,
+        },
+        {
+          name: 'Audit Kredibilitas & Skor',
+          href: '/admin?tab=skor',
+          icon: 'verified',
+          pill: 79,
+        },
+      ],
+    },
+    {
+      section: 'AUDIT & KREDIT BANK',
+      items: [
+        {
+          name: 'Audit Mutasi Kas Global',
+          href: '/admin?tab=kas',
+          icon: 'receipt_long',
+        },
+        {
+          name: 'Pengawasan Penyaluran KUR',
+          href: '/admin?tab=kur',
+          icon: 'account_balance',
+          infoPill: 'Bank',
+        },
+      ],
+    },
+    {
+      section: 'SISTEM',
+      items: [
+        {
+          name: 'Status Keamanan & Log',
+          href: '/admin?tab=sistem',
+          icon: 'security',
+        },
+        {
+          name: 'Halaman Utama',
+          href: '/',
+          icon: 'open_in_new',
+        },
+      ],
+    },
+  ]
+
+  const activeNavItems = isUserAdmin ? adminNavItems : navItems
+
   return (
     <>
       {/* Mobile Drawer Backdrop */}
@@ -138,11 +199,13 @@ export default function Sidebar({
       {/* Main Sidebar Shell */}
       <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`} id="app-sidebar">
         <div className="sidebar-header">
-          <Link href="/dashboard" className="sidebar-brand">
-            <div className="brand-symbol">U</div>
+          <Link href={isUserAdmin ? '/admin' : '/dashboard'} className="sidebar-brand">
+            <div className="brand-symbol" style={isUserAdmin ? { background: '#14532D', color: '#FCD34D' } : {}}>
+              {isUserAdmin ? '🛡️' : 'U'}
+            </div>
             <div className="brand-text">
-              <span className="brand-name">UTERA</span>
-              <span className="brand-tag">Finansial UMKM</span>
+              <span className="brand-name">{isUserAdmin ? 'UTERA PENGAWAS' : 'UTERA'}</span>
+              <span className="brand-tag">{isUserAdmin ? 'Auditor & Kredibilitas' : 'Finansial UMKM'}</span>
             </div>
           </Link>
           <button
@@ -157,13 +220,13 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Menus */}
-        <nav className="sidebar-nav" aria-label="Menu Utama Dashboard">
-          {navItems.map((sec) => (
+        <nav className="sidebar-nav" aria-label="Menu Navigasi">
+          {activeNavItems.map((sec) => (
             <div key={sec.section} className="nav-section">
               <div className="nav-section-title">{sec.section}</div>
               <ul className="nav-list">
                 {sec.items.map((item) => {
-                  const isActive = pathname === item.href
+                  const isActive = pathname === item.href || (item.href.includes('?') && pathname === item.href.split('?')[0])
                   return (
                     <li key={item.name}>
                       <Link
@@ -193,22 +256,25 @@ export default function Sidebar({
 
         {/* Bottom Profile / Business Card */}
         <div className="sidebar-footer">
-          <Link
-            href="/profil-usaha"
+          <div
             className="business-profile-card"
-            title="Lihat Profil Usaha"
+            title={isUserAdmin ? 'Pengawas Ekosistem UTERA' : 'Profil Usaha'}
             style={{ textDecoration: 'none' }}
           >
-            <div className="business-avatar" aria-hidden="true">
-              <span className="material-symbols-rounded icon-coffee" style={{ color: '#1F6B4F' }}>
-                local_cafe
+            <div className="business-avatar" aria-hidden="true" style={isUserAdmin ? { background: '#ECFDF5' } : {}}>
+              <span className="material-symbols-rounded" style={{ color: isUserAdmin ? '#059669' : '#1F6B4F' }}>
+                {isUserAdmin ? 'verified_user' : 'local_cafe'}
               </span>
             </div>
             <div className="business-details">
-              <span className="business-title" id="sidebar-business-name">{businessName || 'Profil Usaha'}</span>
-              <span className="business-badge">{userEmail || 'UMKM Kuliner Mandiri'}</span>
+              <span className="business-title" id="sidebar-business-name">
+                {isUserAdmin ? 'Super Administrator' : (businessName || 'Profil Usaha')}
+              </span>
+              <span className="business-badge">
+                {isUserAdmin ? 'Pengawas & Penjaga Kredibilitas' : (userEmail || 'UMKM Mandiri')}
+              </span>
             </div>
-          </Link>
+          </div>
 
           <button
             type="button"
