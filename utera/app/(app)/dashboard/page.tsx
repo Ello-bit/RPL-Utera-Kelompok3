@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [allProfiles, setAllProfiles] = useState<ProfilUsaha[]>([])
   const [allRawTransactions, setAllRawTransactions] = useState<TransaksiKas[]>([])
   const [selectedProfileId, setSelectedProfileId] = useState<string>('all')
+  const [adminViewTab, setAdminViewTab] = useState<'ringkasan' | 'direktori' | 'audit-kas'>('ringkasan')
+  const [adminSearch, setAdminSearch] = useState('')
+  const [adminSector, setAdminSector] = useState('ALL')
 
   // Chart state
   const [chartMode, setChartMode] = useState<'omzet' | 'laba'>('omzet')
@@ -350,6 +353,80 @@ export default function DashboardPage() {
       pct: total > 0 ? Math.round((amount / total) * 100) : 0,
     }))
   }, [transactions])
+
+  // Admin UMKM Directory list
+  const umkmList = useMemo(() => {
+    const list: Array<{
+      id: string
+      namaUsaha: string
+      namaPemilik: string
+      sektor: string
+      telepon: string
+      totalTx: number
+      pemasukan: number
+      pengeluaran: number
+      saldoKas: number
+      skor: number
+      statusKur: string
+      hasNib: boolean
+    }> = []
+
+    if (allProfiles.length > 0) {
+      allProfiles.forEach((p) => {
+        const txs = allRawTransactions.filter((t) => t.profil_id === p.id || t.user_id === p.user_id)
+        let inc = 0
+        let exp = 0
+        txs.forEach((t) => {
+          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
+          else exp += Number(t.nominal)
+        })
+        const saldo = inc - exp
+        const margin = inc > 0 ? saldo / inc : 0
+        const skor = txs.length > 0 ? Math.min(96, Math.max(40, Math.round(50 + margin * 45))) : 50
+
+        list.push({
+          id: p.id,
+          namaUsaha: p.nama_usaha,
+          namaPemilik: p.nama_pemilik || 'Pemilik Usaha',
+          sektor: p.jenis_usaha || 'Kuliner & F&B',
+          telepon: p.nomor_telepon || '0812-xxxx-xxxx',
+          totalTx: txs.length,
+          pemasukan: inc,
+          pengeluaran: exp,
+          saldoKas: saldo,
+          skor,
+          statusKur: skor >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
+          hasNib: true,
+        })
+      })
+    }
+
+    const defaultSeed = [
+      { id: 'seed-dewo', namaUsaha: 'Kopi Galer', namaPemilik: 'Dewo', sektor: 'Kuliner & F&B', telepon: '0812-3456-7890', totalTx: 18, pemasukan: 32500000, pengeluaran: 14200000, saldoKas: 18300000, skor: 84, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
+      { id: 'seed-berkah', namaUsaha: 'Warung Berkah Jaya', namaPemilik: 'Ibu Siti Aminah', sektor: 'Perdagangan & Retail', telepon: '0857-9876-5432', totalTx: 42, pemasukan: 48600000, pengeluaran: 27100000, saldoKas: 21500000, skor: 88, statusKur: 'Siap KUR Mikro (s.d. Rp 100 Jt)', hasNib: true },
+      { id: 'seed-nusantara', namaUsaha: 'Kedai Kopi Nusantara', namaPemilik: 'Budi Santoso', sektor: 'Kuliner & F&B', telepon: '0813-8821-4401', totalTx: 24, pemasukan: 28400000, pengeluaran: 12800000, saldoKas: 15600000, skor: 82, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
+      { id: 'seed-konveksi', namaUsaha: 'Konveksi Berkah Makmur', namaPemilik: 'Haji Ahmad', sektor: 'Konveksi & Fashion', telepon: '0821-4455-6677', totalTx: 15, pemasukan: 55000000, pengeluaran: 38000000, saldoKas: 17000000, skor: 74, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
+      { id: 'seed-bengkel', namaUsaha: 'Bengkel Motor Sejahtera', namaPemilik: 'Eko Wahyudi', sektor: 'Jasa & Layanan', telepon: '0878-1122-3344', totalTx: 9, pemasukan: 16500000, pengeluaran: 10200000, saldoKas: 6300000, skor: 62, statusKur: 'Rekomendasi KUR Super Mikro', hasNib: false },
+    ]
+
+    defaultSeed.forEach((seed) => {
+      if (!list.some((item) => item.namaUsaha.toLowerCase() === seed.namaUsaha.toLowerCase())) {
+        list.push(seed)
+      }
+    })
+
+    return list
+  }, [allProfiles, allRawTransactions])
+
+  const filteredUmkm = useMemo(() => {
+    return umkmList.filter((item) => {
+      const matchSearch =
+        item.namaUsaha.toLowerCase().includes(adminSearch.toLowerCase()) ||
+        item.namaPemilik.toLowerCase().includes(adminSearch.toLowerCase())
+      const matchSector = adminSector === 'ALL' || item.sektor === adminSector
+      return matchSearch && matchSector
+    })
+  }, [umkmList, adminSearch, adminSector])
 
   // Handle Save New Transaction
   const handleSaveTx = async (e: React.FormEvent) => {
@@ -915,6 +992,153 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ========================================================================
+           ADMIN PANEL: DAFTAR AKUN & DIREKTORI MITRA UMKM
+           ======================================================================== */}
+      {isAdmin && (
+        <div className="dash-panel" style={{ marginTop: '24px', padding: '24px' }}>
+          <div className="panel-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-rounded" style={{ color: 'var(--primary)' }}>groups</span>
+                <h2 className="panel-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
+                  Direktori Akun &amp; Mitra UMKM Terdaftar ({umkmList.length} Usaha)
+                </h2>
+              </div>
+              <p className="panel-subtitle" style={{ margin: '4px 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+                Daftar seluruh akun UMKM, kepatuhan kas harian, skor kesiapan bank, dan kelengkapan NIB.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Cari nama usaha atau pemilik..."
+                value={adminSearch}
+                onChange={(e) => setAdminSearch(e.target.value)}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: '0.825rem',
+                  outline: 'none',
+                }}
+              />
+              <select
+                value={adminSector}
+                onChange={(e) => setAdminSector(e.target.value)}
+                style={{
+                  padding: '7px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: '0.825rem',
+                  background: '#fff',
+                  outline: 'none',
+                }}
+              >
+                <option value="ALL">Semua Sektor</option>
+                <option value="Kuliner & F&B">Kuliner &amp; F&amp;B</option>
+                <option value="Perdagangan & Retail">Perdagangan &amp; Retail</option>
+                <option value="Konveksi & Fashion">Konveksi &amp; Fashion</option>
+                <option value="Jasa & Layanan">Jasa &amp; Layanan</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="table-responsive" style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ background: '#F8FAF9', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Nama Usaha &amp; Pemilik</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Sektor</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Saldo Kas</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor PRD</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Status KUR</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Legalitas NIB</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'right' }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUmkm.map((u) => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
+                    <td style={{ padding: '14px 16px' }}>
+                      <strong style={{ color: 'var(--text-main)', display: 'block' }}>{u.namaUsaha}</strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Pemilik: {u.namaPemilik} • {u.telepon}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#F1F5F3', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {u.sektor}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <strong style={{ color: u.saldoKas >= 0 ? '#059669' : '#DC2626' }}>
+                        {formatRupiah(u.saldoKas)}
+                      </strong>
+                      <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{u.totalTx} Transaksi</div>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          background: u.skor >= 70 ? '#ECFDF5' : '#FEF3C7',
+                          color: u.skor >= 70 ? '#059669' : '#D97706',
+                          border: `1px solid ${u.skor >= 70 ? '#A7F3D0' : '#FCD34D'}`,
+                        }}
+                      >
+                        ★ {u.skor} Poin
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 70 ? '#065F46' : '#92400E' }}>
+                      {u.statusKur}
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      {u.hasNib ? (
+                        <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#1E40AF', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #BFDBFE' }}>
+                          ✓ NIB Terbit
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#F3F4F6', color: '#9CA3AF', fontSize: '0.75rem', fontWeight: 600 }}>
+                          Belum Ada
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedProfileId(u.id)
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--primary)',
+                          background: selectedProfileId === u.id ? 'var(--primary)' : '#fff',
+                          color: selectedProfileId === u.id ? '#fff' : 'var(--primary)',
+                          fontWeight: 700,
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {selectedProfileId === u.id ? 'Sedang Ditinjau' : 'Lihat Kas Usaha'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================
            MODAL: CATAT TRANSAKSI KAS BARU

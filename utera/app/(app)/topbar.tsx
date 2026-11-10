@@ -104,7 +104,9 @@ export default function TopBar({
             </div>
             <div className="user-meta-top">
               <span className="user-name-label" id="user-top-name">{displayName}</span>
-              <small className="user-role-label">Pemilik Warung</small>
+              <small className="user-role-label">
+                {userEmail.toLowerCase().includes('admin') ? 'Super Administrator' : 'Pemilik Usaha'}
+              </small>
             </div>
             <span
               className="material-symbols-rounded"
