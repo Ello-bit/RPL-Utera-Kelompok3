@@ -808,6 +808,122 @@ body.dashboard-body {
 }
 
 /* ==========================================================================
+   PUSAT NOTIFIKASI MODAL (FULL INBOX & DETAIL VIEW)
+   ========================================================================== */
+.notif-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 24, 20, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+.notif-modal-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 820px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 48px -12px rgba(16, 24, 20, 0.25);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  font-family: var(--font-family);
+}
+
+.notif-modal-header {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #FAFDFB;
+}
+
+.notif-modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.notif-tab-btn {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.775rem;
+  font-weight: 700;
+  border: 1px solid var(--border-subtle);
+  background: #F8FAF9;
+  color: var(--text-body);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.notif-tab-btn:hover {
+  background: #F1F5F3;
+  color: var(--primary);
+}
+
+.notif-tab-btn.is-active {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+}
+
+.notif-modal-body {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .notif-modal-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.notif-modal-sidebar {
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  max-height: 520px;
+  background: #FAFDFB;
+}
+
+.notif-modal-sidebar-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid #F1F5F3;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: background 0.15s ease;
+}
+
+.notif-modal-sidebar-item:hover {
+  background: #F1F5F3;
+}
+
+.notif-modal-sidebar-item.is-selected {
+  background: #FFFFFF;
+  border-left: 3px solid var(--primary);
+}
+
+.notif-modal-content-view {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 520px;
+}
+
+/* ==========================================================================
    BUTTONS & BADGES
    ========================================================================== */
 .btn {

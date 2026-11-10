@@ -548,6 +548,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* UMKM Financial Insight & Notification Banner */}
+      {!isAdmin && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#F0FDF4',
+          border: '1px solid #BBF7D0',
+          borderRadius: '12px',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          fontSize: '0.85rem',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '20px' }}>
+              verified
+            </span>
+            <span>
+              <strong>Kabar Baik:</strong> Skor Kelayakan Bank Anda naik ke <strong>79/100</strong>. Kapasitas cicilan aman Guardrail 30% mencapai <strong>Rp 16.905.000/bln</strong>.
+            </span>
+          </div>
+          <Link href="/skor-kelayakan" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span>Lihat Analisis Skor</span>
+            <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>arrow_forward</span>
+          </Link>
+        </div>
+      )}
+
       {/* ====================================================================
            1. KPI STATS METRIC ROW (Material Symbols Icons)
            ==================================================================== */}
