@@ -157,6 +157,25 @@ export default function TopBar({
     } catch (e) {}
   }, [isUserAdmin, userEmail])
 
+  // Real-time listener for notification updates
+  useEffect(() => {
+    const handleUpdate = () => {
+      const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+      try {
+        const stored = localStorage.getItem(storageKey)
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed)) {
+            setNotifList(parsed)
+            if (parsed.length > 0) setSelectedNotif(parsed[0])
+          }
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('utera_notifs_updated', handleUpdate)
+    return () => window.removeEventListener('utera_notifs_updated', handleUpdate)
+  }, [userEmail])
+
   const unreadCount = notifList.filter((n) => !n.read).length
 
   const filteredModalNotifs = useMemo(() => {

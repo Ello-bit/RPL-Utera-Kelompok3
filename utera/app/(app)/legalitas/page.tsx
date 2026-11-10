@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import { DEFAULT_LEGALITAS_DOCS, evaluateLegalitas } from '@/lib/legalitas'
@@ -258,6 +259,39 @@ export default function LegalitasPage() {
           </div>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status Kesiapan</span>
         </div>
+      </div>
+
+      {/* Verification CTA Banner */}
+      <div
+        style={{
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          borderRadius: '12px',
+          padding: '14px 20px',
+          marginBottom: '28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="material-symbols-rounded" style={{ color: '#2563EB', fontSize: '24px' }}>
+            verified_user
+          </span>
+          <span style={{ fontSize: '0.875rem', color: '#1E40AF', lineHeight: 1.4 }}>
+            <strong>Validasi Legalitas Resmi:</strong> Ajukan permohonan audit NIB dan legalitas dokumen Anda ke <strong>Admin Pengawas UTERA</strong> agar tercatat resmi sebagai Mitra Kredibel.
+          </span>
+        </div>
+        <Link
+          href="/profil-usaha"
+          className="btn btn-primary btn-sm"
+          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified</span>
+          <span>Ajukan Verifikasi ke Admin</span>
+        </Link>
       </div>
 
       {/* Document Checklist Cards */}

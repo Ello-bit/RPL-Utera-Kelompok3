@@ -3,8 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_PROFILES } from '@/lib/demo-seed'
+import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables, TablesInsert } from '@/lib/database.types'
+import {
+  VerificationRequest,
+  findVerificationByBusiness,
+  submitVerificationRequest,
+} from '@/lib/verification'
 import './profil-usaha.css'
 
 type ProfilUsaha = Tables<'profil_usaha'>
@@ -39,6 +44,15 @@ export default function ProfilUsahaPage() {
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
+  // Verification states
+  const [verifRecord, setVerifRecord] = useState<VerificationRequest | null>(null)
+  const [isVerifModalOpen, setIsVerifModalOpen] = useState(false)
+  const [verifType, setVerifType] = useState('Verifikasi Kredibilitas Lengkap (Siap KUR)')
+  const [verifNotes, setVerifNotes] = useState('')
+  const [submittingVerif, setSubmittingVerif] = useState(false)
+  const [userTotalTx, setUserTotalTx] = useState(0)
+  const [userSkorPRD, setUserSkorPRD] = useState(0)
+
   // Legal document states
   const [hasNib, setHasNib] = useState(false)
   const [nomorNib, setNomorNib] = useState('')
@@ -57,6 +71,8 @@ export default function ProfilUsahaPage() {
       if (!user) {
         setIsGuest(true)
         setProfiles(DEMO_PROFILES)
+        setUserTotalTx(DEMO_TRANSACTIONS.length)
+        setUserSkorPRD(82)
         if (DEMO_PROFILES.length > 0) {
           setActiveProfile(DEMO_PROFILES[0])
           setHasNib(true)
@@ -123,11 +139,77 @@ export default function ProfilUsahaPage() {
         })
       }
 
+      // 3. Fetch transactions for verification summary
+      const { data: txsData } = await supabase.from('transaksi_kas').select('*')
+      if (txsData) {
+        setUserTotalTx(txsData.length)
+        let inc = 0
+        let exp = 0
+        txsData.forEach((t) => {
+          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
+          else exp += Number(t.nominal)
+        })
+        const saldo = inc - exp
+        const margin = inc > 0 ? saldo / inc : 0
+        const skor = txsData.length > 0 ? Math.min(96, Math.max(40, Math.round(50 + margin * 45))) : 0
+        setUserSkorPRD(skor)
+      }
+
       setLoading(false)
     }
 
     loadData()
   }, [])
+
+  // Sync verification status with active profile
+  useEffect(() => {
+    if (activeProfile.nama_usaha) {
+      const rec = findVerificationByBusiness(activeProfile.id || '', activeProfile.nama_usaha)
+      setVerifRecord(rec)
+    }
+  }, [activeProfile.id, activeProfile.nama_usaha])
+
+  useEffect(() => {
+    const handleVerifChange = () => {
+      if (activeProfile.nama_usaha) {
+        const rec = findVerificationByBusiness(activeProfile.id || '', activeProfile.nama_usaha)
+        setVerifRecord(rec)
+      }
+    }
+    window.addEventListener('utera_verification_changed', handleVerifChange)
+    return () => window.removeEventListener('utera_verification_changed', handleVerifChange)
+  }, [activeProfile.id, activeProfile.nama_usaha])
+
+  const handleSubmitVerification = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!activeProfile.nama_usaha || !activeProfile.nama_usaha.trim()) {
+      showToast('error', 'Nama usaha wajib diisi terlebih dahulu sebelum mengajukan verifikasi.')
+      return
+    }
+
+    setSubmittingVerif(true)
+    setTimeout(() => {
+      const newRec = submitVerificationRequest({
+        businessId: activeProfile.id || 'usr-bus-' + Date.now(),
+        businessName: activeProfile.nama_usaha || 'Usaha Mandiri',
+        ownerName: activeProfile.nama_pemilik || 'Pemilik Usaha',
+        phoneNumber: activeProfile.nomor_telepon || '-',
+        businessSector: activeProfile.jenis_usaha || 'Kuliner & F&B',
+        applicationType: verifType,
+        notes: verifNotes.trim() || 'Permohonan audit kredibilitas kelayakan kredit dan legalitas NIB.',
+        hasNib,
+        nomorNib: hasNib ? nomorNib : undefined,
+        totalTransactions: userTotalTx,
+        skorPRD: userSkorPRD,
+      })
+
+      setVerifRecord(newRec)
+      setSubmittingVerif(false)
+      setIsVerifModalOpen(false)
+      setVerifNotes('')
+      showToast('success', 'Permohonan verifikasi kredibilitas berhasil dikirimkan ke Admin Pengawas UTERA!')
+    }, 500)
+  }
 
   // Calculate completeness score (7 profile fields + 2 legal docs)
   const fields = [
@@ -379,6 +461,49 @@ export default function ProfilUsahaPage() {
                   : 'Tanggal mulai belum diisi'}
               </span>
             </span>
+
+            <span
+              className="meta-chip"
+              style={{
+                background:
+                  verifRecord?.status === 'verified'
+                    ? '#DCFCE7'
+                    : verifRecord?.status === 'pending'
+                    ? '#DBEAFE'
+                    : verifRecord?.status === 'rejected'
+                    ? '#FEE2E2'
+                    : '#F5F5F4',
+                color:
+                  verifRecord?.status === 'verified'
+                    ? '#15803D'
+                    : verifRecord?.status === 'pending'
+                    ? '#1D4ED8'
+                    : verifRecord?.status === 'rejected'
+                    ? '#B91C1C'
+                    : '#57534E',
+                borderColor: 'currentColor',
+                fontWeight: 700,
+              }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>
+                {verifRecord?.status === 'verified'
+                  ? 'verified'
+                  : verifRecord?.status === 'pending'
+                  ? 'hourglass_empty'
+                  : verifRecord?.status === 'rejected'
+                  ? 'error'
+                  : 'shield'}
+              </span>
+              <span>
+                {verifRecord?.status === 'verified'
+                  ? 'Terverifikasi Kredibel'
+                  : verifRecord?.status === 'pending'
+                  ? 'Verifikasi Diproses'
+                  : verifRecord?.status === 'rejected'
+                  ? 'Perlu Revisi'
+                  : 'Belum Terverifikasi'}
+              </span>
+            </span>
           </div>
         </div>
 
@@ -403,6 +528,168 @@ export default function ProfilUsahaPage() {
             <span className="material-symbols-rounded">add</span>
             <span>Tambah Profil</span>
           </button>
+        </div>
+      </div>
+
+      {/* VERIFIKASI KREDIBILITAS STATUS WIDGET */}
+      <div
+        className="verification-status-card"
+        style={{
+          background:
+            verifRecord?.status === 'verified'
+              ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)'
+              : verifRecord?.status === 'pending'
+              ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
+              : verifRecord?.status === 'rejected'
+              ? 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)'
+              : 'linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)',
+          border:
+            verifRecord?.status === 'verified'
+              ? '1.5px solid #86EFAC'
+              : verifRecord?.status === 'pending'
+              ? '1.5px solid #93C5FD'
+              : verifRecord?.status === 'rejected'
+              ? '1.5px solid #FCA5A5'
+              : '1.5px solid #E7E5E4',
+          borderRadius: '16px',
+          padding: '22px 24px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', maxWidth: '640px' }}>
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background:
+                verifRecord?.status === 'verified'
+                  ? '#16A34A'
+                  : verifRecord?.status === 'pending'
+                  ? '#2563EB'
+                  : verifRecord?.status === 'rejected'
+                  ? '#DC2626'
+                  : '#78716C',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: '28px' }}>
+              {verifRecord?.status === 'verified'
+                ? 'verified'
+                : verifRecord?.status === 'pending'
+                ? 'hourglass_top'
+                : verifRecord?.status === 'rejected'
+                ? 'cancel'
+                : 'shield'}
+            </span>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-heading, #0F2419)' }}>
+                {verifRecord?.status === 'verified'
+                  ? 'Mitra UMKM Terverifikasi Resmi UTERA'
+                  : verifRecord?.status === 'pending'
+                  ? 'Pengajuan Verifikasi Sedang Ditinjau Admin'
+                  : verifRecord?.status === 'rejected'
+                  ? 'Permohonan Memerlukan Perbaikan Berkas'
+                  : 'Status Kredibilitas: Belum Diverifikasi'}
+              </h3>
+              <span
+                style={{
+                  fontSize: '0.725rem',
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  background:
+                    verifRecord?.status === 'verified'
+                      ? '#DCFCE7'
+                      : verifRecord?.status === 'pending'
+                      ? '#DBEAFE'
+                      : verifRecord?.status === 'rejected'
+                      ? '#FEE2E2'
+                      : '#E7E5E4',
+                  color:
+                    verifRecord?.status === 'verified'
+                      ? '#15803D'
+                      : verifRecord?.status === 'pending'
+                      ? '#1D4ED8'
+                      : verifRecord?.status === 'rejected'
+                      ? '#B91C1C'
+                      : '#57534E',
+                  border: '1px solid currentColor',
+                }}
+              >
+                {verifRecord?.status === 'verified'
+                  ? 'Lolos Audit Kredibel'
+                  : verifRecord?.status === 'pending'
+                  ? 'Sedang Diproses'
+                  : verifRecord?.status === 'rejected'
+                  ? 'Perlu Revisi'
+                  : 'Belum Diajukan'}
+              </span>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#4B5563', lineHeight: 1.5 }}>
+              {verifRecord?.status === 'verified'
+                ? `Usaha Anda telah lolos validasi Otoritas Pengawas UTERA dengan No. Sertifikat ${verifRecord.certificateNumber || 'UTERA-VERIF-RESMI'}. Profil dan pembukuan kas Anda diprioritaskan saat pengajuan KUR di bank mitra.`
+                : verifRecord?.status === 'pending'
+                ? `Permohonan diajukan: ${verifRecord.submittedAt} (${verifRecord.applicationType}). Tim auditor pengawas sedang memverifikasi integritas pembukuan kas dan kelengkapan izin usaha Anda (Estimasi: 1x24 jam kerja).`
+                : verifRecord?.status === 'rejected'
+                ? `Catatan Auditor: "${verifRecord.rejectionReason || 'Lengkapi dokumen NIB dan catatan kas harian'}". Silakan perbaiki data lalu ajukan kembali.`
+                : 'Dapatkan tanda centang kredibel resmi dari Otoritas Pengawas UTERA agar usaha Anda diakui perbankan dan memenuhi syarat percepatan penyaluran KUR.'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          {verifRecord?.status === 'verified' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803D', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified_user</span>
+                Sertifikat Kredibel Aktif
+              </span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setIsVerifModalOpen(true)}
+                style={{ fontSize: '0.8rem', fontWeight: 700, background: '#fff' }}
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>visibility</span>
+                <span>Lihat Sertifikat</span>
+              </button>
+            </div>
+          ) : verifRecord?.status === 'pending' ? (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setIsVerifModalOpen(true)}
+              style={{ fontSize: '0.8rem', fontWeight: 700, background: '#fff', borderColor: '#93C5FD', color: '#1D4ED8' }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>assignment</span>
+              <span>Rincian Pengajuan</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setIsVerifModalOpen(true)}
+              id="btn-ajukan-verifikasi"
+              style={{ fontSize: '0.875rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>verified</span>
+              <span>{verifRecord?.status === 'rejected' ? 'Ajukan Ulang Verifikasi' : 'Ajukan Verifikasi ke Admin'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -804,6 +1091,325 @@ export default function ProfilUsahaPage() {
                 <span>Ya, Hapus</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VERIFICATION APPLICATION & CERTIFICATE MODAL */}
+      {isVerifModalOpen && (
+        <div className="modal-backdrop" style={{ zIndex: 1100 }}>
+          <div className="modal-box" style={{ maxWidth: '580px', width: '92%' }}>
+            {verifRecord?.status === 'verified' ? (
+              /* VIEW: VERIFIED CERTIFICATE */
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      background: '#ECFDF5',
+                      color: '#059669',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: '12px',
+                      border: '2px solid #A7F3D0',
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ fontSize: '36px' }}>verified</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-heading)' }}>
+                    Sertifikat Kredibilitas UMKM
+                  </h3>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Otoritas Pengawasan Platform UTERA Finansial
+                  </p>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '6px',
+                      background: '#F1F5F9',
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      color: '#1E293B',
+                      border: '1px solid #CBD5E1',
+                    }}
+                  >
+                    No: {verifRecord.certificateNumber || 'UTERA-VERIF-2026-088'}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    background: '#F8FAF9',
+                    border: '1px solid #E6EDE9',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    fontSize: '0.85rem',
+                    marginBottom: '20px',
+                  }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Nama Usaha</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{activeProfile.nama_usaha}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Pemilik Usaha</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{activeProfile.nama_pemilik || '-'}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Legalitas NIB</span>
+                      <strong style={{ color: '#059669' }}>{hasNib ? `Terdaftar (${nomorNib})` : 'Belum Ada'}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Tanggal Disahkan</span>
+                      <strong style={{ color: 'var(--text-main)' }}>{verifRecord.reviewedAt || '2026-03-01'}</strong>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #D1E7DC' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Auditor Pengawas:</span>
+                    <strong style={{ color: '#1F6B4F' }}>{verifRecord.reviewedBy || 'Super Administrator UTERA'}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setIsVerifModalOpen(false)}
+                  >
+                    Tutup
+                  </button>
+                  <Link href="/laporan-siap-bank" className="btn btn-primary">
+                    <span className="material-symbols-rounded">download</span>
+                    <span>Cetak Bukti Siap Bank</span>
+                  </Link>
+                </div>
+              </div>
+            ) : verifRecord?.status === 'pending' ? (
+              /* VIEW: PENDING DETAILS */
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '10px',
+                      background: '#EFF6FF',
+                      color: '#2563EB',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ fontSize: '26px' }}>hourglass_top</span>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-heading)' }}>
+                      Rincian Pengajuan Verifikasi
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                      Status: Dalam Antrean Audit Otoritas UTERA
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: '#F8FAF9',
+                    border: '1px solid #E6EDE9',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    fontSize: '0.85rem',
+                    marginBottom: '20px',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <div style={{ marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Jenis Pengajuan:</span>
+                    <strong>{verifRecord.applicationType}</strong>
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Waktu Dikirim:</span>
+                    <span>{verifRecord.submittedAt}</span>
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Catatan Pengajuan Anda:</span>
+                    <p style={{ margin: '4px 0 0', background: '#FFFFFF', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', fontStyle: 'italic' }}>
+                      &ldquo;{verifRecord.notes}&rdquo;
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', fontSize: '0.78rem', color: '#1E40AF', background: '#EFF6FF', padding: '10px 12px', borderRadius: '8px' }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>info</span>
+                    <span>Auditor sedang memvalidasi kesesuaian pembukuan kas warung Anda dengan standar SAK EMKM dan verifikasi NIB OSS. Hasil akan diberitahukan lewat notifikasi akun Anda.</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setIsVerifModalOpen(false)}
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* VIEW: SUBMISSION FORM (UNVERIFIED / REJECTED) */
+              <form onSubmit={handleSubmitVerification}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '10px',
+                      background: '#ECFDF5',
+                      color: '#059669',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <span className="material-symbols-rounded" style={{ fontSize: '26px' }}>verified_user</span>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-heading)' }}>
+                      Formulir Pengajuan Verifikasi Kredibilitas
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                      Ajukan audit pembukuan kas &amp; legalitas usaha ke Otoritas Pengawas UTERA
+                    </p>
+                  </div>
+                </div>
+
+                {/* Data Summary Card */}
+                <div
+                  style={{
+                    background: '#F8FAF9',
+                    border: '1px solid #E6EDE9',
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    fontSize: '0.825rem',
+                    marginBottom: '16px',
+                  }}
+                >
+                  <strong style={{ display: 'block', marginBottom: '8px', color: '#1F6B4F' }}>
+                    Ringkasan Berkas yang Akan Diaudit:
+                  </strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Nama Usaha: </span>
+                      <strong>{activeProfile.nama_usaha || '(Wajib diisi di profil)'}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Pemilik Usaha: </span>
+                      <strong>{activeProfile.nama_pemilik || '-'}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Legalitas NIB: </span>
+                      <strong style={{ color: hasNib ? '#059669' : '#D97706' }}>
+                        {hasNib ? `✓ Ada (${nomorNib})` : '○ Belum diisi'}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text-muted)' }}>Buku Kas: </span>
+                      <strong>{userTotalTx} Transaksi ({userSkorPRD}/100 Poin)</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Jenis Pengajuan */}
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Pilih Jenis Fasilitas Verifikasi <span className="required">*</span>
+                  </label>
+                  <select
+                    className="form-control"
+                    value={verifType}
+                    onChange={(e) => setVerifType(e.target.value)}
+                    style={{ fontSize: '0.85rem', padding: '10px 12px' }}
+                  >
+                    <option value="Verifikasi Kredibilitas Lengkap (Siap KUR)">
+                      Verifikasi Kredibilitas Lengkap (Siap KUR Mikro / Super Mikro)
+                    </option>
+                    <option value="Validasi Dokumen NIB & Legalitas OSS">
+                      Validasi Dokumen NIB &amp; Legalitas OSS RBA
+                    </option>
+                    <option value="Audit Konsistensi Buku Kas Warung">
+                      Audit Konsistensi Buku Kas Warung (SAK EMKM)
+                    </option>
+                  </select>
+                </div>
+
+                {/* Catatan / Pesan untuk Admin */}
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '6px' }}>
+                    Catatan / Permohonan Khusus untuk Admin Pengawas
+                  </label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    placeholder="Contoh: Kami telah aktif mencatat mutasi kas warung harian dan melengkapi NIB. Mohon audit kredibilitas untuk pengajuan fasilitas KUR ke Bank mitra."
+                    value={verifNotes}
+                    onChange={(e) => setVerifNotes(e.target.value)}
+                    style={{ fontSize: '0.85rem', padding: '10px 12px' }}
+                  />
+                  <span className="form-hint" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Sertakan informasi tambahan yang relevan untuk mempercepat proses pemeriksaan admin.
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    background: '#F0FDF4',
+                    border: '1px solid #BBF7D0',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    fontSize: '0.78rem',
+                    color: '#15803D',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>shield</span>
+                  <span>
+                    Data Anda aman dan diaudit secara rahasia oleh Otoritas Pengawas UTERA sesuai standar audit kredit perbankan.
+                  </span>
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setIsVerifModalOpen(false)}
+                    disabled={submittingVerif}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submittingVerif || !activeProfile.nama_usaha?.trim()}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>
+                      {submittingVerif ? 'progress_activity' : 'send'}
+                    </span>
+                    <span>{submittingVerif ? 'Mengirimkan...' : 'Kirim Pengajuan Verifikasi'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
