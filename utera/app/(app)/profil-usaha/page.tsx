@@ -79,10 +79,18 @@ export default function ProfilUsahaPage() {
         setProfiles(typed)
         setActiveProfile(typed[0])
       } else {
-        const defaultName = (user.user_metadata?.full_name as string) || ''
+        const fullName = (user.user_metadata?.full_name as string) || ''
+        let initialNamaUsaha = ''
+        let initialNamaPemilik = fullName
+        if (fullName.includes('-')) {
+          const parts = fullName.split('-').map((s) => s.trim())
+          initialNamaPemilik = parts[0] || fullName
+          initialNamaUsaha = parts[1] || ''
+        }
+
         setActiveProfile({
-          nama_usaha: '',
-          nama_pemilik: defaultName,
+          nama_usaha: initialNamaUsaha,
+          nama_pemilik: initialNamaPemilik,
           jenis_usaha: 'Kuliner & F&B',
           tanggal_mulai_usaha: '',
           nomor_telepon: '',

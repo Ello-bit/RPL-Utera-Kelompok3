@@ -73,11 +73,23 @@ export default function LaporanSiapBankPage() {
       if (profs && profs.length > 0) {
         setProfile(profs[0] as ProfilUsaha)
       } else {
+        const fullName = (user.user_metadata?.full_name as string) || ''
+        let initialNamaUsaha = 'Usaha Mandiri'
+        let initialNamaPemilik = 'Pemilik Usaha'
+        if (fullName.includes('-')) {
+          const parts = fullName.split('-').map((s) => s.trim())
+          initialNamaPemilik = parts[0] || 'Pemilik Usaha'
+          initialNamaUsaha = parts[1] || 'Usaha Mandiri'
+        } else if (fullName) {
+          initialNamaPemilik = fullName
+          initialNamaUsaha = `Usaha ${fullName}`
+        }
+
         setProfile({
           id: 'temp',
           user_id: user.id,
-          nama_usaha: `Usaha ${user.user_metadata?.full_name || 'UMKM'}`,
-          nama_pemilik: (user.user_metadata?.full_name as string) || 'Pemilik Usaha',
+          nama_usaha: initialNamaUsaha,
+          nama_pemilik: initialNamaPemilik,
           jenis_usaha: 'Kuliner & F&B',
           tanggal_mulai_usaha: '2025-01-01',
           alamat_usaha: '-',
