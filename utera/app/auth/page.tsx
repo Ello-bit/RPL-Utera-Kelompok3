@@ -60,12 +60,29 @@ function AuthContent() {
         })
 
         if (error) {
-          setErrorMessage(error.message)
+          if (error.message.toLowerCase().includes('rate limit')) {
+            setErrorMessage(
+              'Batas pengiriman email verifikasi gratis Supabase tercapai (maksimal 3-4 email/jam). Solusi: Matikan opsi "Confirm email" di Supabase Dashboard (Authentication > Providers > Email).'
+            )
+          } else if (error.message.toLowerCase().includes('signups are disabled')) {
+            setErrorMessage(
+              'Pendaftaran akun email dinonaktifkan di Supabase. Solusi: Di Supabase Dashboard (Authentication > Sign In / Providers > Email), aktifkan kembali toggle "Allow new users to sign up".'
+            )
+          } else {
+            setErrorMessage(error.message)
+          }
           return
         }
 
         if (data.user && data.user.identities && data.user.identities.length === 0) {
           setErrorMessage('Email ini sudah terdaftar. Silakan beralih ke mode Masuk.')
+          return
+        }
+
+        if (data.session) {
+          setSuccessMessage('Pendaftaran berhasil! Anda langsung masuk ke dashboard...')
+          router.push(redirectTarget)
+          router.refresh()
           return
         }
 

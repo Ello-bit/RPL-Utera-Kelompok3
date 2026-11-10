@@ -66,19 +66,45 @@ export default function DashboardPage() {
       if (profs && profs.length > 0) {
         setProfile(profs[0] as ProfilUsaha)
       } else {
-        setProfile({
-          id: 'user-default',
-          nama_usaha: `Usaha ${user.user_metadata?.full_name || 'Mandiri'}`,
-          nama_pemilik: user.user_metadata?.full_name || 'Pemilik Usaha',
-          jenis_usaha: 'UMKM Mandiri',
-          nomor_telepon: null,
-          alamat_usaha: null,
-          tanggal_mulai_usaha: null,
-          deskripsi_usaha: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: user.id,
-        })
+        const fullName = (user.user_metadata?.full_name as string) || ''
+        let initialNamaUsaha = 'Usaha Mandiri'
+        let initialNamaPemilik = 'Pemilik Usaha'
+        if (fullName.includes('-')) {
+          const parts = fullName.split('-').map((s) => s.trim())
+          initialNamaPemilik = parts[0] || 'Pemilik Usaha'
+          initialNamaUsaha = parts[1] || 'Usaha Mandiri'
+        } else if (fullName) {
+          initialNamaPemilik = fullName
+          initialNamaUsaha = `Usaha ${fullName}`
+        }
+
+        const { data: createdProf, error: createErr } = await supabase
+          .from('profil_usaha')
+          .insert({
+            nama_usaha: initialNamaUsaha,
+            nama_pemilik: initialNamaPemilik,
+            jenis_usaha: 'Kuliner & F&B',
+          })
+          .select()
+          .single()
+
+        if (!createErr && createdProf) {
+          setProfile(createdProf as ProfilUsaha)
+        } else {
+          setProfile({
+            id: 'user-default',
+            nama_usaha: initialNamaUsaha,
+            nama_pemilik: initialNamaPemilik,
+            jenis_usaha: 'Kuliner & F&B',
+            nomor_telepon: null,
+            alamat_usaha: null,
+            tanggal_mulai_usaha: null,
+            deskripsi_usaha: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: user.id,
+          })
+        }
       }
 
       // Fetch Transactions
@@ -285,7 +311,7 @@ export default function DashboardPage() {
           tanggal: txDate,
           keterangan: txDesc.trim(),
           metode_pembayaran: 'Tunai',
-          profil_id: profile?.id,
+          profil_id: profile?.id && profile.id !== 'user-default' ? profile.id : null,
         })
         .select()
         .single()
