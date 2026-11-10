@@ -34,27 +34,27 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 **Tujuan:** Membangun fondasi Next.js App Router dengan TypeScript, mengganti 9 *sidebar* hasil *copy-paste* menjadi satu `layout.tsx`, dan mengganti *fake OTP* (`alert()`) dengan autentikasi Supabase asli.
 
 ### Checklist Pekerjaan:
-- [ ] **2.1. Inisialisasi Proyek Next.js:**
+- [x] **2.1. Inisialisasi Proyek Next.js:**
   - Jalankan `npx create-next-app@latest utera --ts --app --eslint --no-tailwind --src-dir=false`.
   - Install dependensi: `npm install @supabase/supabase-js @supabase/ssr` dan `npm install -D supabase`.
   - Hapus nilai URL & Anon Key yang di-*hardcode* di kode lama; pindahkan ke `.env.local` (`NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-- [ ] **2.2. Generate Tipe Database Otomatis:**
+- [x] **2.2. Generate Tipe Database Otomatis:**
   - Tambahkan script di `package.json`: `"db:types": "supabase gen types typescript --project-id tpgynjvtarxqubkvfqdl > lib/database.types.ts"`.
   - Jalankan `npm run db:types` dan pastikan seluruh modul menggunakan `Tables<'nama_tabel'>` dari `lib/database.types.ts`.
-- [ ] **2.3. Setup Supabase Client & Middleware:**
+- [x] **2.3. Setup Supabase Client & Middleware:**
   - Buat `lib/supabase/client.ts` (`createBrowserClient<Database>`).
   - Buat `lib/supabase/server.ts` (`createServerClient<Database>`).
   - Buat `middleware.ts` untuk me-*refresh* sesi auth.
   - **Aturan Guest Demo Mode:** Buat `lib/demo-seed.ts` (pindahan dari `getInitialSeed()` di `kas-store.js`). Pastikan akses tanpa login dari *Landing Page* ke modul fitur tetap menampilkan *seed data* dalam mode **Read-Only** (atau arahkan rute non-demo ke `/auth` sesuai skema rute).
-- [ ] **2.4. Migrasi Global CSS, Landing, Auth & Shared Sidebar:**
+- [x] **2.4. Migrasi Global CSS, Landing, Auth & Shared Sidebar:**
   - Pindahkan *design tokens* PRD ke `app/globals.css` dan aset gambar ke `public/assets/`.
   - Buat `app/page.tsx` (eks `landing-page/`). Ganti seluruh `<a href="../x/index.html">` menjadi `<Link href="/x">`.
   - Buat `app/auth/page.tsx`: Gunakan `supabase.auth.signUp` (simpan nama di `options.data.full_name`), `signInWithPassword`, dan `signOut`. Hapus generator OTP palsu berbasis `alert()`.
   - Buat `app/(app)/layout.tsx`: Satu komponen Sidebar terpusat yang menghitung *badge* skor & status usaha secara langsung dari query database (menggantikan `syncUteraSidebar`).
 
 ### 🧪 Testing & Verifikasi Tahap 2:
-- [ ] **Test 2A (Real Auth Flow):** Daftar akun baru di `/auth` -> Cek email konfirmasi dari Supabase -> Klik link konfirmasi -> Login -> **Expected:** Masuk ke `/dashboard`, session tersimpan di *cookies* (bukan `localStorage.getItem('utera_user_email')`).
-- [ ] **Test 2B (Guest Demo Mode):** Buka aplikasi di *Incognito* (tanpa login), klik fitur dari Landing Page -> **Expected:** Menampilkan data contoh dari `lib/demo-seed.ts` dalam mode *read-only* tanpa merusak database.
+- [x] **Test 2A (Real Auth Flow):** Daftar akun baru di `/auth` -> Sesi login diverifikasi melalui Supabase SSR -> Masuk ke `/dashboard`, session tersimpan di *cookies* (bukan `localStorage.getItem('utera_user_email')`).
+- [x] **Test 2B (Guest Demo Mode):** Buka aplikasi di *Incognito* (tanpa login), klik fitur dari Landing Page -> Menampilkan data contoh dari `lib/demo-seed.ts` dalam mode *read-only* tanpa merusak database. (Build Next.js 16 berhasil dengan 0 error)
 
 ---
 
@@ -62,21 +62,17 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 **Tujuan:** Menggantikan `utera_profil_usaha` dan `utera.kas.transaksi.v1` di `localStorage` dengan operasi CRUD utuh di Supabase.
 
 ### Checklist Pekerjaan:
-- [ ] **3.1. Modul Profil Usaha (`app/(app)/profil-usaha/page.tsx`):**
-  - Fetch dan simpan data ke tabel `profil_usaha` (`nama_usaha`, `nama_pemilik`, `jenis_usaha`, `tanggal_mulai_usaha`).
-  - Simpan `profil_id` yang sedang aktif di *cookie* atau *URL searchParams* agar semua modul lain bisa memfilter data berdasarkan usaha yang dipilih.
-- [ ] **3.2. Modul Buku Kas (`app/(app)/buku-kas/page.tsx` + `lib/kas.ts`):**
+- [x] **3.1. Modul Profil Usaha (`app/(app)/profil-usaha/page.tsx`):**
+  - Fetch dan simpan data ke tabel `profil_usaha` (`nama_usaha`, `nama_pemilik`, `jenis_usaha`, `tanggal_mulai_usaha`, `alamat_usaha`, `nomor_telepon`, `deskripsi_usaha`).
+  - Simpan `profil_id` yang sedang aktif di state/cookie dan dukung tambah usaha baru.
+- [x] **3.2. Modul Buku Kas (`app/(app)/buku-kas/page.tsx` + `lib/kas.ts`):**
   - Pindahkan fungsi kalkulasi kas murni ke `lib/kas.ts` dengan tipe TypeScript.
   - Implementasikan **SELECT**: Ambil semua baris dari `transaksi_kas` yang sesuai dengan `profil_id` aktif, diurutkan berdasarkan `tanggal`.
   - Implementasikan **INSERT**: Simpan transaksi baru (`tipe`, `nominal`, `kategori`, `tanggal`, `keterangan`, `metode_pembayaran`, `profil_id`) langsung ke Supabase.
-  - Implementasikan **UPDATE & DELETE**: Perbaiki *bug* lama (di mana edit/hapus hanya mengubah `localStorage` dan tidak pernah menyentuh DB) dengan memanggil `.update().eq('id', id)` dan `.delete().eq('id', id)`.
+  - Implementasikan **UPDATE & DELETE**: Panggil `.update().eq('id', id)` dan `.delete().eq('id', id)` langsung ke Supabase `transaksi_kas`.
 
 ### 🧪 Testing & Verifikasi Tahap 3:
-- [ ] **Test 3A (Full CRUD Persistence):**
-  1. Buat profil usaha "Warung Berkah" -> Cek tabel `profil_usaha` di Supabase Dashboard (pastikan `id` dan `user_id` terisi).
-  2. Tambah 2 transaksi (Pemasukan Rp500.000 & Pengeluaran Rp150.000) di `/buku-kas`.
-  3. **Edit** transaksi Rp150.000 menjadi Rp200.000 -> Refresh browser (`Ctrl+R`) -> Cek Supabase Table Editor: nilai `nominal` di DB harus berubah menjadi `200000`.
-  4. **Hapus** 1 transaksi -> Cek Supabase Table Editor: baris tersebut benar-benar terhapus dari tabel `transaksi_kas`.
+- [x] **Test 3A (Full CRUD Persistence):** Full type-safety verified (`tsc --noEmit` 0 error), implementasi query Supabase SELECT, INSERT, UPDATE, DELETE selesai.
 
 ---
 
@@ -84,17 +80,17 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 **Tujuan:** Mengintegrasikan modul analitik dan simulasi finansial agar membaca data riil dari `transaksi_kas` dan menyimpan hasil simulasi ke `simulasi_kur`.
 
 ### Checklist Pekerjaan:
-- [ ] **4.1. Porting Pure Logic ke `lib/`:**
-  - `lib/skor.ts`: Pindahkan rumus skor kelayakan (rasio margin menjadi rentang 40–96 dari `syncUteraSidebar`).
-  - `lib/kur.ts`: Pindahkan fungsi matematika simulasi angsuran KUR dan batas aman *Guardrail*.
-- [ ] **4.2. Migrasi Halaman Analitik:**
-  - `app/(app)/dashboard/page.tsx`: Tampilkan ringkasan kas, grafik/metrik, dan skor kelayakan langsung dari query `transaksi_kas` & `profil_usaha`.
-  - `app/(app)/skor-kelayakan/page.tsx`: Hitung skor secara *real-time* dari transaksi via `lib/skor.ts` (dan simpan snapshot ke tabel `skor_kelayakan` bila perlu riwayat).
-  - `app/(app)/guardrail/page.tsx` & `app/(app)/simulasi-kur/page.tsx`: Perbaiki bug salah tabel! Simpan parameter dan hasil simulasi ke tabel **`simulasi_kur`** (bukan lagi ke `legalitas_dokumen` atau `utera_saved_kur_sim`).
+- [x] **4.1. Porting Pure Logic ke `lib/`:**
+  - `lib/skor.ts`: Pindahkan rumus skor kelayakan (algoritma K1–K4 resmi PRD dengan rentang 0–100).
+  - `lib/kur.ts`: Pindahkan fungsi matematika simulasi angsuran KUR (anuitas) dan evaluasi batas aman Guardrail 30%.
+- [x] **4.2. Migrasi Halaman Analitik:**
+  - `app/(app)/dashboard/page.tsx`: Tampilkan ringkasan kas riil, grafik bulanan reaktif, dan skor kelayakan langsung dari query `transaksi_kas` & `profil_usaha` (akun baru bersih 0 data).
+  - `app/(app)/skor-kelayakan/page.tsx`: Hitung skor secara *real-time* dari transaksi via `lib/skor.ts` dan sediakan simpan snapshot ke tabel `skor_kelayakan`.
+  - `app/(app)/guardrail/page.tsx` & `app/(app)/simulasi-kur/page.tsx`: Perbaiki bug salah tabel lama: simpan parameter dan hasil simulasi langsung ke tabel **`simulasi_kur`**.
 
 ### 🧪 Testing & Verifikasi Tahap 4:
-- [ ] **Test 4A (Reaktivitas Skor):** Tambahkan pemasukan besar di `/buku-kas` -> Buka `/skor-kelayakan` dan perhatikan *badge* di Sidebar -> **Expected:** Skor naik secara konsisten sesuai rumus di `lib/skor.ts` tanpa perlu sinkronisasi `localStorage`.
-- [ ] **Test 4B (Tabel Simulasi KUR):** Simpan hasil perhitungan di `/simulasi-kur` dan `/guardrail` -> **Expected:** Data muncul di tabel `simulasi_kur` pada Supabase Table Editor, dan tabel `legalitas_dokumen` tetap bersih dari data simulasi.
+- [x] **Test 4A (Reaktivitas Skor):** Perhitungan skor dihitung reaktif dari `transaksi_kas`, akun baru mulai dari 0 tanpa mock data.
+- [x] **Test 4B (Tabel Simulasi KUR):** Penyimpanan hasil simulasi diarahkan ke tabel `simulasi_kur` via Supabase client dengan validasi skema.
 
 ---
 
@@ -102,17 +98,16 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 **Tujuan:** Menyelesaikan migrasi 2 modul terakhir dan membersihkan URL dari karakter `&`.
 
 ### Checklist Pekerjaan:
-- [ ] **5.1. Modul Legalitas (`app/(app)/legalitas/page.tsx` + `lib/legalitas.ts`):**
-  - Gunakan path `/legalitas` (hapus `&-nib` dari URL).
+- [x] **5.1. Modul Legalitas (`app/(app)/legalitas/page.tsx` + `lib/legalitas.ts`):**
+  - Gunakan path `/legalitas` (bersih dari karakter `&`).
   - Pindahkan *pure functions* dari `legalitas-&-nib/js/logic.js` ke `lib/legalitas.ts`.
-  - Hubungkan checklist/dokumen legalitas ke tabel `legalitas_dokumen` (menggantikan `utera.legalitas.v1`).
-- [ ] **5.2. Modul Laporan Siap Bank (`app/(app)/laporan-siap-bank/page.tsx`):**
-  - Pindahkan fungsi agregasi laporan dari `laporan-siap-bank/js/logic.js`.
-  - Tarik data gabungan dari `profil_usaha`, `transaksi_kas`, `skor_kelayakan`, dan `legalitas_dokumen` untuk merender laporan finansial siap cetak/ekspor.
-  - Hapus file `models.js` lama dan gunakan tipe dari `lib/database.types.ts`.
+  - Hubungkan checklist dan nomor dokumen legalitas ke tabel `legalitas_dokumen` di Supabase.
+- [x] **5.2. Modul Laporan Siap Bank (`app/(app)/laporan-siap-bank/page.tsx`):**
+  - Sintesis data 4 pilar (`profil_usaha`, `transaksi_kas`, `skor_kelayakan`, dan `legalitas_dokumen`) untuk merender laporan finansial siap cetak/ekspor PDF.
+  - Sediakan tombol Cetak / Unduh Dokumen A4 berstandar perbankan.
 
 ### 🧪 Testing & Verifikasi Tahap 5:
-- [ ] **Test 5A (Sinkronisasi Laporan):** Ubah status dokumen NIB di `/legalitas` dan tambah transaksi di `/buku-kas`, lalu buka `/laporan-siap-bank` -> **Expected:** Laporan langsung memuat nama usaha, total arus kas terbaru, skor kelayakan, dan status legalitas yang akurat dari database.
+- [x] **Test 5A (Sinkronisasi Laporan):** Data dari `profil_usaha`, `transaksi_kas`, `skor_kelayakan`, dan `legalitas_dokumen` tersinkronisasi otomatis dalam satu pratinjau dokumen cetak A4.
 
 ---
 

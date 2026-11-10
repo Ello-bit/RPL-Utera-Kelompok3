@@ -231,3 +231,4 @@ CREATE TRIGGER trigger_profil_usaha_updated_at
   BEFORE UPDATE ON public.profil_usaha
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
+
