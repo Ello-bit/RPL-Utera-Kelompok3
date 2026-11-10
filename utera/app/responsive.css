@@ -1,0 +1,145 @@
+/* ==========================================================================
+   RESPONSIVE GLOBAL (HP & tablet) - dimuat terakhir, menimpa gaya per halaman
+   Prefix `body` menaikkan prioritas tanpa memakai !important berlebihan.
+   ========================================================================== */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, svg, video, canvas { max-width: 100%; }
+
+/* ---------- Tablet (<= 1100px) ---------- */
+@media (max-width: 1100px) {
+  body .dashboard-grid,
+  body .guardrail-main-grid,
+  body .skor-hero-grid,
+  body .skor-bottom-grid,
+  body .content-grid,
+  body .planner-interactive-grid,
+  body .dash-bottom-grid,
+  body .charts-split-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body .metrics-grid,
+  body .skor-vitals-grid,
+  body .quick-stats-grid,
+  body .score-indicators-grid,
+  body .doc-fin-highlight-grid,
+  body .chart-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- HP (<= 768px) ---------- */
+@media (max-width: 768px) {
+  /* Top bar */
+  body .top-bar { padding: 0 12px; gap: 8px; }
+  body .top-bar-left { max-width: none; min-width: 0; flex: 1; gap: 8px; }
+  body .top-bar-right { gap: 8px; flex-shrink: 0; }
+  body .top-bar-right > .btn { display: none; }
+  body .user-meta-top { display: none; }
+  body .search-shortcut { display: none; }
+  body .search-box { padding: 8px 10px; min-width: 0; }
+
+  /* Ruang halaman */
+  body .dashboard-scroll-wrap,
+  body .profile-page-viewport,
+  body .page-container { padding: 16px 12px; }
+
+  /* Grid jadi satu kolom (dua kolom untuk kartu angka kecil) */
+  body .metrics-grid,
+  body .skor-vitals-grid,
+  body .komponen-grid,
+  body .quick-stats-grid,
+  body .score-indicators-grid,
+  body .doc-fin-highlight-grid,
+  body .chart-summary-strip,
+  body .pillars-grid,
+  body .readiness-facets,
+  body .status-facets,
+  body .bank-pills-row,
+  body .kur-program-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body .form-grid,
+  body .field-row,
+  body .inline-settings,
+  body .doc-grid-2,
+  body .legal-sub-grid,
+  body .doc-signatures-row,
+  body .type-segmented-toggle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body .grid-2x2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Judul halaman + tombol aksi menumpuk */
+  body .page-title-row,
+  body .page-header-top,
+  body .dash-header-row,
+  body .pool-tabs-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  body .page-title-actions { width: 100%; }
+  body .page-title-actions .btn,
+  body .page-title-actions button { flex: 1; justify-content: center; }
+
+  /* Filter & tab bisa digeser, tidak memanjang halaman */
+  body .pool-nav-list,
+  body .time-filter-group,
+  body .notif-modal-tabs { overflow-x: auto; flex-wrap: nowrap; max-width: 100%; }
+  body .ledger-filter-row { flex-wrap: wrap; gap: 8px; }
+  body .ledger-filter-row > * { min-width: 0; flex: 1 1 100%; }
+
+  /* Tabel: geser ke samping di HP */
+  body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  body .doc-cols, body .doc-row { grid-template-columns: minmax(0, 1fr) auto; }
+  body .doc-cols > :nth-child(n+3), body .doc-row > :nth-child(n+3) { display: none; }
+
+  /* Modal / popup memenuhi layar kecil */
+  body .modal-box,
+  body .modal-dialog,
+  body .notif-modal-card {
+    width: calc(100vw - 24px);
+    max-width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  body .modal-backdrop, body .notif-modal-overlay { padding: 12px; align-items: center; }
+
+  /* Grafik */
+  body .kas-bars { gap: 8px; padding-left: 0; padding-right: 0; }
+  body .kas-bar-group { min-width: 72px; }
+  body .chart-columns { gap: 6px; }
+
+  /* Landing */
+  body .container { padding-left: 16px; padding-right: 16px; }
+  body .hero-section .container,
+  body .hero-grid { grid-template-columns: minmax(0, 1fr); }
+
+  /* Auth */
+  body .auth-card { margin: 12px; }
+  body .auth-mode-tabs { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- HP kecil (<= 480px) ---------- */
+@media (max-width: 480px) {
+  body .metrics-grid,
+  body .skor-vitals-grid,
+  body .komponen-grid,
+  body .quick-stats-grid,
+  body .score-indicators-grid,
+  body .doc-fin-highlight-grid,
+  body .chart-summary-strip,
+  body .pillars-grid,
+  body .readiness-facets,
+  body .status-facets,
+  body .bank-pills-row,
+  body .kur-program-selector,
+  body .grid-2x2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body .chart-big-metric,
+  body .chart-big-number { font-size: 1.6rem; }
+  body .page-main-heading, body .page-title { font-size: 1.35rem; }
+  body .heading-hero { font-size: 1.9rem; }
+  body .heading-section { font-size: 1.6rem; }
+}

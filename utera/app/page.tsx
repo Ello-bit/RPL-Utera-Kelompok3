@@ -67,6 +67,8 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const [menuOpen, setMenuOpen] = useState(false)
+
   // Status login: menu Dashboard hanya untuk pengguna yang sudah masuk
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   useEffect(() => {
@@ -176,7 +178,16 @@ export default function LandingPage() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav aria-label="Navigasi Utama">
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span className="material-symbols-rounded">{menuOpen ? 'close' : 'menu'}</span>
+          </button>
+          <nav aria-label="Navigasi Utama" className={menuOpen ? 'nav-open' : ''} onClick={() => setMenuOpen(false)}>
             <ul className="header-nav">
               <li><Link href="#beranda">Beranda</Link></li>
               <li><Link href="#fitur-utama">Fitur</Link></li>
