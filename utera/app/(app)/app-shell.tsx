@@ -42,6 +42,7 @@ export default function AppShell({
           businessName={businessName}
           userName={userName}
           userEmail={userEmail}
+          isAdmin={isAdmin}
           onToggleMobileMenu={() => setMobileOpen(!mobileOpen)}
         />
         {children}

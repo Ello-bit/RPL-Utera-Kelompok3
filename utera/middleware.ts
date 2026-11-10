@@ -35,11 +35,46 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const isAuthRoute = path.startsWith('/auth')
 
-  // If already authenticated and trying to access /auth, redirect to dashboard
+  const isAdmin = Boolean(
+    user?.email?.toLowerCase().includes('admin') ||
+    user?.user_metadata?.role === 'admin'
+  )
+
+  // 1. If already authenticated and trying to access /auth, redirect to their respective home
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = isAdmin ? '/admin' : '/dashboard'
     return NextResponse.redirect(url)
+  }
+
+  // 2. If admin navigates to regular UMKM routes, redirect directly to supervisor tabs
+  if (user && isAdmin) {
+    const url = request.nextUrl.clone()
+    if (path === '/dashboard') {
+      url.pathname = '/admin'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+    if (path === '/buku-kas') {
+      url.pathname = '/admin'
+      url.search = '?tab=kas'
+      return NextResponse.redirect(url)
+    }
+    if (path === '/skor-kelayakan') {
+      url.pathname = '/admin'
+      url.search = '?tab=skor'
+      return NextResponse.redirect(url)
+    }
+    if (path === '/profil-usaha') {
+      url.pathname = '/admin'
+      url.search = '?tab=direktori'
+      return NextResponse.redirect(url)
+    }
+    if (path === '/guardrail' || path === '/simulasi-kur') {
+      url.pathname = '/admin'
+      url.search = '?tab=kur'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

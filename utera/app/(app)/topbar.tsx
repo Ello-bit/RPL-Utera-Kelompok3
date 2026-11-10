@@ -9,6 +9,7 @@ interface TopBarProps {
   businessName: string
   userName: string
   userEmail: string
+  isAdmin?: boolean
   onToggleMobileMenu?: () => void
 }
 
@@ -16,6 +17,7 @@ export default function TopBar({
   businessName,
   userName,
   userEmail,
+  isAdmin = false,
   onToggleMobileMenu,
 }: TopBarProps) {
   const router = useRouter()
@@ -23,8 +25,9 @@ export default function TopBar({
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const displayName = userName || businessName || 'Pemilik Usaha'
-  const initials = displayName
+  const isUserAdmin = isAdmin || userEmail.toLowerCase().includes('admin')
+  const displayName = isUserAdmin ? 'Super Administrator' : (userName || businessName || 'Pemilik Usaha')
+  const initials = isUserAdmin ? 'SA' : displayName
     .trim()
     .split(/\s+/)
     .map((w) => w[0])
@@ -83,7 +86,7 @@ export default function TopBar({
         </div>
 
         {/* Quick Action */}
-        {userEmail.toLowerCase().includes('admin') ? (
+        {isUserAdmin ? (
           <Link href="/admin?tab=direktori" className="btn btn-primary btn-sm" id="btn-open-tx-modal" style={{ background: '#14532D', borderColor: '#14532D' }}>
             <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>verified</span>
             <span>Verifikasi UMKM</span>
@@ -106,13 +109,17 @@ export default function TopBar({
             onClick={() => setDropdownOpen(!dropdownOpen)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
           >
-            <div className="user-avatar-circle" id="user-top-avatar">
-              {initials}
+            <div className="user-avatar-circle" id="user-top-avatar" style={isUserAdmin ? { background: '#14532D', color: '#FCD34D' } : {}}>
+              {isUserAdmin ? (
+                <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>admin_panel_settings</span>
+              ) : (
+                initials
+              )}
             </div>
             <div className="user-meta-top">
               <span className="user-name-label" id="user-top-name">{displayName}</span>
               <small className="user-role-label">
-                {userEmail.toLowerCase().includes('admin') ? 'Super Administrator' : 'Pemilik Usaha'}
+                {isUserAdmin ? 'Super Administrator' : 'Pemilik Usaha'}
               </small>
             </div>
             <span
@@ -129,20 +136,61 @@ export default function TopBar({
               <span id="dropdown-user-email" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {userEmail}
               </span>
+              {isUserAdmin && (
+                <div style={{ marginTop: '6px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', color: '#065F46', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>verified_user</span>
+                    Otoritas Pengawas Platform
+                  </span>
+                </div>
+              )}
             </div>
             <div className="dropdown-divider"></div>
-            <Link href="/profil-usaha" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
-              <span className="material-symbols-rounded">storefront</span>
-              <span>Profil Usaha</span>
-            </Link>
-            <Link href="/buku-kas" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
-              <span className="material-symbols-rounded">receipt_long</span>
-              <span>Buku Kas Warung</span>
-            </Link>
-            <Link href="/skor-kelayakan" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
-              <span className="material-symbols-rounded">verified</span>
-              <span>Skor Kelayakan</span>
-            </Link>
+
+            {isUserAdmin ? (
+              <>
+                <Link href="/admin" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">admin_panel_settings</span>
+                  <span>Pusat Pengawasan</span>
+                </Link>
+                <Link href="/admin?tab=direktori" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">storefront</span>
+                  <span>Direktori &amp; Verifikasi UMKM</span>
+                </Link>
+                <Link href="/admin?tab=skor" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">verified</span>
+                  <span>Audit Kredibilitas &amp; Skor</span>
+                </Link>
+                <Link href="/admin?tab=kas" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">receipt_long</span>
+                  <span>Audit Mutasi Kas Global</span>
+                </Link>
+                <Link href="/admin?tab=kur" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">account_balance</span>
+                  <span>Pengawasan Penyaluran KUR</span>
+                </Link>
+                <Link href="/admin?tab=sistem" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">security</span>
+                  <span>Status Keamanan &amp; Log</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/profil-usaha" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">storefront</span>
+                  <span>Profil Usaha</span>
+                </Link>
+                <Link href="/buku-kas" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">receipt_long</span>
+                  <span>Buku Kas Warung</span>
+                </Link>
+                <Link href="/skor-kelayakan" className="dropdown-link" onClick={() => setDropdownOpen(false)}>
+                  <span className="material-symbols-rounded">verified</span>
+                  <span>Skor Kelayakan</span>
+                </Link>
+              </>
+            )}
+
             <div className="dropdown-divider"></div>
             <button
               type="button"
