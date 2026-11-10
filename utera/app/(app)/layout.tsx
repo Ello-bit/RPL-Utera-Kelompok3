@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
-import Sidebar from './sidebar'
+import AppShell from './app-shell'
 import './app-layout.css'
 
 export const dynamic = 'force-dynamic'
@@ -75,15 +75,14 @@ export default async function AppShellLayout({
   }
 
   return (
-    <div className="app-layout">
-      <Sidebar
-        businessName={businessName}
-        totalTx={totalTx}
-        skor={skor}
-        userEmail={userEmail}
-        userName={userName}
-      />
-      <div className="main-content">{children}</div>
-    </div>
+    <AppShell
+      businessName={businessName}
+      totalTx={totalTx}
+      skor={skor}
+      userEmail={userEmail}
+      userName={userName}
+    >
+      {children}
+    </AppShell>
   )
 }

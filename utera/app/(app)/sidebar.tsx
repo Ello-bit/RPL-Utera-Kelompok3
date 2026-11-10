@@ -11,6 +11,8 @@ interface SidebarProps {
   skor: number
   userEmail: string
   userName: string
+  mobileOpen?: boolean
+  onCloseMobile?: () => void
 }
 
 interface NavItem {
@@ -33,10 +35,19 @@ export default function Sidebar({
   skor,
   userEmail,
   userName,
+  mobileOpen: controlledMobileOpen,
+  onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false)
+  const isMobileOpen = controlledMobileOpen !== undefined ? controlledMobileOpen : internalMobileOpen
+
+  const closeSidebar = () => {
+    if (onCloseMobile) onCloseMobile()
+    else setInternalMobileOpen(false)
+  }
+
   const supabase = createClient()
 
   async function handleLogout() {
@@ -45,14 +56,6 @@ export default function Sidebar({
     router.push('/auth?mode=login')
     router.refresh()
   }
-
-  const initials = (userName || businessName || 'U')
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 
   const navItems: NavSection[] = [
     {
@@ -123,15 +126,15 @@ export default function Sidebar({
   return (
     <>
       {/* Mobile Drawer Backdrop */}
-      {mobileOpen && (
+      {isMobileOpen && (
         <div
           className="sidebar-backdrop mobile-open"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeSidebar}
         />
       )}
 
       {/* Main Sidebar Shell */}
-      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`} id="app-sidebar">
         <div className="sidebar-header">
           <Link href="/dashboard" className="sidebar-brand">
             <div className="brand-symbol">U</div>
@@ -143,15 +146,16 @@ export default function Sidebar({
           <button
             type="button"
             className="sidebar-toggle-btn"
-            onClick={() => setMobileOpen(false)}
+            id="btn-collapse-sidebar"
+            onClick={closeSidebar}
             aria-label="Tutup navigasi"
           >
-            <span className="material-symbols-rounded">close</span>
+            <span className="material-symbols-rounded">dock_to_right</span>
           </button>
         </div>
 
         {/* Navigation Menus */}
-        <nav className="sidebar-nav" aria-label="Menu Navigasi">
+        <nav className="sidebar-nav" aria-label="Menu Utama Dashboard">
           {navItems.map((sec) => (
             <div key={sec.section} className="nav-section">
               <div className="nav-section-title">{sec.section}</div>
@@ -163,15 +167,15 @@ export default function Sidebar({
                       <Link
                         href={item.href}
                         className={`nav-item ${isActive ? 'active' : ''}`}
-                        onClick={() => setMobileOpen(false)}
+                        onClick={closeSidebar}
                       >
                         <span className="material-symbols-rounded">{item.icon}</span>
                         <span>{item.name}</span>
                         {item.badge !== undefined && (
-                          <span className="nav-badge">{item.badge}</span>
+                          <span className="nav-badge" id="badge-total-tx">{item.badge}</span>
                         )}
                         {item.pill !== undefined && (
-                          <span className="nav-pill-good">{item.pill}</span>
+                          <span className="nav-pill-good" id="nav-pill-skor">{item.pill}</span>
                         )}
                         {item.infoPill && (
                           <span className="nav-pill-info">{item.infoPill}</span>
@@ -190,22 +194,24 @@ export default function Sidebar({
           <Link
             href="/profil-usaha"
             className="business-profile-card"
-            title="Kelola Profil Usaha"
+            title="Lihat Profil Usaha"
+            style={{ textDecoration: 'none' }}
           >
             <div className="business-avatar" aria-hidden="true">
-              <span className="material-symbols-rounded" style={{ color: '#1F6B4F' }}>
-                store
+              <span className="material-symbols-rounded icon-coffee" style={{ color: '#1F6B4F' }}>
+                local_cafe
               </span>
             </div>
             <div className="business-details">
-              <span className="business-title">{businessName || 'Profil Usaha'}</span>
-              <span className="business-badge">{userEmail || 'Akun UMKM'}</span>
+              <span className="business-title" id="sidebar-business-name">{businessName || 'Profil Usaha'}</span>
+              <span className="business-badge">{userEmail || 'UMKM Kuliner Mandiri'}</span>
             </div>
           </Link>
 
           <button
             type="button"
             className="btn-logout"
+            id="btn-logout"
             onClick={handleLogout}
             title="Keluar dari akun"
             style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer' }}

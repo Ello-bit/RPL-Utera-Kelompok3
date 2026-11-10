@@ -7,6 +7,7 @@ import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, getMonthlyBreakdown, formatRupiah } from '@/lib/kas'
 import { calculateSkorPRD } from '@/lib/skor'
 import { evaluateLegalitas } from '@/lib/legalitas'
+import './laporan.css'
 
 type ProfilUsaha = Tables<'profil_usaha'>
 type TransaksiKas = Tables<'transaksi_kas'>

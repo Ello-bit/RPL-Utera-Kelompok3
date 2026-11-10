@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import { DEFAULT_LEGALITAS_DOCS, evaluateLegalitas } from '@/lib/legalitas'
+import './legalitas.css'
 
 type LegalitasDokumen = Tables<'legalitas_dokumen'>
 

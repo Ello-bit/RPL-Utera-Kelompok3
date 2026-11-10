@@ -1,488 +1,929 @@
+'use client'
+
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
-import { calculateKasSummary, getMonthlyBreakdown, getCategoryDistribution, formatRupiah } from '@/lib/kas'
-import { calculateSkorPRD } from '@/lib/skor'
-import { evaluateGuardrail } from '@/lib/kur'
+import {
+  calculateKasSummary,
+  formatRupiah,
+  KAS_CATEGORIES,
+} from '@/lib/kas'
 
-export const dynamic = 'force-dynamic'
+type TransaksiKas = Tables<'transaksi_kas'>
+type ProfilUsaha = Tables<'profil_usaha'>
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+const MONTH_NAMES = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+  'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+]
 
-  let transactions: Tables<'transaksi_kas'>[] = []
-  let profileName = 'Kopi Nusantara'
-  let businessRole = 'Pemilik Usaha'
-  const isGuest = !user
+export default function DashboardPage() {
+  const supabase = createClient()
+  const [transactions, setTransactions] = useState<TransaksiKas[]>([])
+  const [profile, setProfile] = useState<ProfilUsaha | null>(null)
+  const [isGuest, setIsGuest] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  if (user) {
-    const { data: profs } = await supabase
-      .from('profil_usaha')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1)
+  // Chart state
+  const [chartMode, setChartMode] = useState<'omzet' | 'laba'>('omzet')
 
-    const firstProf = profs && profs[0] ? (profs[0] as Tables<'profil_usaha'>) : null
-    if (firstProf) {
-      profileName = firstProf.nama_usaha
-      if (firstProf.jenis_usaha) businessRole = firstProf.jenis_usaha
-    } else if (user.user_metadata?.full_name) {
-      profileName = `Usaha ${user.user_metadata.full_name}`
-    } else {
-      profileName = 'Usaha Baru'
+  // Filter state for recent tx table
+  const [filterTxType, setFilterTxType] = useState<'all' | 'income' | 'expense'>('all')
+
+  // Modal State for New Tx
+  const [modalOpen, setModalOpen] = useState(false)
+  const [txType, setTxType] = useState<'pemasukan' | 'pengeluaran'>('pemasukan')
+  const [txAmount, setTxAmount] = useState('')
+  const [txCategory, setTxCategory] = useState('Penjualan')
+  const [txDesc, setTxDesc] = useState('')
+  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10))
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        setIsGuest(true)
+        setProfile(DEMO_PROFILES[0])
+        setTransactions(DEMO_TRANSACTIONS)
+        setLoading(false)
+        return
+      }
+
+      // Fetch Profile
+      const { data: profs } = await supabase
+        .from('profil_usaha')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (profs && profs.length > 0) {
+        setProfile(profs[0] as ProfilUsaha)
+      } else {
+        setProfile({
+          id: 'user-default',
+          nama_usaha: `Usaha ${user.user_metadata?.full_name || 'Mandiri'}`,
+          nama_pemilik: user.user_metadata?.full_name || 'Pemilik Usaha',
+          jenis_usaha: 'UMKM Mandiri',
+          nomor_telepon: null,
+          alamat_usaha: null,
+          tanggal_mulai_usaha: null,
+          deskripsi_usaha: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_id: user.id,
+        })
+      }
+
+      // Fetch Transactions
+      const { data: txList, error } = await supabase
+        .from('transaksi_kas')
+        .select('*')
+        .order('tanggal', { ascending: false })
+
+      if (!error && txList) {
+        setTransactions(txList as TransaksiKas[])
+      }
+      setLoading(false)
     }
 
-    const { data: txList } = await supabase
-      .from('transaksi_kas')
-      .select('*')
-      .order('tanggal', { ascending: false })
+    loadData()
+  }, [])
 
-    if (txList) transactions = txList as Tables<'transaksi_kas'>[]
-  } else {
-    profileName = DEMO_PROFILES[0].nama_usaha
-    businessRole = DEMO_PROFILES[0].jenis_usaha || 'UMKM Kuliner'
-    transactions = DEMO_TRANSACTIONS
+  // 1. Calculate Kas Summary
+  const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
+
+  // 2. Calculate Dynamic PRD Score Formula (Pillar 2: Consistency + Cashflow Health)
+  const scorePRD = useMemo(() => {
+    if (kasSummary.totalIncome > 0) {
+      const marginRatio = kasSummary.netProfit / kasSummary.totalIncome
+      return Math.min(96, Math.max(40, Math.round(50 + marginRatio * 45)))
+    } else if (transactions.length > 0) {
+      return 50
+    }
+    return 0 // New account with 0 transactions
+  }, [kasSummary, transactions])
+
+  // 3. Guardrail 30% calculation
+  const maxInstallment30Pct = Math.round(Math.max(0, kasSummary.netProfit) * 0.30)
+  const simulatedBriInstallment = 2216000
+  const simulatedKopInstallment = 2291000
+
+  // 4. Monthly Breakdown Timeline (4 consecutive months ending at latest month + 1 target)
+  const timelineData = useMemo(() => {
+    let refYear = 2026
+    let refMonth = 10 // default October 2026
+
+    transactions.forEach((tx) => {
+      if (tx.tanggal) {
+        const parts = tx.tanggal.split('-')
+        const y = parseInt(parts[0], 10)
+        const m = parseInt(parts[1], 10)
+        if (!isNaN(y) && !isNaN(m)) {
+          if (y > refYear || (y === refYear && m > refMonth)) {
+            refYear = y
+            refMonth = m
+          }
+        }
+      }
+    })
+
+    const displayKeys: string[] = []
+    for (let offset = 3; offset >= 0; offset--) {
+      let dMonth = refMonth - offset
+      let dYear = refYear
+      while (dMonth <= 0) {
+        dMonth += 12
+        dYear -= 1
+      }
+      const key = `${dYear}-${String(dMonth).padStart(2, '0')}`
+      displayKeys.push(key)
+    }
+
+    const monthsMap: Record<string, { key: string; income: number; expense: number }> = {}
+    displayKeys.forEach((k) => {
+      monthsMap[k] = { key: k, income: 0, expense: 0 }
+    })
+
+    transactions.forEach((tx) => {
+      const key = tx.tanggal ? tx.tanggal.slice(0, 7) : `${refYear}-${String(refMonth).padStart(2, '0')}`
+      if (!monthsMap[key]) monthsMap[key] = { key, income: 0, expense: 0 }
+      const nom = Number(tx.nominal) || 0
+      if (tx.tipe === 'pemasukan') monthsMap[key].income += nom
+      else monthsMap[key].expense += nom
+    })
+
+    let maxVal = 100000
+    displayKeys.forEach((k) => {
+      const m = monthsMap[k]
+      maxVal = Math.max(maxVal, m.income, m.expense, Math.abs(m.income - m.expense))
+    })
+
+    const columns = displayKeys.map((k, idx) => {
+      const m = monthsMap[k]
+      const isLatest = idx === displayKeys.length - 1
+      const parts = k.split('-')
+      const mIdx = parseInt(parts[1], 10) - 1
+      const mName = MONTH_NAMES[mIdx] || k
+      const label = isLatest ? `${mName} (Kini)` : mName
+
+      const net = m.income - m.expense
+      const displayVal = chartMode === 'omzet' ? m.income : net
+
+      const incBarValue = chartMode === 'omzet' ? m.income : Math.max(0, net)
+      const incHeight = incBarValue > 0 ? Math.max(8, Math.min(94, Math.round((incBarValue / maxVal) * 94))) : 6
+      const expHeight = m.expense > 0 ? Math.max(8, Math.min(94, Math.round((m.expense / maxVal) * 94))) : 6
+
+      return {
+        key: k,
+        mName,
+        label,
+        isLatest,
+        income: m.income,
+        expense: m.expense,
+        net,
+        displayVal,
+        incHeight,
+        expHeight,
+      }
+    })
+
+    // Trend calculation
+    const latestMonth = monthsMap[displayKeys[displayKeys.length - 1]]
+    const prevMonth = monthsMap[displayKeys[displayKeys.length - 2]]
+    const curVal = chartMode === 'omzet' ? latestMonth.income : (latestMonth.income - latestMonth.expense)
+    const prevVal = prevMonth ? (chartMode === 'omzet' ? prevMonth.income : (prevMonth.income - prevMonth.expense)) : 0
+    const prevName = prevMonth ? (MONTH_NAMES[parseInt(prevMonth.key.split('-')[1], 10) - 1] || 'bulan lalu') : 'bulan lalu'
+
+    let trendText = '0% Belum ada data'
+    let trendIsUp = true
+    if (prevVal > 0) {
+      const pct = Math.round(((curVal - prevVal) / prevVal) * 100)
+      trendIsUp = pct >= 0
+      trendText = `${trendIsUp ? '+' : ''}${pct}% dibanding ${prevName}`
+    } else if (curVal > 0) {
+      trendIsUp = true
+      trendText = 'Omzet bulan aktif tercatat'
+    }
+
+    return {
+      columns,
+      highlightVal: curVal,
+      trendText,
+      trendIsUp,
+    }
+  }, [transactions, chartMode])
+
+  // Filtered recent transactions for table
+  const filteredRecentTx = useMemo(() => {
+    let list = [...transactions]
+    if (filterTxType === 'income') list = list.filter((t) => t.tipe === 'pemasukan')
+    else if (filterTxType === 'expense') list = list.filter((t) => t.tipe === 'pengeluaran')
+    return list.slice(0, 6)
+  }, [transactions, filterTxType])
+
+  // Category distribution
+  const categoryDist = useMemo(() => {
+    const map = new Map<string, number>()
+    transactions
+      .filter((t) => t.tipe === 'pemasukan')
+      .forEach((t) => {
+        const cat = t.kategori || 'Lain-lain'
+        map.set(cat, (map.get(cat) || 0) + Number(t.nominal))
+      })
+    const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1])
+    const total = entries.reduce((acc, curr) => acc + curr[1], 0)
+    return entries.slice(0, 4).map(([name, amount]) => ({
+      name,
+      amount,
+      pct: total > 0 ? Math.round((amount / total) * 100) : 0,
+    }))
+  }, [transactions])
+
+  // Handle Save New Transaction
+  const handleSaveTx = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const nominal = Number(txAmount)
+    if (!txDesc.trim() || isNaN(nominal) || nominal <= 0) return
+
+    setSubmitting(true)
+    const newTx: TransaksiKas = {
+      id: `tx-${Date.now()}`,
+      user_id: profile?.user_id || 'demo-user',
+      profil_id: profile?.id || null,
+      tanggal: txDate,
+      keterangan: txDesc.trim(),
+      nominal,
+      tipe: txType,
+      kategori: txCategory,
+      metode_pembayaran: 'Tunai',
+      created_at: new Date().toISOString(),
+    }
+
+    if (isGuest) {
+      setTransactions((prev) => [newTx, ...prev])
+      setModalOpen(false)
+      setTxDesc('')
+      setTxAmount('')
+      setSubmitting(false)
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('transaksi_kas')
+        .insert({
+          tipe: txType,
+          nominal,
+          kategori: txCategory,
+          tanggal: txDate,
+          keterangan: txDesc.trim(),
+          metode_pembayaran: 'Tunai',
+          profil_id: profile?.id,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      if (data) {
+        setTransactions((prev) => [data as TransaksiKas, ...prev])
+      }
+      setModalOpen(false)
+      setTxDesc('')
+      setTxAmount('')
+    } catch (err) {
+      console.error('Error inserting transaction:', err)
+      alert('Gagal menyimpan transaksi kas.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  // Calculate kas summary
-  const kasSummary = calculateKasSummary(transactions)
-  // Calculate score PRD
-  const skorResult = calculateSkorPRD(transactions, isGuest)
-  // Calculate guardrail (30% of profit)
-  const guardrail = evaluateGuardrail(2_216_000, kasSummary.netProfit)
-  // Monthly breakdown for chart
-  const monthlyData = getMonthlyBreakdown(transactions, 5)
-  // Distribution by category
-  const categories = getCategoryDistribution(transactions, 'pemasukan')
-  // Top 5 recent transactions
-  const recentTransactions = transactions.slice(0, 5)
-
-  // Max value for monthly chart scaling
-  const maxMonthlyVal = Math.max(
-    ...monthlyData.map((m) => Math.max(m.pemasukan, m.pengeluaran)),
-    1
-  )
-
   return (
-    <>
-      {/* Top Sticky App Bar */}
-      <header className="top-bar">
-        <div className="top-bar-left">
-          <div className="search-box">
-            <span className="material-symbols-rounded">search</span>
-            <input
-              type="text"
-              placeholder="Cari transaksi kas, kategori, atau fitur..."
-              style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.875rem' }}
-            />
-          </div>
+    <div className="dashboard-scroll-wrap">
+      {/* Header Row: Title + Period Selector & Export */}
+      <div className="dash-header-row">
+        <div>
+          <h1 className="dash-heading">Dashboard Finansial</h1>
+          <p className="dash-subheading">
+            Pantau arus kas riil warung harian, indikator kelayakan KUR, dan guardrail beban cicilan.
+          </p>
         </div>
-        <div className="top-bar-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link href="/buku-kas" className="btn btn-primary btn-sm">
-            <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>add</span>
-            <span>Catat Kas</span>
+
+        <div className="dash-header-actions">
+          <div className="date-range-badge">
+            <span className="material-symbols-rounded date-icon">calendar_today</span>
+            <span>Okt 2026 • Real-time</span>
+          </div>
+
+          <select className="select-period" id="select-period" aria-label="Pilih Periode Waktu">
+            <option value="bulanan">Bulan Ini</option>
+            <option value="mingguan">7 Hari Terakhir</option>
+            <option value="triwulan">Triwulan (Q4)</option>
+          </select>
+
+          <Link href="/laporan-siap-bank" className="btn btn-outline btn-sm" id="btn-export-laporan">
+            <span className="material-symbols-rounded btn-icon">download</span>
+            <span>Ekspor PDF</span>
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              className="user-avatar-circle"
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'var(--primary)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '0.875rem',
-              }}
-            >
-              {profileName.slice(0, 2).toUpperCase()}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong style={{ fontSize: '0.85rem' }}>{profileName}</strong>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{businessRole}</small>
-            </div>
-          </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Dashboard Workspace */}
-      <main className="dashboard-content" style={{ padding: '28px' }}>
-        <div className="page-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
-              Dashboard Finansial
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Pantau arus kas riil warung harian, indikator kelayakan KUR, dan guardrail beban cicilan.
-            </p>
+      {/* ====================================================================
+           1. KPI STATS METRIC ROW (Material Symbols Icons)
+           ==================================================================== */}
+      <section className="metrics-grid" aria-label="Metrik Finansial Utama">
+        {/* Card 1: Saldo Kas Bersih */}
+        <div className="metric-card">
+          <div className="metric-top">
+            <span className="metric-label">Total Saldo Kas Operasional</span>
+            <div className="metric-icon-wrap" aria-hidden="true">
+              <span className="material-symbols-rounded">account_balance_wallet</span>
+            </div>
           </div>
-          {isGuest && (
-            <span
-              style={{
-                padding: '6px 12px',
-                borderRadius: '20px',
-                background: '#FEF3CD',
-                color: '#92400E',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                border: '1px solid #FDE68A',
-              }}
-            >
-              Mode Tamu (Read-Only)
+          <div className="metric-value-row">
+            <span className="metric-value" id="val-saldo">{formatRupiah(kasSummary.saldoKas)}</span>
+            <span className="trend-pill trend-up">
+              <span className="material-symbols-rounded trend-icon">trending_up</span>
+              <span>{transactions.length > 0 ? `${kasSummary.marginPct}%` : '0%'}</span>
             </span>
-          )}
+          </div>
+          <p className="metric-caption">Saldo riil di kasir &amp; rekening kas warung saat ini.</p>
         </div>
 
-        {/* 4 Primary Metric Cards */}
-        <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '28px' }}>
-          <div className="metric-card" style={{ background: '#fff', padding: '20px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Total Saldo Kas Operasional
-            </span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: kasSummary.saldoKas >= 0 ? 'var(--text-main)' : '#DC2626', margin: '8px 0 4px' }}>
-              {formatRupiah(kasSummary.saldoKas)}
+        {/* Card 2: Pemasukan Bulan Ini */}
+        <div className="metric-card">
+          <div className="metric-top">
+            <span className="metric-label">Total Pemasukan (Omzet)</span>
+            <div className="metric-icon-wrap bg-emerald" aria-hidden="true">
+              <span className="material-symbols-rounded text-emerald">arrow_downward</span>
             </div>
-            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              Saldo riil kasir & rekening kas saat ini
-            </small>
           </div>
-
-          <div className="metric-card" style={{ background: '#fff', padding: '20px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Total Pemasukan (Omzet)
+          <div className="metric-value-row">
+            <span className="metric-value text-emerald" id="val-pemasukan">{formatRupiah(kasSummary.totalIncome)}</span>
+            <span className="trend-pill trend-up">
+              <span className="material-symbols-rounded trend-icon">trending_up</span>
+              <span>Aktif</span>
             </span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10B981', margin: '8px 0 4px' }}>
-              {formatRupiah(kasSummary.totalIncome)}
-            </div>
-            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              Total omzet dari {kasSummary.count} transaksi kas
-            </small>
           </div>
+          <p className="metric-caption">Total omzet dari transaksi kas yang dicatat.</p>
+        </div>
 
-          <div className="metric-card" style={{ background: '#fff', padding: '20px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Pengeluaran Biaya & Kulakan
+        {/* Card 3: Pengeluaran Kas */}
+        <div className="metric-card">
+          <div className="metric-top">
+            <span className="metric-label">Pengeluaran Biaya &amp; Kulakan</span>
+            <div className="metric-icon-wrap bg-terracotta" aria-hidden="true">
+              <span className="material-symbols-rounded text-terracotta">arrow_upward</span>
+            </div>
+          </div>
+          <div className="metric-value-row">
+            <span className="metric-value text-terracotta" id="val-pengeluaran">{formatRupiah(kasSummary.totalExpense)}</span>
+            <span className="trend-pill trend-down">
+              <span className="material-symbols-rounded trend-icon">trending_down</span>
+              <span>Operasional</span>
             </span>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#B5532F', margin: '8px 0 4px' }}>
-              {formatRupiah(kasSummary.totalExpense)}
-            </div>
-            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              Belanja bahan baku, sewa, listrik & gaji
-            </small>
           </div>
+          <p className="metric-caption">Belanja bahan baku, sewa, listrik &amp; operasional.</p>
+        </div>
 
-          <div className="metric-card" style={{ background: '#fff', padding: '20px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Skor Kelayakan Bank (PRD)
+        {/* Card 4: Skor Kelayakan Kredit PRD UTERA */}
+        <Link
+          href="/skor-kelayakan"
+          className="metric-card metric-card-highlight"
+          style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+          title="Buka Detail Analisis Skor Kelayakan"
+        >
+          <div className="metric-top">
+            <span className="metric-label">Skor Kelayakan Bank (PRD)</span>
+            <div className="metric-icon-wrap bg-gold" aria-hidden="true">
+              <span className="material-symbols-rounded text-gold">hotel_class</span>
+            </div>
+          </div>
+          <div className="metric-value-row">
+            <div className="score-display">
+              <span className="metric-value text-primary" id="val-skor">{scorePRD}</span>
+              <span className="score-denom">/100</span>
+            </div>
+            {transactions.length === 0 ? (
+              <span className="badge-status-good" style={{ background: '#F1F5F9', color: '#64748B' }}>
+                Belum Ada Transaksi
               </span>
-              <span
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  background: skorResult.badgeBg,
-                  color: skorResult.badgeColor,
-                }}
-              >
-                {skorResult.badgeLabel}
-              </span>
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', margin: '8px 0 4px' }}>
-              {skorResult.total}
-              <small style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>/100</small>
-            </div>
-            <Link href="/skor-kelayakan" style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <span>Buka Analisis Skor</span>
-              <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>arrow_forward</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Middle Section: Cashflow Chart & Guardrail Card */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '28px' }}>
-          {/* Cashflow Chart Card */}
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Grafik Arus Kas Bulanan
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  Perbandingan pemasukan, pengeluaran, dan laba bersih
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', fontWeight: 600 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#1F6B4F' }} />
-                  Pemasukan
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#D1E7DC' }} />
-                  Pengeluaran
-                </span>
-              </div>
-            </div>
-
-            {monthlyData.length === 0 ? (
-              <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <span className="material-symbols-rounded" style={{ fontSize: '36px', color: 'var(--text-light)', display: 'block', marginBottom: '8px' }}>
-                  bar_chart
-                </span>
-                Belum ada data bulanan. Catat transaksi untuk menampilkan grafik.
-              </div>
+            ) : scorePRD >= 70 ? (
+              <span className="badge-status-good">Layak KUR Mikro</span>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '180px', paddingTop: '20px', borderBottom: '1px solid var(--border-subtle)' }}>
-                {monthlyData.map((m) => {
-                  const hIn = Math.round((m.pemasukan / maxMonthlyVal) * 130)
-                  const hOut = Math.round((m.pengeluaran / maxMonthlyVal) * 130)
-                  return (
-                    <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '130px' }}>
-                        <div
-                          title={`Pemasukan: ${formatRupiah(m.pemasukan)}`}
-                          style={{
-                            width: '24px',
-                            height: `${Math.max(6, hIn)}px`,
-                            background: '#1F6B4F',
-                            borderRadius: '4px 4px 0 0',
-                            transition: 'height 0.3s ease',
-                          }}
-                        />
-                        <div
-                          title={`Pengeluaran: ${formatRupiah(m.pengeluaran)}`}
-                          style={{
-                            width: '24px',
-                            height: `${Math.max(6, hOut)}px`,
-                            background: '#D1E7DC',
-                            borderRadius: '4px 4px 0 0',
-                            transition: 'height 0.3s ease',
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                        {m.label}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
+              <span className="badge-status-good" style={{ background: '#FEF3CD', color: '#92400E' }}>
+                Perbaikan Kas
+              </span>
             )}
+          </div>
+          <div className="metric-footer-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '6px' }}>
+            <p className="metric-caption" style={{ margin: 0 }}>Berdasarkan konsistensi pencatatan kas aktif &amp; tren profit.</p>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+              Buka <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>arrow_forward</span>
+            </span>
+          </div>
+        </Link>
+      </section>
 
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Margin Laba Usaha:{' '}
-                <strong style={{ color: kasSummary.marginPct >= 20 ? '#10B981' : '#B5532F' }}>
-                  {kasSummary.marginPct}%
-                </strong>
-              </span>
-              <Link href="/buku-kas" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
-                Kelola di Buku Kas →
-              </Link>
+      {/* ====================================================================
+           2. MAIN CHART ROW: Sales & Cashflow Overview + Guardrail 30% Gauge
+           ==================================================================== */}
+      <div className="charts-split-grid">
+        {/* Large Chart: Arus Kas & Margin Usaha */}
+        <div className="dash-panel panel-chart-main">
+          <div className="panel-header">
+            <div className="panel-header-info">
+              <h2 className="panel-title">Grafik Arus Kas Bulanan</h2>
+              <p className="panel-subtitle">Perbandingan pemasukan, pengeluaran, dan akumulasi laba bersih</p>
+            </div>
+            <div className="panel-actions">
+              <div className="segmented-control" role="tablist">
+                <button
+                  type="button"
+                  className={`seg-btn ${chartMode === 'omzet' ? 'active' : ''}`}
+                  onClick={() => setChartMode('omzet')}
+                >
+                  Omzet
+                </button>
+                <button
+                  type="button"
+                  className={`seg-btn ${chartMode === 'laba' ? 'active' : ''}`}
+                  onClick={() => setChartMode('laba')}
+                >
+                  Laba Bersih
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Guardrail 30% Card */}
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Guardrail Cicilan 30%
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  Batas aman angsuran kredit kas UMKM
-                </p>
-              </div>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: guardrail.isSafe ? '#ECFDF5' : '#FEF2F2',
-                  color: guardrail.color,
-                }}
-              >
-                {guardrail.statusText}
+          {/* Chart Headline & Summary Numbers */}
+          <div className="chart-summary-header">
+            <div>
+              <span className="chart-big-number" id="chart-highlight-number">
+                {formatRupiah(timelineData.highlightVal)}
+              </span>
+              <span className={`trend-pill ${timelineData.trendIsUp ? 'trend-up' : 'trend-down'}`}>
+                <span className="material-symbols-rounded trend-icon">
+                  {timelineData.trendIsUp ? 'trending_up' : 'trending_down'}
+                </span>
+                <span>{timelineData.trendText}</span>
               </span>
             </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700 }}>
-                Kapasitas Cicilan Maksimal
-              </small>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-                {formatRupiah(guardrail.guardrailLimit)}
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}> / bln</span>
-              </div>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                30% dari laba bersih ({formatRupiah(kasSummary.netProfit)})
-              </small>
+            {/* Chart Legend */}
+            <div className="chart-legend">
+              <span className="legend-item"><span className="legend-dot dot-income"></span> Pemasukan</span>
+              <span className="legend-item"><span className="legend-dot dot-expense"></span> Pengeluaran</span>
+              <span className="legend-item"><span className="legend-dot dot-net"></span> Laba Bersih</span>
             </div>
+          </div>
 
-            {/* Simulated Loan Examples */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#F8FAF9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '0.85rem' }}>Simulasi KUR BRI 6%</strong>
-                  <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Plafon Rp 50 Juta • Tenor 24 Bln</small>
+          {/* CSS Bar Visualization */}
+          <div className="bar-chart-container" id="bar-chart-container">
+            <div className="chart-columns" id="dashboard-chart-columns">
+              {timelineData.columns.map((c) => (
+                <div key={c.key} className={`chart-col ${c.isLatest ? 'active-month' : ''}`}>
+                  <div className="col-bars">
+                    <div
+                      className={`bar bar-income ${c.isLatest ? 'highlight' : ''}`}
+                      style={{ height: `${c.incHeight}%` }}
+                      title={`${chartMode === 'omzet' ? 'Pemasukan' : 'Laba Bersih'} ${c.mName}: ${formatRupiah(c.displayVal)}`}
+                    >
+                      {c.isLatest && <span className="bar-tooltip">{formatRupiah(c.displayVal)}</span>}
+                    </div>
+                    <div
+                      className="bar bar-expense"
+                      style={{ height: `${c.expHeight}%` }}
+                      title={`Pengeluaran ${c.mName}: ${formatRupiah(c.expense)}`}
+                    ></div>
+                  </div>
+                  <span className={`col-label ${c.isLatest ? 'font-bold' : ''}`}>{c.label}</span>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <strong style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>Rp 2.216.000/bln</strong>
-                  <small style={{ display: 'block', color: '#10B981', fontSize: '0.7rem', fontWeight: 600 }}>
-                    ✓ Masuk Batas Kas
-                  </small>
-                </div>
-              </div>
+              ))}
 
-              <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#F8FAF9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ display: 'block', fontSize: '0.85rem' }}>Pinjaman Koperasi Usaha</strong>
-                  <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Plafon Rp 25 Juta • Tenor 12 Bln</small>
+              <div className="chart-col projected">
+                <div className="col-bars">
+                  <div className="bar bar-income dashed" style={{ height: '52%' }} title="Proyeksi Pertumbuhan Target"></div>
+                  <div className="bar bar-expense dashed" style={{ height: '32%' }}></div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <strong style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>Rp 2.291.000/bln</strong>
-                  <small style={{ display: 'block', color: '#10B981', fontSize: '0.7rem', fontWeight: 600 }}>
-                    ✓ Masuk Batas Kas
-                  </small>
-                </div>
+                <span className="col-label">Target (Est.)</span>
               </div>
             </div>
+          </div>
 
-            <Link
-              href="/guardrail"
-              style={{
-                display: 'block',
-                textAlign: 'center',
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-body)',
-                fontWeight: 600,
-                fontSize: '0.825rem',
-                textDecoration: 'none',
-              }}
-            >
-              Buka Simulator Guardrail Lengkap
-            </Link>
+          {/* Cashflow Health Banner */}
+          <div className="chart-footer-banner">
+            <div className="health-indicator">
+              <span
+                className="status-circle"
+                style={{ background: transactions.length > 0 ? '#10B981' : '#94A3B8' }}
+              ></span>
+              {transactions.length > 0 ? (
+                <span>
+                  <strong>Arus Kas Sehat:</strong> Pembukuan aktif mencatatkan rasio margin laba {kasSummary.marginPct}%. Siap untuk pengajuan KUR.
+                </span>
+              ) : (
+                <span>
+                  <strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Bottom Section: Recent Transactions & Category Breakdown */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-          {/* Recent Transactions Card */}
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
-                  Buku Kas: Transaksi Terakhir
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  Catatan kasir yang terhubung langsung ke laporan keuangan
-                </p>
-              </div>
-              <Link href="/buku-kas" className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>
-                + Catat Baru
-              </Link>
+        {/* Side Panel: Guardrail Rasio Cicilan 30% (PRD Pillar 3) */}
+        <div className="dash-panel panel-guardrail" id="section-guardrail">
+          <div className="panel-header">
+            <div>
+              <h2 className="panel-title">Guardrail Cicilan 30%</h2>
+              <p className="panel-subtitle">Batas aman angsuran kredit kas UMKM</p>
+            </div>
+            <span className={maxInstallment30Pct >= simulatedBriInstallment ? 'badge-status-safe' : 'badge-status-warning'}>
+              {maxInstallment30Pct >= simulatedBriInstallment ? 'Kondisi Aman' : 'Kapasitas Terbatas'}
+            </span>
+          </div>
+
+          {/* Big Capacity Indicator */}
+          <div className="guardrail-capacity-box">
+            <div className="capacity-stat">
+              <span className="capacity-label">Kapasitas Cicilan Maksimal</span>
+              <span className="capacity-val" id="val-max-cicilan">
+                {formatRupiah(maxInstallment30Pct)} / bln
+              </span>
+              <span className="capacity-formula">
+                30% x Rata-rata Laba Bersih ({formatRupiah(kasSummary.netProfit)})
+              </span>
             </div>
 
-            {recentTransactions.length === 0 ? (
-              <div style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-                Belum ada transaksi tercatat.
+            {/* Meter Progress Bar */}
+            <div className="guardrail-meter">
+              <div className="meter-bar-track">
+                <div
+                  className={`meter-bar-fill ${maxInstallment30Pct >= simulatedBriInstallment ? 'safe' : 'danger'}`}
+                  style={{
+                    width: maxInstallment30Pct > 0
+                      ? `${Math.min(100, Math.round((simulatedBriInstallment / Math.max(maxInstallment30Pct, simulatedBriInstallment)) * 100))}%`
+                      : '0%',
+                  }}
+                ></div>
+                {/* 30% Threshold Line Indicator */}
+                <div className="meter-threshold-line" style={{ left: '70%' }} title="Batas Maksimal 30%">
+                  <span className="threshold-label">Batas 30%</span>
+                </div>
               </div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', textAlign: 'left', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-                    <th style={{ padding: '10px 0' }}>Tanggal</th>
-                    <th style={{ padding: '10px 0' }}>Keterangan</th>
-                    <th style={{ padding: '10px 0' }}>Kategori</th>
-                    <th style={{ padding: '10px 0', textAlign: 'right' }}>Nominal</th>
+              <div className="meter-labels">
+                <span>Rp 0</span>
+                <span className="text-safe font-medium">
+                  {transactions.length > 0 ? `Simulasi Teruji: ${formatRupiah(simulatedBriInstallment)}` : 'Cicilan Aktif: Rp 0'}
+                </span>
+                <span>Maks {formatRupiah(maxInstallment30Pct)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Simulasi Cepat Pilihan Pembiayaan */}
+          <div className="guardrail-actions-list">
+            <div className="loan-option-card">
+              <div className="loan-icon-wrap" aria-hidden="true">
+                <span className="material-symbols-rounded">account_balance</span>
+              </div>
+              <div className="loan-info">
+                <strong>Simulasi KUR BRI 6%</strong>
+                <span>Plafon Rp 50 Juta • Tenor 24 Bln</span>
+              </div>
+              <div className="loan-result">
+                <span className="loan-installment">Rp 2.216.000/bln</span>
+                {transactions.length === 0 || kasSummary.netProfit <= 0 ? (
+                  <span className="loan-status" style={{ color: '#94A3B8' }}>○ Belum Ada Saldo Kas</span>
+                ) : maxInstallment30Pct >= simulatedBriInstallment ? (
+                  <span className="loan-status text-emerald" style={{ color: '#10B981', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
+                ) : (
+                  <span className="loan-status text-terracotta" style={{ color: '#B5532F', fontWeight: 600 }}>⚠️ Melebihi Batas 30%</span>
+                )}
+              </div>
+            </div>
+
+            <div className="loan-option-card">
+              <div className="loan-icon-wrap" aria-hidden="true">
+                <span className="material-symbols-rounded">handshake</span>
+              </div>
+              <div className="loan-info">
+                <strong>Pinjaman Koperasi Usaha</strong>
+                <span>Plafon Rp 25 Juta • Tenor 12 Bln</span>
+              </div>
+              <div className="loan-result">
+                <span className="loan-installment">Rp 2.291.000/bln</span>
+                {transactions.length === 0 || kasSummary.netProfit <= 0 ? (
+                  <span className="loan-status" style={{ color: '#94A3B8' }}>○ Belum Ada Saldo Kas</span>
+                ) : maxInstallment30Pct >= simulatedKopInstallment ? (
+                  <span className="loan-status text-emerald" style={{ color: '#10B981', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
+                ) : (
+                  <span className="loan-status text-terracotta" style={{ color: '#B5532F', fontWeight: 600 }}>⚠️ Melebihi Batas 30%</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="guardrail-cta">
+            <Link href="/guardrail" className="btn btn-secondary btn-block btn-sm" id="btn-quick-simulasi">
+              <span className="material-symbols-rounded btn-icon" style={{ fontSize: '16px' }}>shield</span>
+              <span>Buka Simulator Guardrail Lengkap</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ====================================================================
+           3. LOWER SECTION: Recent Transactions Table + Quick Category Breakdown
+           ==================================================================== */}
+      <div className="dash-bottom-grid">
+        {/* Left/Main: Recent Transactions Table */}
+        <div className="dash-panel panel-transactions" id="section-buku-kas">
+          <div className="panel-header">
+            <div>
+              <h2 className="panel-title">Buku Kas: Transaksi Terakhir</h2>
+              <p className="panel-subtitle">Catatan kasir dan pengeluaran harian yang terhubung langsung ke laporan keuangan</p>
+            </div>
+
+            <div className="table-filter-group">
+              <select
+                className="select-filter-tx"
+                id="filter-tx-type"
+                value={filterTxType}
+                onChange={(e) => setFilterTxType(e.target.value as any)}
+              >
+                <option value="all">Semua Tipe</option>
+                <option value="income">Pemasukan (Kas Masuk)</option>
+                <option value="expense">Pengeluaran (Kas Keluar)</option>
+              </select>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                id="btn-add-tx-row"
+                onClick={() => setModalOpen(true)}
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
+                <span>Catat Baru</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <div className="table-responsive">
+            <table className="data-table" id="table-transactions">
+              <thead>
+                <tr>
+                  <th>Waktu / Tanggal</th>
+                  <th>Kategori</th>
+                  <th>Keterangan Transaksi</th>
+                  <th>Tipe Arus Kas</th>
+                  <th className="text-right">Nominal</th>
+                  <th className="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body">
+                {filteredRecentTx.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                      Belum ada transaksi kas yang dicatat. Klik tombol <strong>Catat Baru</strong> di atas untuk memulai.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentTransactions.map((tx) => (
-                    <tr key={tx.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '12px 0', fontWeight: 600 }}>{tx.tanggal}</td>
-                      <td style={{ padding: '12px 0' }}>{tx.keterangan || '-'}</td>
-                      <td style={{ padding: '12px 0' }}>
-                        <span
-                          style={{
-                            padding: '3px 8px',
-                            borderRadius: '4px',
-                            fontSize: '0.7rem',
-                            fontWeight: 600,
-                            background: tx.tipe === 'pemasukan' ? '#ECFDF5' : '#FEF2F2',
-                            color: tx.tipe === 'pemasukan' ? '#065F46' : '#991B1B',
-                          }}
-                        >
-                          {tx.kategori}
+                ) : (
+                  filteredRecentTx.map((t) => (
+                    <tr key={t.id}>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{t.tanggal}</td>
+                      <td>
+                        <span className="badge-kategori" style={{ background: '#F1F5F9', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          {t.kategori || 'Umum'}
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: '12px 0',
-                          textAlign: 'right',
-                          fontWeight: 700,
-                          color: tx.tipe === 'pemasukan' ? '#10B981' : '#B5532F',
-                        }}
-                      >
-                        {tx.tipe === 'pemasukan' ? '+ ' : '- '}
-                        {formatRupiah(Number(tx.nominal))}
+                      <td style={{ fontWeight: 600 }}>{t.keterangan}</td>
+                      <td>
+                        <span className={`pill-tipe ${t.tipe === 'pemasukan' ? 'text-emerald' : 'text-terracotta'}`} style={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                          {t.tipe === 'pemasukan' ? '+ Kas Masuk' : '- Kas Keluar'}
+                        </span>
+                      </td>
+                      <td className="text-right tabular-nums" style={{ fontWeight: 700, color: t.tipe === 'pemasukan' ? 'var(--primary)' : 'var(--secondary)' }}>
+                        {t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(Number(t.nominal))}
+                      </td>
+                      <td className="text-center">
+                        <Link href="/buku-kas" className="btn-link-action" style={{ fontSize: '0.75rem' }}>
+                          Detail
+                        </Link>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Distribution by Category */}
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-subtle)' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
-              Distribusi Pemasukan
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '16px' }}>
-              Sumber omzet per kategori produk
-            </p>
-
-            {categories.length === 0 ? (
-              <div style={{ padding: '36px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Belum ada data kategori.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {categories.map((c) => (
-                  <div key={c.category}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: 600 }}>{c.category}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>{c.pct}%</span>
-                    </div>
-                    <div style={{ height: '6px', background: '#F1F5F3', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${c.pct}%`,
-                          height: '100%',
-                          background: 'var(--primary)',
-                          borderRadius: '3px',
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Table Footer Pagination / Status */}
+          <div className="table-footer-status">
+            <span className="text-muted text-sm" id="tx-count-display">
+              Menampilkan {filteredRecentTx.length} dari {transactions.length} transaksi aktif
+            </span>
+            <Link href="/buku-kas" className="btn-link-action" id="btn-view-all-tx">
+              Buka Buku Kas Warung →
+            </Link>
           </div>
         </div>
-      </main>
-    </>
+
+        {/* Right/Secondary: Distribusi Kategori Penjualan UMKM */}
+        <div className="dash-panel panel-distribution">
+          <div className="panel-header">
+            <div>
+              <h2 className="panel-title">Distribusi Penjualan</h2>
+              <p className="panel-subtitle">Sumber omzet per kategori produk</p>
+            </div>
+            <span className="period-chip">Bulan Ini</span>
+          </div>
+
+          {/* Visual Category Distribution */}
+          <div className="distribution-bars-wrap" id="distribution-bars-wrap" style={{ padding: '16px 0' }}>
+            {categoryDist.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Belum ada data penjualan tercatat.</p>
+            ) : (
+              categoryDist.map((c) => (
+                <div key={c.name} style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
+                    <strong>{c.name}</strong>
+                    <span className="tabular-nums">{formatRupiah(c.amount)} ({c.pct}%)</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: `${c.pct}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px' }}></div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Kelayakan Dokumen Legalitas (Pilar 4 UTERA) */}
+          <div className="legalitas-status-card" id="legalitas-status-card" style={{ marginTop: '16px', padding: '16px', background: '#EEF7F2', borderRadius: '12px', border: '1px solid #D1E7DC' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="material-symbols-rounded" style={{ color: 'var(--primary)' }}>description</span>
+              <strong style={{ color: 'var(--primary-dark)', fontSize: '0.9rem' }}>Status Legalitas NIB OSS</strong>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-body)', margin: 0, lineHeight: 1.5 }}>
+              Lengkapi berkas NIB dan sertifikasi halal untuk membuka akses pengajuan KUR Mikro hingga Rp 50 Juta.
+            </p>
+            <Link href="/legalitas" style={{ display: 'inline-block', marginTop: '10px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+              Kelola Dokumen Legalitas →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================
+           MODAL: CATAT TRANSAKSI KAS BARU
+           ======================================================================== */}
+      {modalOpen && (
+        <div className="modal-backdrop" id="modal-tx-backdrop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-dialog" role="dialog" aria-modal="true" style={{ background: '#fff', borderRadius: '16px', width: '92%', maxWidth: '480px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 className="modal-title" style={{ fontSize: '1.25rem', fontWeight: 800 }}>Catat Transaksi Kas Warung</h3>
+              <button
+                type="button"
+                className="btn-close-modal"
+                onClick={() => setModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px' }}
+              >
+                <span className="material-symbols-rounded">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTx} className="modal-form">
+              {/* Tipe Transaksi */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
+                  Tipe Arus Kas
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setTxType('pemasukan')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: `2px solid ${txType === 'pemasukan' ? 'var(--primary)' : '#E2E8F0'}`,
+                      background: txType === 'pemasukan' ? 'var(--primary-soft)' : '#fff',
+                      color: txType === 'pemasukan' ? 'var(--primary-dark)' : 'var(--text-body)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    + Pemasukan (Omzet)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTxType('pengeluaran')}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: `2px solid ${txType === 'pengeluaran' ? 'var(--secondary)' : '#E2E8F0'}`,
+                      background: txType === 'pengeluaran' ? 'var(--secondary-soft, #FDF1ED)' : '#fff',
+                      color: txType === 'pengeluaran' ? 'var(--secondary)' : 'var(--text-body)',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    - Pengeluaran (Biaya)
+                  </button>
+                </div>
+              </div>
+
+              {/* Nominal Rupiah */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
+                  Nominal Transaksi (Rp)
+                </label>
+                <input
+                  type="number"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700 }}
+                  placeholder="contoh: 250000"
+                  min="1000"
+                  step="1000"
+                  value={txAmount}
+                  onChange={(e) => setTxAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Kategori */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
+                  Kategori
+                </label>
+                <select
+                  className="form-select"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
+                  value={txCategory}
+                  onChange={(e) => setTxCategory(e.target.value)}
+                >
+                  {KAS_CATEGORIES[txType].map((cat: string) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Keterangan */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
+                  Keterangan Transaksi
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
+                  placeholder="contoh: Penjualan 50 porsi sarapan pagi"
+                  value={txDesc}
+                  onChange={(e) => setTxDesc(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Tanggal */}
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
+                  Tanggal Transaksi
+                </label>
+                <input
+                  type="date"
+                  className="form-input"
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
+                  value={txDate}
+                  onChange={(e) => setTxDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Menyimpan...' : 'Simpan Transaksi Kas'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
