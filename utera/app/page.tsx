@@ -185,7 +185,7 @@ export default function LandingPage() {
             <div className="hero-cta-group">
               <a href="#playground-simulator" className="btn btn-primary btn-pill" id="hero-btn-primary">
                 <span>Mulai Gratis Sekarang</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
               </a>
               <a href="#playground-simulator" className="btn btn-secondary btn-pill" id="hero-btn-demo">
                 Buka Simulator Interaktif
@@ -296,7 +296,7 @@ export default function LandingPage() {
               <div className="feature-box">
                 <div>
                   <div className="feature-icon-container" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span className="material-symbols-rounded" style={{ fontSize: '28px', color: 'var(--primary)' }}>receipt_long</span>
                   </div>
                   <h3>Buku Kas Warung Real-Time</h3>
                   <p>
@@ -305,7 +305,7 @@ export default function LandingPage() {
                 </div>
                 <Link href="/buku-kas" className="feature-link">
                   <span>Buka Buku Kas Warung</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
                 </Link>
               </div>
 
@@ -313,7 +313,7 @@ export default function LandingPage() {
               <div className="feature-box">
                 <div>
                   <div className="feature-icon-container" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span className="material-symbols-rounded" style={{ fontSize: '28px', color: 'var(--primary)' }}>verified</span>
                   </div>
                   <h3>Engine Skor Kelayakan (0–100)</h3>
                   <p>
@@ -322,7 +322,7 @@ export default function LandingPage() {
                 </div>
                 <Link href="/skor-kelayakan" className="feature-link">
                   <span>Buka Skor Kelayakan</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
                 </Link>
               </div>
 
@@ -330,7 +330,7 @@ export default function LandingPage() {
               <div className="feature-box">
                 <div>
                   <div className="feature-icon-container" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span className="material-symbols-rounded" style={{ fontSize: '28px', color: 'var(--primary)' }}>shield</span>
                   </div>
                   <h3>Simulasi Guardrail Batas 30% Kas</h3>
                   <p>
@@ -339,7 +339,7 @@ export default function LandingPage() {
                 </div>
                 <Link href="/guardrail" className="feature-link">
                   <span>Uji Guardrail 30% Kas</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
                 </Link>
               </div>
             </div>
@@ -363,8 +363,9 @@ export default function LandingPage() {
               <p className="moka-feature-desc">
                 Kami membantu Anda mencatat setiap pemasukan dan pengeluaran secara akurat sehingga laporan keuangan Anda siap untuk pengajuan kredit bank kapan saja.
               </p>
-              <a href="#playground-simulator" className="moka-feature-link" id="btn-fitur-kas">
-                Pelajari &nbsp;<span aria-hidden="true">&#8594;</span>
+              <a href="#playground-simulator" className="moka-feature-link" id="btn-fitur-kas" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span>Pelajari</span>
+                <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
               </a>
             </div>
           </div>
@@ -382,8 +383,9 @@ export default function LandingPage() {
               <p className="moka-feature-desc">
                 Algoritma otomatis UTERA menganalisis 4 parameter objektif &mdash; konsistensi, pertumbuhan omzet, margin laba, dan stabilitas kas &mdash; untuk menghasilkan Skor PRD yang diakui perbankan.
               </p>
-              <Link href="/skor-kelayakan" className="moka-feature-link" id="btn-fitur-skor">
-                Buka Skor Kelayakan &nbsp;<span aria-hidden="true">&#8594;</span>
+              <Link href="/skor-kelayakan" className="moka-feature-link" id="btn-fitur-skor" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span>Buka Skor Kelayakan</span>
+                <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
               </Link>
             </div>
           </div>
@@ -405,8 +407,9 @@ export default function LandingPage() {
               <p className="moka-feature-desc">
                 Jutaan transaksi dicatat setiap bulan oleh pelaku usaha yang menggunakan UTERA. Mereka membuktikan bahwa pembukuan yang rapi adalah kunci membuka akses permodalan lebih cepat.
               </p>
-              <a href="#playground-simulator" className="moka-feature-link" id="btn-komunitas">
-                Mulai Sekarang &nbsp;<span aria-hidden="true">&#8594;</span>
+              <a href="#playground-simulator" className="moka-feature-link" id="btn-komunitas" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span>Mulai Sekarang</span>
+                <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
               </a>
             </div>
           </div>
@@ -821,16 +824,16 @@ export default function LandingPage() {
                           </p>
 
                           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: 'var(--neutral-800)', marginBottom: '24px' }}>
-                            <li style={{ display: 'flex', gap: '10px' }}>
-                              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                               <span><strong>Skor Kelayakan:</strong> Menghitung ulang margin laba dan konsistensi catatan bulanan.</span>
                             </li>
-                            <li style={{ display: 'flex', gap: '10px' }}>
-                              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                               <span><strong>Guardrail Koperasi:</strong> Memperbarui batas aman cicilan 30% berdasarkan saldo kas riil.</span>
                             </li>
-                            <li style={{ display: 'flex', gap: '10px' }}>
-                              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>✓</span>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                               <span><strong>Laporan Bank:</strong> Menghasilkan neraca laba rugi terstandar tanpa pencatatan ganda.</span>
                             </li>
                           </ul>
@@ -881,19 +884,19 @@ export default function LandingPage() {
                   </p>
                   <ul className="tier-checklist">
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Suku bunga bersubsidi 3% efektif per tahun</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Tanpa agunan fisik tambahan</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Cukup NIB atau Surat Keterangan Usaha (SKU)</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Tenor kredit modal kerja hingga 36 bulan</span>
                     </li>
                   </ul>
@@ -915,19 +918,19 @@ export default function LandingPage() {
                   </p>
                   <ul className="tier-checklist">
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Suku bunga bersubsidi 6% efektif per tahun</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Evaluasi catatan kas minimal 6 bulan berturut-turut</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Rekomendasi Skor Kelayakan UTERA: BAIK (≥ 70)</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Laporan keuangan PDF UTERA siap dilampirkan</span>
                     </li>
                   </ul>
@@ -948,19 +951,19 @@ export default function LandingPage() {
                   </p>
                   <ul className="tier-checklist">
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Suku bunga bertahap 6% s.d 9% efektif</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Wajib melampirkan NIB aktif dan NPWP usaha</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Agunan pokok sesuai dengan ketentuan bank pelaksana</span>
                     </li>
                     <li>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
                       <span>Tenor investasi hingga 60 bulan (5 tahun)</span>
                     </li>
                   </ul>
@@ -1071,7 +1074,7 @@ export default function LandingPage() {
               <div className={`faq-item ${openFaq === 0 ? 'active' : ''}`}>
                 <div className="faq-header" onClick={() => setOpenFaq(openFaq === 0 ? null : 0)}>
                   <h4>Bagaimana cara UTERA menjamin data keuangan usaha saya valid?</h4>
-                  <svg className="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <span className="material-symbols-rounded faq-icon" style={{ fontSize: '24px', transition: 'transform 0.25s ease', transform: openFaq === 0 ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--primary)' }}>keyboard_arrow_down</span>
                 </div>
                 <div className="faq-body">
                   UTERA menerapkan prinsip Satu Sumber Data Keuangan. Setiap catatan transaksi harian pada Buku Kas Warung secara otomatis mengalir ke neraca laba rugi, mesin hitung skor kelayakan, dan simulasi guardrail cicilan tanpa kemungkinan pengeditan ganda yang tidak konsisten.
@@ -1082,7 +1085,7 @@ export default function LandingPage() {
               <div className={`faq-item ${openFaq === 1 ? 'active' : ''}`}>
                 <div className="faq-header" onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}>
                   <h4>Apakah UTERA memberikan persetujuan pinjaman secara langsung?</h4>
-                  <svg className="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <span className="material-symbols-rounded faq-icon" style={{ fontSize: '24px', transition: 'transform 0.25s ease', transform: openFaq === 1 ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--primary)' }}>keyboard_arrow_down</span>
                 </div>
                 <div className="faq-body">
                   Tidak. UTERA adalah platform analitik dan pendampingan kesehatan finansial. Skor kelayakan dan laporan yang dihasilkan UTERA berfungsi sebagai berkas pendukung resmi untuk mempermudah penilaian oleh bank penyalur KUR (seperti BRI, Mandiri, BNI) atau koperasi simpan pinjam terkait.
@@ -1093,7 +1096,7 @@ export default function LandingPage() {
               <div className={`faq-item ${openFaq === 2 ? 'active' : ''}`}>
                 <div className="faq-header" onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}>
                   <h4>Mengapa beban cicilan pinjaman dibatasi maksimal 30% dari laba kas?</h4>
-                  <svg className="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <span className="material-symbols-rounded faq-icon" style={{ fontSize: '24px', transition: 'transform 0.25s ease', transform: openFaq === 2 ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--primary)' }}>keyboard_arrow_down</span>
                 </div>
                 <div className="faq-body">
                   Batas 30% adalah standar manajemen risiko kas (Debt Service Coverage) yang direkomendasikan untuk usaha mikro. Jika cicilan melebihi 30% dari laba bersih bulanan, usaha Anda berisiko mengalami defisit modal saat terjadi penurunan omzet atau kenaikan harga bahan baku.
@@ -1104,7 +1107,7 @@ export default function LandingPage() {
               <div className={`faq-item ${openFaq === 3 ? 'active' : ''}`}>
                 <div className="faq-header" onClick={() => setOpenFaq(openFaq === 3 ? null : 3)}>
                   <h4>Bantuan perizinan apa saja yang disediakan dalam sistem UTERA?</h4>
-                  <svg className="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <span className="material-symbols-rounded faq-icon" style={{ fontSize: '24px', transition: 'transform 0.25s ease', transform: openFaq === 3 ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--primary)' }}>keyboard_arrow_down</span>
                 </div>
                 <div className="faq-body">
                   UTERA menyediakan panduan pemenuhan dokumen NIB berbasis risiko (OSS RBA), persyaratan izin edar pangan industri rumah tangga (PIRT) dari Dinas Kesehatan, serta panduan sertifikasi halal melalui BPJPH Kementerian Agama.
