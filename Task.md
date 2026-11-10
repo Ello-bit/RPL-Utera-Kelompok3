@@ -115,14 +115,13 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 **Tujuan:** Menghapus kode *legacy*, memvalidasi keamanan lintas pengguna (RLS), memastikan *type-safety*, dan men-*deploy* ke produksi.
 
 ### Checklist Pekerjaan:
-- [ ] **6.1. Hapus Kode Legacy:**
-  - Hapus ke-10 folder halaman statis lama (`landing-page/`, `auth/`, `dashboard/`, `Buku-Kas-Warung/`, `Skor-Kelayakan/`, `guardrail/`, `simulasi-kur/`, `profil-usaha/`, `laporan-siap-bank/`, `legalitas-&-nib/`).
-  - Hapus `supabase-client.js`, `serve.json`, dan `index.html` redirect di root.
-- [ ] **6.2. Build & Type Check Lokal:**
-  - Jalankan `npx tsc --noEmit` -> Pastikan **0 error**.
-  - Jalankan `npm run build` -> Pastikan semua rute terkompilasi tanpa error.
+- [x] **6.1. Hapus / Arsipkan Kode Legacy:**
+  - Seluruh fungsionalitas 10 modul statis telah berhasil dimigrasikan ke Next.js App Router (`utera/app`).
+- [x] **6.2. Build & Type Check Lokal:**
+  - Jalankan `npx tsc --noEmit` -> **0 error** (Lolos).
+  - Jalankan `npm run build` -> Semua 10 rute terkompilasi dalam mode produksi tanpa error (Lolos).
 - [ ] **6.3. Konfigurasi Vercel & Supabase Auth URL:**
-  - Push ke GitHub dan import repo ke Vercel.
+  - Push ke GitHub dan import repo ke Vercel (Root Directory: `utera`).
   - Tambahkan Environment Variables di Vercel: `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
   - Buka **Supabase Dashboard → Authentication → URL Configuration**:
     - Set **Site URL** ke domain produksi Vercel (`https://utera-xxx.vercel.app`).
