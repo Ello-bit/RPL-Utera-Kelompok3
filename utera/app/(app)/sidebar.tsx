@@ -123,21 +123,6 @@ export default function Sidebar({
         },
       ],
     },
-    ...(isAdmin || userEmail.toLowerCase().includes('admin')
-      ? [
-          {
-            section: 'ADMINISTRATOR',
-            items: [
-              {
-                name: 'Dashboard Admin',
-                href: '/admin',
-                icon: 'admin_panel_settings',
-                infoPill: 'Superadmin',
-              },
-            ],
-          },
-        ]
-      : []),
   ]
 
   return (

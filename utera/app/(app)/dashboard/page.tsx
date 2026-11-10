@@ -26,6 +26,12 @@ export default function DashboardPage() {
   const [isGuest, setIsGuest] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  // Admin state
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [allProfiles, setAllProfiles] = useState<ProfilUsaha[]>([])
+  const [allRawTransactions, setAllRawTransactions] = useState<TransaksiKas[]>([])
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('all')
+
   // Chart state
   const [chartMode, setChartMode] = useState<'omzet' | 'laba'>('omzet')
 
@@ -56,7 +62,50 @@ export default function DashboardPage() {
         return
       }
 
-      // Fetch Profile
+      const isUserAdmin =
+        user.email?.toLowerCase().includes('admin') ||
+        user.user_metadata?.role === 'admin'
+      setIsAdmin(isUserAdmin)
+
+      if (isUserAdmin) {
+        // Fetch all profiles across platform
+        const { data: allProfs } = await supabase.from('profil_usaha').select('*')
+        if (allProfs && allProfs.length > 0) {
+          setAllProfiles(allProfs as ProfilUsaha[])
+        }
+
+        // Fetch all transactions across platform
+        const { data: allTxs } = await supabase
+          .from('transaksi_kas')
+          .select('*')
+          .order('tanggal', { ascending: false })
+
+        if (allTxs && allTxs.length > 0) {
+          setAllRawTransactions(allTxs as TransaksiKas[])
+          setTransactions(allTxs as TransaksiKas[])
+        } else {
+          setAllRawTransactions(DEMO_TRANSACTIONS)
+          setTransactions(DEMO_TRANSACTIONS)
+        }
+
+        setProfile({
+          id: 'admin-platform',
+          user_id: user.id,
+          nama_usaha: 'Seluruh Ekosistem UMKM',
+          nama_pemilik: 'Administrator UTERA',
+          jenis_usaha: 'Agregat Platform Finansial',
+          nomor_telepon: '1500-UTERA',
+          alamat_usaha: 'Pusat Komando UTERA Finansial',
+          tanggal_mulai_usaha: '2026-01-01',
+          deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        setLoading(false)
+        return
+      }
+
+      // Fetch Profile for regular user
       const { data: profs } = await supabase
         .from('profil_usaha')
         .select('*')
@@ -121,6 +170,36 @@ export default function DashboardPage() {
 
     loadData()
   }, [])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    if (selectedProfileId === 'all') {
+      setTransactions(allRawTransactions)
+      setProfile({
+        id: 'admin-platform',
+        user_id: 'admin',
+        nama_usaha: 'Seluruh Ekosistem UMKM',
+        nama_pemilik: 'Administrator UTERA',
+        jenis_usaha: 'Agregat Platform Finansial',
+        nomor_telepon: '1500-UTERA',
+        alamat_usaha: 'Pusat Komando UTERA Finansial',
+        tanggal_mulai_usaha: '2026-01-01',
+        deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+    } else if (selectedProfileId === 'demo-kopi') {
+      setTransactions(DEMO_TRANSACTIONS)
+      setProfile(DEMO_PROFILES[0])
+    } else {
+      const found = allProfiles.find((p) => p.id === selectedProfileId)
+      if (found) {
+        setProfile(found)
+        const filtered = allRawTransactions.filter((t) => t.profil_id === found.id || t.user_id === found.user_id)
+        setTransactions(filtered.length > 0 ? filtered : DEMO_TRANSACTIONS)
+      }
+    }
+  }, [selectedProfileId, isAdmin, allProfiles, allRawTransactions])
 
   // 1. Calculate Kas Summary
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
@@ -336,13 +415,44 @@ export default function DashboardPage() {
       {/* Header Row: Title + Period Selector & Export */}
       <div className="dash-header-row">
         <div>
-          <h1 className="dash-heading">Dashboard Finansial</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+            <h1 className="dash-heading">Dashboard Finansial</h1>
+            {isAdmin && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
+                <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>shield</span>
+                Mode Administrator
+              </span>
+            )}
+          </div>
           <p className="dash-subheading">
-            Pantau arus kas riil warung harian, indikator kelayakan KUR, dan guardrail beban cicilan.
+            {isAdmin
+              ? `Memantau kesehatan kas dan rasio kelayakan kredit: ${profile?.nama_usaha || 'Ekosistem UMKM'}`
+              : 'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan guardrail beban cicilan.'}
           </p>
         </div>
 
         <div className="dash-header-actions">
+          {isAdmin && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-muted)' }}>Pilih Usaha:</span>
+              <select
+                className="select-period"
+                value={selectedProfileId}
+                onChange={(e) => setSelectedProfileId(e.target.value)}
+                style={{ fontWeight: 700, color: 'var(--primary)' }}
+                aria-label="Pilih Usaha Mitra untuk Ditinjau"
+              >
+                <option value="all">🌐 Seluruh Ekosistem UMKM</option>
+                {allProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    🏪 {p.nama_usaha} ({p.nama_pemilik || 'Pemilik'})
+                  </option>
+                ))}
+                <option value="demo-kopi">☕ Dewo - Kopi Galer</option>
+              </select>
+            </div>
+          )}
+
           <div className="date-range-badge">
             <span className="material-symbols-rounded date-icon">calendar_today</span>
             <span>Okt 2026 • Real-time</span>

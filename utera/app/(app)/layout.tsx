@@ -26,21 +26,21 @@ export default async function AppShellLayout({
   if (user) {
     if (user.email?.toLowerCase().includes('admin') || user.user_metadata?.role === 'admin') {
       isAdmin = true
-      businessName = 'Portal Admin UTERA'
+      businessName = 'Ekosistem UMKM UTERA'
       userName = 'Administrator'
-    }
+    } else {
+      // 1. Fetch live profil usaha
+      const { data: profiles } = await supabase
+        .from('profil_usaha')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
 
-    // 1. Fetch live profil usaha
-    const { data: profiles } = await supabase
-      .from('profil_usaha')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    const firstProfile = profiles && profiles[0] ? (profiles[0] as Tables<'profil_usaha'>) : null
-    if (firstProfile) {
-      businessName = firstProfile.nama_usaha
-      if (firstProfile.nama_pemilik) userName = firstProfile.nama_pemilik
+      const firstProfile = profiles && profiles[0] ? (profiles[0] as Tables<'profil_usaha'>) : null
+      if (firstProfile) {
+        businessName = firstProfile.nama_usaha
+        if (firstProfile.nama_pemilik) userName = firstProfile.nama_pemilik
+      }
     }
 
     // 2. Fetch live transactions to calculate count and PRD score

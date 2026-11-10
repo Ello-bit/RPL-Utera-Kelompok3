@@ -106,15 +106,7 @@ function AuthContent() {
           return
         }
 
-        const isUserAdmin =
-          normalizedEmail.toLowerCase().includes('admin') ||
-          data?.user?.user_metadata?.role === 'admin'
-
-        if (isUserAdmin) {
-          router.push('/admin')
-        } else {
-          router.push(redirectTarget)
-        }
+        router.push(redirectTarget)
         router.refresh()
       })
     }
