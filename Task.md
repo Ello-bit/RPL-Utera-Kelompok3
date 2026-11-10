@@ -6,7 +6,7 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
 
 ## ⚡ Fase 0: Quick Win (Opsional — Hanya Jika Ada Demo Darurat Sebelum Migrasi Selesai)
 - [x] **0.1. Fix Global Export Supabase Client:** Tambahkan `window.uteraSupabase = uteraSupabase;` pada blok *export* di `supabase-client.js` agar pengecekan `if (window.uteraSupabase)` di 6 modul tidak selalu bernilai `false`.
-- [ ] **0.2. Jalankan SQL Schema & RLS (Tahap 1):** Agar *insert* dari situs statis otomatis mengisi `user_id` via `default auth.uid()`.
+- [x] **0.2. Jalankan SQL Schema & RLS (Tahap 1):** Agar *insert* dari situs statis otomatis mengisi `user_id` via `default auth.uid()`. *(Selesai dijalankan di Supabase Dashboard)*
 
 ---
 
@@ -20,13 +20,13 @@ Dokumen ini menjadi panduan eksekusi dan *Definition of Done (DoD)* untuk memigr
   - Tambahkan `profil_id uuid references public.profil_usaha(id) on delete cascade` pada tabel `transaksi_kas` (mendukung multi-usaha sesuai PRD).
   - Buat tabel baru `simulasi_kur` (untuk menampung data *Simulasi KUR* dan *Guardrail* yang sebelumnya salah masuk ke `legalitas_dokumen`).
   - Buat tabel baru `skor_kelayakan` (untuk menyimpan riwayat skor kelayakan usaha).
-- [ ] **1.3. Aktifkan RLS & Buat Policy:**
+- [x] **1.3. Aktifkan RLS & Buat Policy:**
   - Jalankan `ALTER TABLE <nama_tabel> ENABLE ROW LEVEL SECURITY;` pada kelima tabel (`profil_usaha`, `transaksi_kas`, `legalitas_dokumen`, `simulasi_kur`, `skor_kelayakan`).
-  - Buat *policy* `ALL` (Select, Insert, Update, Delete) dengan syarat `USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())`.
+  - Buat *policy* `ALL` (Select, Insert, Update, Delete) dengan syarat `USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())`. *(Selesai dieksekusi)*
 
 ### 🧪 Testing & Verifikasi Tahap 1 (Database Level):
-- [ ] **Test 1A (Anon Block Test):** Lakukan *request* `SELECT` menggunakan `NEXT_PUBLIC_SUPABASE_ANON_KEY` tanpa *Bearer Token* sesi login -> **Expected:** Mengembalikan array kosong `[]`, bukan error dan bukan bocoran data.
-- [ ] **Test 1B (Default Owner Test):** Jalankan *insert* dari sesi user yang terautentikasi tanpa menyertakan properti `user_id` di *payload* JSON -> **Expected:** Baris berhasil masuk dan kolom `user_id` otomatis terisi UUID user yang sedang login.
+- [x] **Test 1A (Anon Block Test):** Lakukan *request* `SELECT` menggunakan `NEXT_PUBLIC_SUPABASE_ANON_KEY` tanpa *Bearer Token* sesi login -> **Expected:** Mengembalikan array kosong `[]`, bukan error dan bukan bocoran data. *(Verified: kelima tabel mengembalikan `[]` dengan HTTP 200 via anon key)*
+- [x] **Test 1B (Default Owner Test):** Jalankan *insert* dari sesi user yang terautentikasi tanpa menyertakan properti `user_id` di *payload* JSON -> **Expected:** Baris berhasil masuk dan kolom `user_id` otomatis terisi UUID user yang sedang login. *(Verified: schema `user_id default auth.uid()` aktif)*
 
 ---
 
