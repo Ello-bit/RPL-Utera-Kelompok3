@@ -1424,7 +1424,22 @@ body.dashboard-body {
   border-radius: var(--r-sm);
   white-space: nowrap;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 5;
 }
+
+.bar:hover .bar-tooltip,
+.bar:focus-visible .bar-tooltip,
+.bar.show-tip .bar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bar:hover { filter: brightness(0.92); }
+.bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.bar-tooltip-expense { background: #475569; }
 
 .col-label {
   font-size: 0.75rem;

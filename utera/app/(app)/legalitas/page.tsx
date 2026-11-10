@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Tables, TablesInsert } from '@/lib/database.types'
-import { DEFAULT_LEGALITAS_DOCS, evaluateLegalitas } from '@/lib/legalitas'
+import { DEFAULT_LEGALITAS_DOCS, evaluateLegalitas, statusMasaBerlaku } from '@/lib/legalitas'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
+import { todayLocal } from '@/lib/input'
 import './legalitas.css'
 
 type LegalitasDokumen = Tables<'legalitas_dokumen'>
@@ -14,6 +16,7 @@ export default function LegalitasPage() {
   const [docs, setDocs] = useState<LegalitasDokumen[]>([])
   const [loading, setLoading] = useState(true)
   const [isGuest, setIsGuest] = useState(false)
+  const [profilId, setProfilId] = useState<string | null>(null)
   const [editingDoc, setEditingDoc] = useState<Partial<LegalitasDokumen> | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -58,13 +61,20 @@ export default function LegalitasPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('legalitas_dokumen')
-        .select('*')
+      const { data: profs } = await supabase
+        .from('profil_usaha')
+        .select('id')
         .order('created_at', { ascending: false })
+      const active = pickActiveProfile(profs ?? [], getActiveProfilId())
+      setProfilId(active?.id ?? null)
+
+      let query = supabase.from('legalitas_dokumen').select('*')
+      if (active) query = query.eq('profil_id', active.id)
+      const { data, error } = await query.order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error fetching legalitas_dokumen:', error)
+        setMessage({ type: 'error', text: 'Gagal memuat dokumen legalitas: ' + error.message })
       } else if (data) {
         setDocs(data as LegalitasDokumen[])
       }
@@ -85,7 +95,7 @@ export default function LegalitasPage() {
         kategori,
         nama_dokumen: nama,
         nomor_dokumen: '',
-        tanggal_terbit: new Date().toISOString().slice(0, 10),
+        tanggal_terbit: todayLocal(),
         masa_berlaku: '',
         file_url: '',
       })
@@ -151,6 +161,7 @@ export default function LegalitasPage() {
           tanggal_terbit: editingDoc.tanggal_terbit || null,
           masa_berlaku: editingDoc.masa_berlaku || null,
           file_url: editingDoc.file_url?.trim() || null,
+          profil_id: profilId,
         }
 
         const { data, error } = await supabase
@@ -350,6 +361,19 @@ export default function LegalitasPage() {
                         Terbit: {uploaded.tanggal_terbit}
                       </div>
                     )}
+                    {(() => {
+                      const mb = statusMasaBerlaku(uploaded.masa_berlaku)
+                      if (mb.status === 'tidak-ada') return null
+                      const label =
+                        mb.status === 'kedaluwarsa' ? 'Kedaluwarsa' : mb.status === 'segera-habis' ? 'Segera habis' : 'Berlaku sampai'
+                      const color = mb.status === 'kedaluwarsa' ? '#B5532F' : mb.status === 'segera-habis' ? '#8A5E0F' : 'var(--text-muted)'
+                      return (
+                        <div role="status" style={{ marginTop: '4px', fontWeight: 700, color }}>
+                          {label}: {uploaded.masa_berlaku}
+                          {mb.status === 'segera-habis' ? ` (${mb.sisaHari} hari lagi)` : ''}
+                        </div>
+                      )
+                    })()}
                   </div>
                 ) : (
                   <div style={{ padding: '12px', background: '#FFFBEB', borderRadius: '8px', marginBottom: '16px', fontSize: '0.8rem', color: '#B45309' }}>
@@ -445,6 +469,19 @@ export default function LegalitasPage() {
                   type="date"
                   value={editingDoc.tanggal_terbit || ''}
                   onChange={(e) => setEditingDoc({ ...editingDoc, tanggal_terbit: e.target.value })}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.9rem', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-body)', marginBottom: '4px' }}>
+                  Masa Berlaku Sampai (opsional)
+                </label>
+                <input
+                  type="date"
+                  value={editingDoc.masa_berlaku || ''}
+                  min={editingDoc.tanggal_terbit || undefined}
+                  onChange={(e) => setEditingDoc({ ...editingDoc, masa_berlaku: e.target.value })}
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontSize: '0.9rem', outline: 'none' }}
                 />
               </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, getMonthlyBreakdown, formatRupiah } from '@/lib/kas'
@@ -68,10 +69,12 @@ export default function LaporanSiapBankPage() {
         .from('profil_usaha')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1)
 
+      let activeProfilId: string | null = null
       if (profs && profs.length > 0) {
-        setProfile(profs[0] as ProfilUsaha)
+        const picked = pickActiveProfile(profs, getActiveProfilId())!
+        activeProfilId = picked.id
+        setProfile(picked as ProfilUsaha)
       } else {
         const fullName = (user.user_metadata?.full_name as string) || ''
         let initialNamaUsaha = 'Usaha Mandiri'
@@ -91,27 +94,26 @@ export default function LaporanSiapBankPage() {
           nama_usaha: initialNamaUsaha,
           nama_pemilik: initialNamaPemilik,
           jenis_usaha: 'Kuliner & F&B',
-          tanggal_mulai_usaha: '2025-01-01',
-          alamat_usaha: '-',
-          nomor_telepon: '-',
-          deskripsi_usaha: '-',
+          tanggal_mulai_usaha: null,
+          alamat_usaha: null,
+          nomor_telepon: null,
+          deskripsi_usaha: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
       }
 
       // Fetch Transactions
-      const { data: txs } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      let txQuery = supabase.from('transaksi_kas').select('*')
+      if (activeProfilId) txQuery = txQuery.eq('profil_id', activeProfilId)
+      const { data: txs } = await txQuery.order('tanggal', { ascending: false })
 
       if (txs) setTransactions(txs as TransaksiKas[])
 
       // Fetch Legalitas
-      const { data: docs } = await supabase
-        .from('legalitas_dokumen')
-        .select('*')
+      let docsQuery = supabase.from('legalitas_dokumen').select('*')
+      if (activeProfilId) docsQuery = docsQuery.eq('profil_id', activeProfilId)
+      const { data: docs } = await docsQuery
 
       if (docs) setLegalDocs(docs as LegalitasDokumen[])
 
@@ -406,7 +408,11 @@ export default function LaporanSiapBankPage() {
               <ul style={{ listStyle: 'none', padding: 0, margin: '6px 0 0', fontSize: '0.8rem' }}>
                 {legalDocs.map((d) => (
                   <li key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                    <span style={{ color: '#10B981' }}>✓</span>
+                    {d.nomor_dokumen || d.file_url ? (
+                      <span style={{ color: '#10B981' }} aria-label="Lengkap">✓</span>
+                    ) : (
+                      <span style={{ color: '#B5532F' }} aria-label="Belum lengkap">✗</span>
+                    )}
                     <span>{d.nama_dokumen}: {d.nomor_dokumen || '-'}</span>
                   </li>
                 ))}

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
-import { calculateSkorPRD, SkorResult } from '@/lib/skor'
+import { calculateSkorPRD, buildSkorSnapshot, rataLabaBulanan, SkorResult } from '@/lib/skor'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import { formatRupiah } from '@/lib/kas'
 import './skor.css'
 
@@ -18,6 +19,8 @@ export default function SkorKelayakanPage() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [isGuest, setIsGuest] = useState(false)
+  const [profilId, setProfilId] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -33,15 +36,23 @@ export default function SkorKelayakanPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      const { data: profs } = await supabase
+        .from('profil_usaha')
+        .select('id')
+        .order('created_at', { ascending: false })
+      const active = pickActiveProfile(profs ?? [], getActiveProfilId())
+      setProfilId(active?.id ?? null)
 
-      if (!error && data) {
-        setTransactions(data as TransaksiKas[])
+      let query = supabase.from('transaksi_kas').select('*')
+      if (active) query = query.eq('profil_id', active.id)
+      const { data, error } = await query.order('tanggal', { ascending: false })
+
+      if (error) {
+        // Pengguna login tidak boleh melihat data demo bila query gagal.
+        setLoadError(error.message)
+        setTransactions([])
       } else {
-        setTransactions(DEMO_TRANSACTIONS)
+        setTransactions((data ?? []) as TransaksiKas[])
       }
       setLoading(false)
     }
@@ -77,15 +88,9 @@ export default function SkorKelayakanPage() {
     }
 
     try {
-      const { error } = await supabase.from('skor_kelayakan').insert({
-        skor: totalScore,
-        kategori: skorData.category,
-        omzet_bulanan: skorData.totals.pemasukan,
-        laba_bersih: skorData.totals.laba,
-        margin_profit: Math.round(skorData.totals.margin * 100),
-        konsistensi_bulan: skorData.k1.score,
-        catatan: `Evaluasi otomatis: ${skorData.badgeLabel}`,
-      })
+      const { error } = await supabase
+        .from('skor_kelayakan')
+        .insert({ ...buildSkorSnapshot(skorData), profil_id: profilId })
 
       if (error) throw error
       setSaveSuccess('Riwayat skor kelayakan berhasil disimpan ke database!')
@@ -114,6 +119,18 @@ export default function SkorKelayakanPage() {
           </span>
         </div>
       </div>
+
+      {loadError && (
+        <p role="alert" className="dash-subheading" style={{ color: '#B5532F' }}>
+          Gagal memuat transaksi: {loadError}
+        </p>
+      )}
+      {!loading && !isGuest && skorData.dataKurang && skorData.category !== 'Belum Ada Data' && (
+        <p role="status" className="dash-subheading" style={{ color: '#8A5E0F' }}>
+          Data belum cukup: baru {skorData.k1.detail}. Skor dihitung dari bulan yang ada dan
+          akan lebih akurat setelah 6 bulan tercatat.
+        </p>
+      )}
 
       {/* 1. SKOR UTAMA + STATUS HERO */}
       <div className="skor-hero-grid">
@@ -259,7 +276,7 @@ export default function SkorKelayakanPage() {
               <div className="vital-info">
                 <span className="vital-label">Guardrail 30% Kas</span>
                 <span className="vital-val text-emerald">
-                  Maks {formatRupiah(Math.round(skorData.totals.laba * 0.30))} / bln
+                  Maks {formatRupiah(Math.max(0, Math.round(rataLabaBulanan(skorData) * 0.30)))} / bln
                 </span>
                 <span className="vital-sub">Batas cicilan aman likuiditas</span>
               </div>

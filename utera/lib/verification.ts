@@ -1,3 +1,10 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database, Tables } from './database.types'
+
+// Pengajuan verifikasi usaha disimpan di tabel Supabase `verifikasi_usaha`
+// (lihat supabase/verifikasi.sql). Sebelumnya di localStorage, sehingga admin
+// di browser lain tidak pernah melihat pengajuan pengguna.
+
 export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
 
 export interface VerificationRequest {
@@ -15,299 +22,190 @@ export interface VerificationRequest {
   skorPRD: number
   status: VerificationStatus
   submittedAt: string
+  /** Waktu pengajuan lengkap (ISO), dipakai untuk mengurutkan antrean admin. */
+  submittedAtIso: string
   reviewedAt?: string
   reviewedBy?: string
-  rejectionReason?: string
+  /** Catatan dari admin saat mengesahkan atau menolak (opsional). */
+  adminNote?: string
   certificateNumber?: string
 }
 
-export const DEFAULT_VERIFICATION_RECORDS: VerificationRequest[] = [
-  {
-    id: 'verif-konveksi',
-    businessId: 'seed-konveksi',
-    businessName: 'Konveksi Berkah Makmur',
-    ownerName: 'Haji Ahmad',
-    phoneNumber: '0821-4455-6677',
-    businessSector: 'Konveksi & Fashion',
-    applicationType: 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    notes: 'Mohon validasi NIB OSS kami dan catatan kas 15 transaksi untuk rekomendasi pengajuan KUR Mikro ke Bank BRI.',
-    hasNib: true,
-    nomorNib: '9120001234567',
-    totalTransactions: 15,
-    skorPRD: 74,
-    status: 'pending',
-    submittedAt: 'Hari ini, 10 menit lalu',
-  },
-  {
-    id: 'verif-bengkel',
-    businessId: 'seed-bengkel',
-    businessName: 'Bengkel Motor Sejahtera',
-    ownerName: 'Eko Wahyudi',
-    phoneNumber: '0878-1122-3344',
-    businessSector: 'Jasa & Layanan',
-    applicationType: 'Validasi Pembukuan Kas Operasional',
-    notes: 'Ingin memeriksa konsistensi pembukuan kas bulanan sebelum mengajukan NIB.',
-    hasNib: false,
-    totalTransactions: 9,
-    skorPRD: 62,
-    status: 'unverified',
-    submittedAt: '',
-  },
-  {
-    id: 'verif-dewo',
-    businessId: 'seed-dewo',
-    businessName: 'Kopi Galer',
-    ownerName: 'Dewo',
-    phoneNumber: '0812-3456-7890',
-    businessSector: 'Kuliner & F&B',
-    applicationType: 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    notes: 'Pengajuan validasi pembukuan digital dan NIB OSS untuk KUR Mikro.',
-    hasNib: true,
-    nomorNib: '1234567890123',
-    totalTransactions: 18,
-    skorPRD: 84,
-    status: 'verified',
-    submittedAt: '2026-03-01',
-    reviewedAt: '2026-03-02',
-    reviewedBy: 'Super Administrator UTERA',
-    certificateNumber: 'UTERA-VERIF-2026-084',
-  },
-  {
-    id: 'verif-berkah',
-    businessId: 'seed-berkah',
-    businessName: 'Warung Berkah Jaya',
-    ownerName: 'Ibu Siti Aminah',
-    phoneNumber: '0857-9876-5432',
-    businessSector: 'Perdagangan & Retail',
-    applicationType: 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    notes: 'Validasi berkas pembukuan warung kelontong & NIB.',
-    hasNib: true,
-    nomorNib: '8120009876543',
-    totalTransactions: 42,
-    skorPRD: 88,
-    status: 'verified',
-    submittedAt: '2026-02-14',
-    reviewedAt: '2026-02-15',
-    reviewedBy: 'Super Administrator UTERA',
-    certificateNumber: 'UTERA-VERIF-2026-088',
-  },
-  {
-    id: 'verif-nusantara',
-    businessId: 'seed-nusantara',
-    businessName: 'Kedai Kopi Nusantara',
-    ownerName: 'Budi Santoso',
-    phoneNumber: '0813-8821-4401',
-    businessSector: 'Kuliner & F&B',
-    applicationType: 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    notes: 'Audit kas digital dan kelengkapan izin edar / NIB.',
-    hasNib: true,
-    nomorNib: '3120005544332',
-    totalTransactions: 24,
-    skorPRD: 82,
-    status: 'verified',
-    submittedAt: '2026-01-20',
-    reviewedAt: '2026-01-21',
-    reviewedBy: 'Super Administrator UTERA',
-    certificateNumber: 'UTERA-VERIF-2026-082',
-  },
-]
+type Client = SupabaseClient<Database>
+type VerifikasiRow = Tables<'verifikasi_usaha'>
 
-const STORAGE_KEY = 'utera_verifikasi_records_v1'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export function getStoredVerificationRecords(): VerificationRequest[] {
-  if (typeof window === 'undefined') return DEFAULT_VERIFICATION_RECORDS
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_VERIFICATION_RECORDS))
-      return DEFAULT_VERIFICATION_RECORDS
-    }
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_VERIFICATION_RECORDS
-  } catch (err) {
-    console.warn('Error reading verification storage:', err)
-    return DEFAULT_VERIFICATION_RECORDS
+export function rowToRequest(row: VerifikasiRow): VerificationRequest {
+  return {
+    id: row.id,
+    businessId: row.profil_id,
+    businessName: row.nama_usaha,
+    ownerName: row.nama_pemilik || 'Pemilik Usaha',
+    phoneNumber: row.nomor_telepon || '-',
+    businessSector: row.jenis_usaha || '-',
+    applicationType: row.jenis_pengajuan,
+    notes: row.catatan || '',
+    hasNib: row.punya_nib,
+    nomorNib: row.nomor_nib || undefined,
+    totalTransactions: row.total_transaksi,
+    skorPRD: row.skor,
+    status: row.status as VerificationStatus,
+    submittedAt: row.diajukan_pada ? row.diajukan_pada.slice(0, 10) : '',
+    submittedAtIso: row.diajukan_pada || '',
+    reviewedAt: row.ditinjau_pada ? row.ditinjau_pada.slice(0, 10) : undefined,
+    reviewedBy: row.ditinjau_oleh || undefined,
+    adminNote: row.catatan_admin || row.alasan_penolakan || undefined,
+    certificateNumber: row.nomor_sertifikat || undefined,
   }
 }
 
-export function saveVerificationRecords(records: VerificationRequest[]): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
-    window.dispatchEvent(new CustomEvent('utera_verification_changed', { detail: records }))
-  } catch (err) {
-    console.error('Error saving verification storage:', err)
+/** Pengajuan milik satu usaha (pemilik), atau null bila belum pernah mengajukan. */
+export async function fetchVerificationByProfil(
+  supabase: Client,
+  profilId: string
+): Promise<VerificationRequest | null> {
+  if (!UUID_RE.test(profilId)) return null
+  const { data, error } = await supabase
+    .from('verifikasi_usaha')
+    .select('*')
+    .eq('profil_id', profilId)
+    .maybeSingle()
+  if (error) {
+    console.error('Gagal memuat status verifikasi:', error.message)
+    return null
   }
+  return data ? rowToRequest(data) : null
 }
 
-export function findVerificationByBusiness(
-  businessId: string,
-  businessName?: string
-): VerificationRequest | null {
-  const list = getStoredVerificationRecords()
-  const found = list.find(
-    (item) =>
-      item.businessId === businessId ||
-      (businessName && item.businessName.toLowerCase() === businessName.toLowerCase())
-  )
-  return found || null
+/** Semua pengajuan (admin). Pengguna biasa hanya mendapat miliknya sendiri karena RLS. */
+export async function fetchAllVerifications(
+  supabase: Client
+): Promise<{ data: VerificationRequest[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('verifikasi_usaha')
+    .select('*')
+    .order('diajukan_pada', { ascending: false })
+  if (error) return { data: [], error: error.message }
+  return { data: (data ?? []).map(rowToRequest), error: null }
 }
 
-export function submitVerificationRequest(data: {
-  businessId: string
-  businessName: string
-  ownerName: string
-  phoneNumber: string
-  businessSector: string
-  applicationType: string
-  notes: string
-  hasNib: boolean
-  nomorNib?: string
-  totalTransactions: number
-  skorPRD: number
-}): VerificationRequest {
-  const current = getStoredVerificationRecords()
-  const existingIdx = current.findIndex(
-    (c) =>
-      c.businessId === data.businessId ||
-      c.businessName.toLowerCase() === data.businessName.toLowerCase()
-  )
-
-  const newRecord: VerificationRequest = {
-    id: existingIdx >= 0 ? current[existingIdx].id : 'verif-' + Date.now(),
-    businessId: data.businessId,
-    businessName: data.businessName,
-    ownerName: data.ownerName || 'Pemilik Usaha',
-    phoneNumber: data.phoneNumber || '-',
-    businessSector: data.businessSector || 'Kuliner & F&B',
-    applicationType: data.applicationType || 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    notes: data.notes || 'Pengajuan verifikasi kredibilitas pembukuan & legalitas.',
-    hasNib: data.hasNib,
-    nomorNib: data.nomorNib,
-    totalTransactions: data.totalTransactions,
-    skorPRD: data.skorPRD,
-    status: 'pending',
-    submittedAt: 'Hari ini, baru saja',
+export async function submitVerificationRequest(
+  supabase: Client,
+  data: {
+    businessId: string
+    businessName: string
+    ownerName: string
+    phoneNumber: string
+    businessSector: string
+    applicationType: string
+    notes: string
+    hasNib: boolean
+    nomorNib?: string
+    totalTransactions: number
+    skorPRD: number
+  }
+): Promise<{ record: VerificationRequest | null; error: string | null }> {
+  if (!UUID_RE.test(data.businessId)) {
+    return { record: null, error: 'Simpan profil usaha terlebih dahulu sebelum mengajukan verifikasi.' }
   }
 
-  let updatedList: VerificationRequest[]
-  if (existingIdx >= 0) {
-    updatedList = [...current]
-    updatedList[existingIdx] = newRecord
-  } else {
-    updatedList = [newRecord, ...current]
-  }
-
-  saveVerificationRecords(updatedList)
-
-  // Dispatch Admin Notification if in browser
-  if (typeof window !== 'undefined') {
-    try {
-      const adminStorageKey = 'utera_notifs_clean_admin123_utera_id'
-      const rawAdmin = localStorage.getItem(adminStorageKey)
-      const adminNotifs = rawAdmin ? JSON.parse(rawAdmin) : []
-      const newAdminNotif = {
-        id: 'adm-verif-' + Date.now(),
-        title: 'Permohonan Verifikasi Baru: ' + data.businessName,
-        desc: `${data.ownerName} mengajukan ${data.applicationType}.`,
-        category: 'Verifikasi UMKM',
-        fullMessage: `Mitra UMKM "${data.businessName}" (${data.ownerName}) telah mengajukan permohonan audit kredibilitas. Catatan: "${data.notes}". Dokumen NIB: ${data.hasNib ? 'Tersedia' : 'Belum Ada'}, Transaksi: ${data.totalTransactions}, Skor: ${data.skorPRD}/100.`,
-        recommendation: 'Buka Direktori & Verifikasi UMKM untuk meninjau data dan mengesahkan status kredibilitas.',
-        time: 'Baru saja',
-        icon: 'verified',
-        iconBg: '#ECFDF5',
-        iconColor: '#059669',
-        href: '/admin?tab=direktori',
-        actionLabel: 'Tinjau Permohonan',
-        read: false,
-        urgent: true,
-      }
-      localStorage.setItem(adminStorageKey, JSON.stringify([newAdminNotif, ...adminNotifs]))
-      window.dispatchEvent(new Event('utera_notifs_updated'))
-    } catch (e) {
-      console.warn('Could not dispatch admin notif:', e)
+  // Aturan: satu usaha hanya boleh punya satu pengajuan aktif. Selama masih 'pending' atau
+  // sudah 'verified' tidak bisa mengajukan lagi; baru boleh ajukan ulang setelah ditolak.
+  const existing = await fetchVerificationByProfil(supabase, data.businessId)
+  if (!canSubmitVerification(existing?.status)) {
+    return {
+      record: null,
+      error:
+        existing?.status === 'verified'
+          ? 'Usaha ini sudah terverifikasi, tidak perlu mengajukan lagi.'
+          : 'Pengajuan Anda masih menunggu tinjauan admin. Anda bisa mengajukan lagi hanya jika ditolak.',
     }
   }
 
-  return newRecord
+  const payload = {
+    nama_usaha: data.businessName,
+    nama_pemilik: data.ownerName || null,
+    nomor_telepon: data.phoneNumber || null,
+    jenis_usaha: data.businessSector || null,
+    jenis_pengajuan: data.applicationType || 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
+    catatan: data.notes || null,
+    punya_nib: data.hasNib,
+    nomor_nib: data.hasNib ? data.nomorNib || null : null,
+    total_transaksi: data.totalTransactions,
+    skor: data.skorPRD,
+    status: 'pending',
+    alasan_penolakan: null,
+    catatan_admin: null,
+    nomor_sertifikat: null,
+    ditinjau_oleh: null,
+    ditinjau_pada: null,
+    diajukan_pada: new Date().toISOString(),
+  }
+
+  const query = existing
+    ? supabase.from('verifikasi_usaha').update(payload).eq('profil_id', data.businessId)
+    : supabase.from('verifikasi_usaha').insert({ ...payload, profil_id: data.businessId })
+
+  const { data: row, error } = await query.select().single()
+  if (error) {
+    // Dua klik bersamaan: baris kedua ditolak oleh UNIQUE(profil_id) / RLS.
+    const duplicate = error.code === '23505' || /row-level security/i.test(error.message)
+    return {
+      record: null,
+      error: duplicate
+        ? 'Pengajuan untuk usaha ini sudah ada dan masih diproses.'
+        : error.message,
+    }
+  }
+  return { record: rowToRequest(row), error: null }
 }
 
-export function updateVerificationStatus(
+/** Satu pengajuan per usaha: boleh mengajukan bila belum pernah, ditolak, atau ditangguhkan admin. */
+export function canSubmitVerification(status: VerificationStatus | undefined | null): boolean {
+  return !status || status === 'rejected' || status === 'unverified'
+}
+
+/**
+ * Keputusan admin atas pengajuan yang masih 'pending': hanya 'verified' (sahkan) atau
+ * 'rejected' (tolak), keduanya boleh disertai catatan yang dilihat pemilik usaha.
+ */
+export async function reviewVerification(
+  supabase: Client,
   businessId: string,
-  newStatus: VerificationStatus,
+  decision: 'verified' | 'rejected',
   options?: {
-    rejectionReason?: string
+    note?: string
     certificateNumber?: string
     reviewedBy?: string
   }
-): VerificationRequest | null {
-  const current = getStoredVerificationRecords()
-  const idx = current.findIndex((c) => c.businessId === businessId || c.id === businessId)
-  if (idx < 0) return null
-
-  const target = current[idx]
-  const updated: VerificationRequest = {
-    ...target,
-    status: newStatus,
-    reviewedAt: new Date().toISOString().slice(0, 10),
-    reviewedBy: options?.reviewedBy || 'Super Administrator UTERA',
-    rejectionReason: newStatus === 'rejected' ? (options?.rejectionReason || 'Berkas belum lengkap') : undefined,
-    certificateNumber:
-      newStatus === 'verified'
-        ? (options?.certificateNumber || `UTERA-VERIF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`)
-        : target.certificateNumber,
+): Promise<{ record: VerificationRequest | null; error: string | null }> {
+  if (!UUID_RE.test(businessId)) {
+    // Baris contoh (mock) di halaman admin tidak punya pengajuan di database.
+    return { record: null, error: null }
   }
 
-  const updatedList = [...current]
-  updatedList[idx] = updated
-  saveVerificationRecords(updatedList)
+  const note = options?.note?.trim() || null
+  const { data, error } = await supabase
+    .from('verifikasi_usaha')
+    .update({
+      status: decision,
+      ditinjau_pada: new Date().toISOString(),
+      ditinjau_oleh: options?.reviewedBy || 'Super Administrator UTERA',
+      catatan_admin: note,
+      alasan_penolakan: decision === 'rejected' ? note : null,
+      nomor_sertifikat: decision === 'verified' ? options?.certificateNumber || null : null,
+    })
+    .or(`profil_id.eq.${businessId},id.eq.${businessId}`)
+    .eq('status', 'pending')
+    .select()
 
-  // Dispatch User Notification if verified or rejected
-  if (typeof window !== 'undefined') {
-    try {
-      const isApproved = newStatus === 'verified'
-      const notifItem = {
-        id: 'usr-verif-' + Date.now(),
-        title: isApproved
-          ? 'Selamat! Usaha Anda Terverifikasi Resmi UTERA'
-          : 'Pembaruan Permohonan Verifikasi Usaha',
-        desc: isApproved
-          ? `Status kredibilitas ${target.businessName} telah disahkan resmi oleh Otoritas Pengawas.`
-          : `Permohonan verifikasi ${target.businessName} memerlukan revisi: ${options?.rejectionReason || 'Periksa berkas'}.`,
-        category: 'Status Verifikasi',
-        fullMessage: isApproved
-          ? `Selamat! Usaha "${target.businessName}" telah resmi dinyatakan Lolos Verifikasi Kredibilitas oleh Otoritas Pengawas UTERA dengan No. Sertifikat ${updated.certificateNumber}. Pembukuan kas dan legalitas Anda kini diakui bank mitra sebagai siap KUR.`
-          : `Permohonan verifikasi untuk "${target.businessName}" ditangguhkan. Catatan pengawas: "${options?.rejectionReason || 'Lengkapi dokumen NIB dan catatan kas harian'}". Anda dapat mengajukan kembali setelah melengkapi data.`,
-        recommendation: isApproved
-          ? 'Buka Laporan Siap Bank untuk mengunduh berkas pengajuan kredit dengan stempel kredibilitas resmi.'
-          : 'Buka Profil Usaha & Legalitas untuk memperbarui data yang diperlukan.',
-        time: 'Baru saja',
-        icon: isApproved ? 'verified' : 'warning',
-        iconBg: isApproved ? '#ECFDF5' : '#FEF3C7',
-        iconColor: isApproved ? '#059669' : '#D97706',
-        href: '/profil-usaha',
-        actionLabel: isApproved ? 'Lihat Status Profil' : 'Perbaiki Berkas Usaha',
-        read: false,
-        urgent: true,
-      }
-
-      // Store in current user's local notification list if available
-      const allKeys = Object.keys(localStorage).filter((k) => k.startsWith('utera_notifs_clean_'))
-      allKeys.forEach((key) => {
-        if (!key.includes('admin')) {
-          try {
-            const list = JSON.parse(localStorage.getItem(key) || '[]')
-            localStorage.setItem(key, JSON.stringify([notifItem, ...list]))
-          } catch {
-            // ignore
-          }
-        }
-      })
-      window.dispatchEvent(new Event('utera_notifs_updated'))
-    } catch (e) {
-      console.warn('Could not dispatch user notif:', e)
+  if (error) return { record: null, error: error.message }
+  if (!data || data.length === 0) {
+    return {
+      record: null,
+      error: 'Pengajuan tidak ditemukan, sudah ditinjau, atau akun ini bukan admin.',
     }
   }
-
-  return updated
+  return { record: rowToRequest(data[0]), error: null }
 }

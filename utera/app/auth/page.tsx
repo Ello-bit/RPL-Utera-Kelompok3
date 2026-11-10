@@ -4,13 +4,14 @@ import { useState, useTransition, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { isAdminUser, safeRedirect } from '@/lib/auth'
 import './auth.css'
 
 function AuthContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const defaultMode = searchParams.get('mode') === 'login' ? 'login' : 'register'
-  const redirectTarget = searchParams.get('redirect') || '/dashboard'
+  const redirectTarget = safeRedirect(searchParams.get('redirect'))
 
   const [mode, setMode] = useState<'register' | 'login'>(defaultMode)
   const [fullName, setFullName] = useState('')
@@ -106,7 +107,7 @@ function AuthContent() {
           return
         }
 
-        if (normalizedEmail.toLowerCase().includes('admin') || data?.user?.user_metadata?.role === 'admin') {
+        if (isAdminUser(data?.user)) {
           router.push('/admin')
         } else {
           router.push(redirectTarget)

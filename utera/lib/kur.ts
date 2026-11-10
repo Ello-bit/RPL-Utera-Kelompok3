@@ -5,45 +5,61 @@ export interface KurTier {
   rateDisplay: string
   minPlafon: number
   maxPlafon: number
+  minTenor: number
+  maxTenor: number
   defaultPlafon: number
   defaultTenor: number
   ticks: string[]
 }
 
+// Sumber tunggal jenis KUR (PRD "Jenis KUR sebagai batas nominal"). Bunga 6%/tahun.
 export const KUR_TIERS: Record<string, KurTier> = {
   'kur-super': {
     id: 'kur-super',
     name: 'KUR Super Mikro',
-    rate: 0.03,
-    rateDisplay: '3.0%',
+    rate: 0.06,
+    rateDisplay: '6.0%',
     minPlafon: 1_000_000,
     maxPlafon: 10_000_000,
+    minTenor: 12,
+    maxTenor: 36,
     defaultPlafon: 10_000_000,
     defaultTenor: 12,
     ticks: ['Rp 1 Jt', 'Rp 3 Jt', 'Rp 5 Jt', 'Rp 10 Jt'],
   },
   'kur-mikro': {
     id: 'kur-mikro',
-    name: 'KUR Mikro Bank',
+    name: 'KUR Mikro',
     rate: 0.06,
     rateDisplay: '6.0%',
     minPlafon: 10_000_000,
-    maxPlafon: 100_000_000,
-    defaultPlafon: 50_000_000,
-    defaultTenor: 24,
-    ticks: ['Rp 10 Jt', 'Rp 30 Jt', 'Rp 50 Jt', 'Rp 100 Jt'],
+    maxPlafon: 50_000_000,
+    minTenor: 36,
+    maxTenor: 60,
+    defaultPlafon: 30_000_000,
+    defaultTenor: 36,
+    ticks: ['Rp 10 Jt', 'Rp 20 Jt', 'Rp 35 Jt', 'Rp 50 Jt'],
   },
   'kur-kecil': {
     id: 'kur-kecil',
     name: 'KUR Kecil (Ekspansi)',
     rate: 0.06,
     rateDisplay: '6.0%',
-    minPlafon: 100_000_000,
+    minPlafon: 50_000_000,
     maxPlafon: 500_000_000,
-    defaultPlafon: 150_000_000,
+    minTenor: 12,
+    maxTenor: 60,
+    defaultPlafon: 100_000_000,
     defaultTenor: 36,
-    ticks: ['Rp 100 Jt', 'Rp 200 Jt', 'Rp 350 Jt', 'Rp 500 Jt'],
+    ticks: ['Rp 50 Jt', 'Rp 200 Jt', 'Rp 350 Jt', 'Rp 500 Jt'],
   },
+}
+
+export function clampToTier(tier: KurTier, plafon: number, tenor: number) {
+  return {
+    plafon: Math.min(tier.maxPlafon, Math.max(tier.minPlafon, plafon)),
+    tenor: Math.min(tier.maxTenor, Math.max(tier.minTenor, tenor)),
+  }
 }
 
 export const BANKS: Record<string, string> = {

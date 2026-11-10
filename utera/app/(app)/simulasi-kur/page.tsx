@@ -6,54 +6,28 @@ import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, formatRupiah } from '@/lib/kas'
-import { calculateInstallment, evaluateGuardrail } from '@/lib/kur'
+import { calculateInstallment, evaluateGuardrail, KUR_TIERS, type KurTier } from '@/lib/kur'
+import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import './simulasi-kur.css'
 
 type TransaksiKas = Tables<'transaksi_kas'>
 
-interface KurTier {
-  id: string
-  name: string
-  rate: number
-  rateDisplay: string
-  minPlafon: number
-  maxPlafon: number
-  defaultPlafon: number
-  desc: string
+type TierConfig = KurTier & { desc: string }
+
+const TIER_DESC: Record<string, string> = {
+  'kur-mikro': 'Skema paling populer bagi warung dan bengkel mandiri.',
+  'kur-super': 'Untuk usaha rintisan tanpa agunan fisik tambahan.',
+  'kur-kecil': 'Untuk skala ekspansi cabang baru & pengadaan aset produksi.',
 }
 
-const KUR_TIERS_CONFIG: Record<string, KurTier> = {
-  'kur-mikro': {
-    id: 'kur-mikro',
-    name: 'KUR Mikro Bank (BRI / Mandiri / BNI)',
-    rate: 0.06,
-    rateDisplay: '6.0% p.a.',
-    minPlafon: 10_000_000,
-    maxPlafon: 100_000_000,
-    defaultPlafon: 50_000_000,
-    desc: 'Skema paling populer bagi warung dan bengkel mandiri.',
-  },
-  'kur-super': {
-    id: 'kur-super',
-    name: 'KUR Super Mikro',
-    rate: 0.03,
-    rateDisplay: '3.0% p.a.',
-    minPlafon: 1_000_000,
-    maxPlafon: 10_000_000,
-    defaultPlafon: 10_000_000,
-    desc: 'Untuk usaha rintisan tanpa agunan fisik tambahan.',
-  },
-  'kur-kecil': {
-    id: 'kur-kecil',
-    name: 'KUR Kecil (Ekspansi Usaha)',
-    rate: 0.07,
-    rateDisplay: '6% - 9% p.a.',
-    minPlafon: 50_000_000,
-    maxPlafon: 500_000_000,
-    defaultPlafon: 100_000_000,
-    desc: 'Untuk skala ekspansi cabang baru & pengadaan aset produksi.',
-  },
-}
+// Jenis KUR diambil dari lib/kur.ts (satu sumber sesuai PRD: bunga 6%, plafon dan tenor per jenis).
+const KUR_TIERS_CONFIG: Record<string, TierConfig> = Object.fromEntries(
+  Object.values(KUR_TIERS).map((t) => [
+    t.id,
+    { ...t, rateDisplay: `${t.rateDisplay} p.a.`, desc: TIER_DESC[t.id] ?? '' },
+  ])
+)
 
 export default function SimulasiKurPage() {
   const supabase = createClient()
@@ -61,12 +35,13 @@ export default function SimulasiKurPage() {
   const [isGuest, setIsGuest] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
+  const [profilId, setProfilId] = useState<string | null>(null)
 
   // Simulation Controls
   const [selectedTierId, setSelectedTierId] = useState<string>('kur-mikro')
   const [selectedBank, setSelectedBank] = useState<string>('bri')
-  const [plafon, setPlafon] = useState<number>(50_000_000)
-  const [tenorMonths, setTenorMonths] = useState<number>(24)
+  const [plafon, setPlafon] = useState<number>(30_000_000)
+  const [tenorMonths, setTenorMonths] = useState<number>(36)
 
   useEffect(() => {
     async function loadData() {
@@ -80,15 +55,23 @@ export default function SimulasiKurPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      const { data: profs } = await supabase
+        .from('profil_usaha')
+        .select('id')
+        .order('created_at', { ascending: false })
+      const active = pickActiveProfile(profs ?? [], getActiveProfilId())
+      setProfilId(active?.id ?? null)
 
-      if (!error && data) {
-        setTransactions(data as TransaksiKas[])
+      let query = supabase.from('transaksi_kas').select('*')
+      if (active) query = query.eq('profil_id', active.id)
+      const { data, error } = await query.order('tanggal', { ascending: false })
+
+      if (error) {
+        // Jangan tampilkan data demo ke pengguna yang login.
+        alert('Gagal memuat transaksi: ' + error.message)
+        setTransactions([])
       } else {
-        setTransactions(DEMO_TRANSACTIONS)
+        setTransactions((data ?? []) as TransaksiKas[])
       }
     }
 
@@ -99,11 +82,11 @@ export default function SimulasiKurPage() {
 
   // Kas summary & effective monthly profit
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
-  const baseMonthlyProfit = useMemo(() => {
-    if (kasSummary.netProfit > 0) return kasSummary.netProfit
-    if (isGuest) return 18_450_000
-    return 0
-  }, [kasSummary, isGuest])
+  // PRD: rata-rata laba bersih bulanan 6 bulan terakhir; tanpa angka bawaan
+  const baseMonthlyProfit = useMemo(
+    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions, isGuest))),
+    [transactions, isGuest]
+  )
 
   // Guardrail 30% limit
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
@@ -128,25 +111,31 @@ export default function SimulasiKurPage() {
   const totalSavings = monthlySavings * tenorMonths
 
   // Score estimate
-  const estimatedScore = transactions.length > 0 ? (kasSummary.marginPct >= 20 ? 84 : 65) : (isGuest ? 84 : 0)
+  const estimatedScore = calculateSkorPRD(transactions, isGuest).total
 
   const handleTierChange = (tierId: string) => {
     setSelectedTierId(tierId)
     const tier = KUR_TIERS_CONFIG[tierId]
     if (plafon > tier.maxPlafon) setPlafon(tier.defaultPlafon)
     else if (plafon < tier.minPlafon) setPlafon(tier.minPlafon)
+    setTenorMonths(Math.min(tier.maxTenor, Math.max(tier.minTenor, tenorMonths)))
     setSaveSuccess(null)
   }
 
   const handleReset = () => {
     setSelectedTierId('kur-mikro')
     setSelectedBank('bri')
-    setPlafon(50_000_000)
-    setTenorMonths(24)
+    setPlafon(30_000_000)
+    setTenorMonths(36)
     setSaveSuccess(null)
   }
 
   const handleSaveSimulation = async () => {
+    // PRD: pengajuan hanya disimpan bila cicilan sesuai arus kas (maks 30% rata-rata laba bersih)
+    if (!isGuest && !guard.isSafe) {
+      alert('Cicilan ini melebihi 30% rata-rata laba bersih Anda. Coba tenor lebih panjang atau nominal lebih kecil.')
+      return
+    }
     setSaving(true)
     setSaveSuccess(null)
 
@@ -168,11 +157,12 @@ export default function SimulasiKurPage() {
       const { error } = await supabase.from('simulasi_kur').insert({
         program: `${currentTier.name} via ${bankNames[selectedBank] || 'Bank BRI'}`,
         plafon,
-        bunga_tahunan: currentTier.rate,
+        bunga_tahunan: currentTier.rate * 100,
+        profil_id: profilId,
         tenor_bulan: tenorMonths,
         angsuran_bulanan: calcKur.total,
-        rasio_kas: Math.round(guard.ratio),
-        status_guardrail: guard.statusText,
+        rasio_kas: Math.round(guard.ratio * 10) / 10,
+        status_guardrail: guard.isSafe ? (guard.ratio <= 25 ? 'aman' : 'waspada') : 'melebihi',
         catatan: `Simulasi KUR: ${guard.statusText} (${guard.ratio.toFixed(1)}% beban kas). Hemat ${formatRupiah(totalSavings)} vs pinjaman komersial.`,
       })
 
@@ -459,7 +449,7 @@ export default function SimulasiKurPage() {
                 </span>
               </div>
               <div className="tenor-pills-group">
-                {[6, 12, 18, 24, 36, 48, 60].map((m) => (
+                {[6, 12, 18, 24, 36, 48, 60].filter((m) => m >= currentTier.minTenor && m <= currentTier.maxTenor).map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -478,7 +468,7 @@ export default function SimulasiKurPage() {
                 type="button"
                 className="btn btn-primary"
                 onClick={handleSaveSimulation}
-                disabled={saving}
+                disabled={saving || (!isGuest && !guard.isSafe)}
               >
                 <span className="material-symbols-rounded">bookmark</span>
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi KUR ke Database'}</span>

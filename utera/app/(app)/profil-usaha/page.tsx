@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getActiveProfilId, setActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
+import { calculateSkorPRD } from '@/lib/skor'
 import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import {
   VerificationRequest,
-  findVerificationByBusiness,
+  fetchVerificationByProfil,
   submitVerificationRequest,
 } from '@/lib/verification'
 import './profil-usaha.css'
@@ -50,6 +52,7 @@ export default function ProfilUsahaPage() {
   const [verifType, setVerifType] = useState('Verifikasi Kredibilitas Lengkap (Siap KUR)')
   const [verifNotes, setVerifNotes] = useState('')
   const [submittingVerif, setSubmittingVerif] = useState(false)
+  const [verifError, setVerifError] = useState<string | null>(null)
   const [userTotalTx, setUserTotalTx] = useState(0)
   const [userSkorPRD, setUserSkorPRD] = useState(0)
 
@@ -84,6 +87,7 @@ export default function ProfilUsahaPage() {
         return
       }
 
+      let loadedProfilId: string | null = null
       // 1. Fetch user's profiles
       const { data: profData } = await supabase
         .from('profil_usaha')
@@ -93,7 +97,9 @@ export default function ProfilUsahaPage() {
       if (profData && profData.length > 0) {
         const typed = profData as ProfilUsaha[]
         setProfiles(typed)
-        setActiveProfile(typed[0])
+        const picked = pickActiveProfile(typed, getActiveProfilId())!
+        setActiveProfile(picked)
+        loadedProfilId = picked.id
       } else {
         const fullName = (user.user_metadata?.full_name as string) || ''
         let initialNamaUsaha = ''
@@ -116,9 +122,9 @@ export default function ProfilUsahaPage() {
       }
 
       // 2. Fetch legal documents
-      const { data: docsData } = await supabase
-        .from('legalitas_dokumen')
-        .select('*')
+      let docsQuery = supabase.from('legalitas_dokumen').select('*')
+      if (loadedProfilId) docsQuery = docsQuery.eq('profil_id', loadedProfilId)
+      const { data: docsData } = await docsQuery
 
       if (docsData) {
         const typedDocs = docsData as LegalitasDokumen[]
@@ -140,19 +146,12 @@ export default function ProfilUsahaPage() {
       }
 
       // 3. Fetch transactions for verification summary
-      const { data: txsData } = await supabase.from('transaksi_kas').select('*')
+      let txsQuery = supabase.from('transaksi_kas').select('*')
+      if (loadedProfilId) txsQuery = txsQuery.eq('profil_id', loadedProfilId)
+      const { data: txsData } = await txsQuery
       if (txsData) {
         setUserTotalTx(txsData.length)
-        let inc = 0
-        let exp = 0
-        txsData.forEach((t) => {
-          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
-          else exp += Number(t.nominal)
-        })
-        const saldo = inc - exp
-        const margin = inc > 0 ? saldo / inc : 0
-        const skor = txsData.length > 0 ? Math.min(96, Math.max(40, Math.round(50 + margin * 45))) : 0
-        setUserSkorPRD(skor)
+        setUserSkorPRD(calculateSkorPRD(txsData as Tables<'transaksi_kas'>[]).total)
       }
 
       setLoading(false)
@@ -161,36 +160,37 @@ export default function ProfilUsahaPage() {
     loadData()
   }, [])
 
-  // Sync verification status with active profile
+  // Status verifikasi usaha aktif diambil dari database (tabel verifikasi_usaha)
   useEffect(() => {
-    if (activeProfile.nama_usaha) {
-      const rec = findVerificationByBusiness(activeProfile.id || '', activeProfile.nama_usaha)
-      setVerifRecord(rec)
+    if (isGuest || !activeProfile.id) {
+      setVerifRecord(null)
+      return
     }
-  }, [activeProfile.id, activeProfile.nama_usaha])
-
-  useEffect(() => {
-    const handleVerifChange = () => {
-      if (activeProfile.nama_usaha) {
-        const rec = findVerificationByBusiness(activeProfile.id || '', activeProfile.nama_usaha)
-        setVerifRecord(rec)
-      }
+    let cancelled = false
+    fetchVerificationByProfil(supabase, activeProfile.id).then((rec) => {
+      if (!cancelled) setVerifRecord(rec)
+    })
+    return () => {
+      cancelled = true
     }
-    window.addEventListener('utera_verification_changed', handleVerifChange)
-    return () => window.removeEventListener('utera_verification_changed', handleVerifChange)
-  }, [activeProfile.id, activeProfile.nama_usaha])
+  }, [activeProfile.id, isGuest])
 
-  const handleSubmitVerification = (e: React.FormEvent) => {
+  const handleSubmitVerification = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!activeProfile.nama_usaha || !activeProfile.nama_usaha.trim()) {
       showToast('error', 'Nama usaha wajib diisi terlebih dahulu sebelum mengajukan verifikasi.')
       return
     }
+    if (isGuest) {
+      showToast('error', 'Mode tamu: masuk atau daftar akun untuk mengajukan verifikasi.')
+      return
+    }
 
     setSubmittingVerif(true)
-    setTimeout(() => {
-      const newRec = submitVerificationRequest({
-        businessId: activeProfile.id || 'usr-bus-' + Date.now(),
+    setVerifError(null)
+    try {
+      const { record: newRec, error } = await submitVerificationRequest(supabase, {
+        businessId: activeProfile.id || '',
         businessName: activeProfile.nama_usaha || 'Usaha Mandiri',
         ownerName: activeProfile.nama_pemilik || 'Pemilik Usaha',
         phoneNumber: activeProfile.nomor_telepon || '-',
@@ -203,12 +203,23 @@ export default function ProfilUsahaPage() {
         skorPRD: userSkorPRD,
       })
 
+      if (error) {
+        // Tampil di dalam modal (modal berada di atas toast) dan sebagai toast.
+        setVerifError(error)
+        showToast('error', 'Gagal mengirim pengajuan verifikasi: ' + error)
+        return
+      }
       setVerifRecord(newRec)
-      setSubmittingVerif(false)
       setIsVerifModalOpen(false)
       setVerifNotes('')
-      showToast('success', 'Permohonan verifikasi kredibilitas berhasil dikirimkan ke Admin Pengawas UTERA!')
-    }, 500)
+      showToast('success', 'Pengajuan verifikasi terkirim. Status: Menunggu tinjauan admin.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan tak terduga.'
+      setVerifError(msg)
+      showToast('error', 'Gagal mengirim pengajuan verifikasi: ' + msg)
+    } finally {
+      setSubmittingVerif(false)
+    }
   }
 
   // Calculate completeness score (7 profile fields + 2 legal docs)
@@ -291,6 +302,7 @@ export default function ProfilUsahaPage() {
         activeId = created.id
         setProfiles([created, ...profiles])
         setActiveProfile(created)
+        setActiveProfilId(created.id)
         showToast('success', 'Profil usaha baru berhasil didaftarkan!')
       }
 
@@ -368,6 +380,7 @@ export default function ProfilUsahaPage() {
       setProfiles(remaining)
       if (remaining.length > 0) {
         setActiveProfile(remaining[0])
+        setActiveProfilId(remaining[0].id)
       } else {
         handleCreateNew()
       }
@@ -515,7 +528,10 @@ export default function ProfilUsahaPage() {
             value={activeProfile.id || ''}
             onChange={(e) => {
               const selected = profiles.find((p) => p.id === e.target.value)
-              if (selected) setActiveProfile(selected)
+              if (selected) {
+                setActiveProfilId(selected.id)
+                window.location.reload()
+              }
             }}
           >
             {profiles.map((p) => (
@@ -641,11 +657,11 @@ export default function ProfilUsahaPage() {
 
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#4B5563', lineHeight: 1.5 }}>
               {verifRecord?.status === 'verified'
-                ? `Usaha Anda telah lolos validasi Otoritas Pengawas UTERA dengan No. Sertifikat ${verifRecord.certificateNumber || 'UTERA-VERIF-RESMI'}. Profil dan pembukuan kas Anda diprioritaskan saat pengajuan KUR di bank mitra.`
+                ? `Usaha Anda telah lolos validasi Otoritas Pengawas UTERA dengan No. Sertifikat ${verifRecord.certificateNumber || 'UTERA-VERIF-RESMI'}. Profil dan pembukuan kas Anda diprioritaskan saat pengajuan KUR di bank mitra.${verifRecord.adminNote ? ` Catatan admin: "${verifRecord.adminNote}".` : ''}`
                 : verifRecord?.status === 'pending'
                 ? `Permohonan diajukan: ${verifRecord.submittedAt} (${verifRecord.applicationType}). Tim auditor pengawas sedang memverifikasi integritas pembukuan kas dan kelengkapan izin usaha Anda (Estimasi: 1x24 jam kerja).`
                 : verifRecord?.status === 'rejected'
-                ? `Catatan Auditor: "${verifRecord.rejectionReason || 'Lengkapi dokumen NIB dan catatan kas harian'}". Silakan perbaiki data lalu ajukan kembali.`
+                ? `Pengajuan ditolak. Catatan admin: "${verifRecord.adminNote || 'Lengkapi dokumen NIB dan catatan kas harian'}". Silakan perbaiki data lalu ajukan kembali.`
                 : 'Dapatkan tanda centang kredibel resmi dari Otoritas Pengawas UTERA agar usaha Anda diakui perbankan dan memenuhi syarat percepatan penyaluran KUR.'}
             </p>
           </div>
@@ -1387,11 +1403,18 @@ export default function ProfilUsahaPage() {
                   </span>
                 </div>
 
+                {verifError && (
+                  <div role="alert" className="verif-inline-error">
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>error</span>
+                    <span>{verifError}</span>
+                  </div>
+                )}
+
                 <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
                     className="btn btn-outline"
-                    onClick={() => setIsVerifModalOpen(false)}
+                    onClick={() => { setVerifError(null); setIsVerifModalOpen(false) }}
                     disabled={submittingVerif}
                   >
                     Batal

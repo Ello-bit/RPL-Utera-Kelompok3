@@ -216,6 +216,75 @@ export interface Database {
         }
         Relationships: []
       }
+      verifikasi_usaha: {
+        Row: {
+          id: string
+          user_id: string
+          profil_id: string
+          nama_usaha: string
+          nama_pemilik: string | null
+          nomor_telepon: string | null
+          jenis_usaha: string | null
+          jenis_pengajuan: string
+          catatan: string | null
+          punya_nib: boolean
+          nomor_nib: string | null
+          total_transaksi: number
+          skor: number
+          status: string
+          alasan_penolakan: string | null
+          catatan_admin: string | null
+          nomor_sertifikat: string | null
+          ditinjau_oleh: string | null
+          ditinjau_pada: string | null
+          diajukan_pada: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          profil_id: string
+          nama_usaha: string
+          nama_pemilik?: string | null
+          nomor_telepon?: string | null
+          jenis_usaha?: string | null
+          jenis_pengajuan: string
+          catatan?: string | null
+          punya_nib?: boolean
+          nomor_nib?: string | null
+          total_transaksi?: number
+          skor?: number
+          status?: string
+          alasan_penolakan?: string | null
+          catatan_admin?: string | null
+          nomor_sertifikat?: string | null
+          ditinjau_oleh?: string | null
+          ditinjau_pada?: string | null
+          diajukan_pada?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          profil_id?: string
+          nama_usaha?: string
+          nama_pemilik?: string | null
+          nomor_telepon?: string | null
+          jenis_usaha?: string | null
+          jenis_pengajuan?: string
+          catatan?: string | null
+          punya_nib?: boolean
+          nomor_nib?: string | null
+          total_transaksi?: number
+          skor?: number
+          status?: string
+          alasan_penolakan?: string | null
+          catatan_admin?: string | null
+          nomor_sertifikat?: string | null
+          ditinjau_oleh?: string | null
+          ditinjau_pada?: string | null
+          diajukan_pada?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

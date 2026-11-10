@@ -116,7 +116,7 @@ export default function TopBar({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
 
-  const isUserAdmin = isAdmin || userEmail.toLowerCase().includes('admin')
+  const isUserAdmin = isAdmin
   const displayName = isUserAdmin ? 'Super Administrator' : (userName || businessName || 'Pemilik Usaha')
   const initials = isUserAdmin ? 'SA' : displayName
     .trim()
@@ -233,9 +233,15 @@ export default function TopBar({
 
   async function handleLogout() {
     if (!confirm('Apakah Anda yakin ingin keluar dari akun UTERA?')) return
-    await supabase.auth.signOut()
-    router.push('/auth?mode=login')
-    router.refresh()
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      // Sesi di server mungkin sudah tidak ada; tetap hapus sesi lokal agar pengguna benar-benar keluar.
+      await supabase.auth.signOut({ scope: 'local' })
+    }
+    // Navigasi penuh (bukan router.push) agar cache router Next.js yang masih menyimpan
+    // halaman versi "sudah login" ikut dibuang dan middleware membaca cookie yang baru.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- logout butuh muat ulang penuh
+    window.location.assign('/auth?mode=login')
   }
 
   return (

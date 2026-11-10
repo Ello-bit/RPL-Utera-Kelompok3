@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 interface SidebarProps {
@@ -41,7 +41,6 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [internalMobileOpen, setInternalMobileOpen] = useState(false)
   const isMobileOpen = controlledMobileOpen !== undefined ? controlledMobileOpen : internalMobileOpen
 
@@ -54,9 +53,15 @@ export default function Sidebar({
 
   async function handleLogout() {
     if (!confirm('Apakah Anda yakin ingin keluar dari akun UTERA?')) return
-    await supabase.auth.signOut()
-    router.push('/auth?mode=login')
-    router.refresh()
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      // Sesi di server mungkin sudah tidak ada; tetap hapus sesi lokal agar pengguna benar-benar keluar.
+      await supabase.auth.signOut({ scope: 'local' })
+    }
+    // Navigasi penuh (bukan router.push) agar cache router Next.js yang masih menyimpan
+    // halaman versi "sudah login" ikut dibuang dan middleware membaca cookie yang baru.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- logout butuh muat ulang penuh
+    window.location.assign('/auth?mode=login')
   }
 
   const navItems: NavSection[] = [
@@ -125,7 +130,7 @@ export default function Sidebar({
     },
   ]
 
-  const isUserAdmin = isAdmin || userEmail.toLowerCase().includes('admin')
+  const isUserAdmin = isAdmin
 
   const adminNavItems: NavSection[] = [
     {

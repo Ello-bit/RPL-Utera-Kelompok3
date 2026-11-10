@@ -1,5 +1,11 @@
 'use client'
 
+import { isAdminUser } from '@/lib/auth'
+import { useRouter } from 'next/navigation'
+import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
+import { syncSkorSnapshot } from '@/lib/skor-sync'
+import { todayLocal } from '@/lib/input'
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -21,6 +27,7 @@ const MONTH_NAMES = [
 
 export default function DashboardPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
   const [profile, setProfile] = useState<ProfilUsaha | null>(null)
   const [isGuest, setIsGuest] = useState(false)
@@ -37,6 +44,8 @@ export default function DashboardPage() {
 
   // Chart state
   const [chartMode, setChartMode] = useState<'omzet' | 'laba'>('omzet')
+  // Batang yang di-klik (tooltip tetap tampil); null = default bulan terbaru
+  const [pinnedBar, setPinnedBar] = useState<string | null>(null)
 
   // Filter state for recent tx table
   const [filterTxType, setFilterTxType] = useState<'all' | 'income' | 'expense'>('all')
@@ -47,7 +56,7 @@ export default function DashboardPage() {
   const [txAmount, setTxAmount] = useState('')
   const [txCategory, setTxCategory] = useState('Penjualan')
   const [txDesc, setTxDesc] = useState('')
-  const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10))
+  const [txDate, setTxDate] = useState(todayLocal())
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -65,9 +74,7 @@ export default function DashboardPage() {
         return
       }
 
-      const isUserAdmin =
-        user.email?.toLowerCase().includes('admin') ||
-        user.user_metadata?.role === 'admin'
+      const isUserAdmin = isAdminUser(user)
       setIsAdmin(isUserAdmin)
 
       if (isUserAdmin) {
@@ -109,14 +116,15 @@ export default function DashboardPage() {
       }
 
       // Fetch Profile for regular user
+      let activeProfilId: string | null = null
       const { data: profs } = await supabase
         .from('profil_usaha')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1)
 
       if (profs && profs.length > 0) {
-        setProfile(profs[0] as ProfilUsaha)
+        activeProfilId = pickActiveProfile(profs, getActiveProfilId())!.id
+        setProfile(profs.find((p) => p.id === activeProfilId) as ProfilUsaha)
       } else {
         const fullName = (user.user_metadata?.full_name as string) || ''
         let initialNamaUsaha = 'Usaha Mandiri'
@@ -160,10 +168,9 @@ export default function DashboardPage() {
       }
 
       // Fetch Transactions
-      const { data: txList, error } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      let txListQuery = supabase.from('transaksi_kas').select('*')
+      if (activeProfilId) txListQuery = txListQuery.eq('profil_id', activeProfilId)
+      const { data: txList, error } = await txListQuery.order('tanggal', { ascending: false })
 
       if (!error && txList) {
         setTransactions(txList as TransaksiKas[])
@@ -208,18 +215,11 @@ export default function DashboardPage() {
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
 
   // 2. Calculate Dynamic PRD Score Formula (Pillar 2: Consistency + Cashflow Health)
-  const scorePRD = useMemo(() => {
-    if (kasSummary.totalIncome > 0) {
-      const marginRatio = kasSummary.netProfit / kasSummary.totalIncome
-      return Math.min(96, Math.max(40, Math.round(50 + marginRatio * 45)))
-    } else if (transactions.length > 0) {
-      return 50
-    }
-    return 0 // New account with 0 transactions
-  }, [kasSummary, transactions])
+  const skorResult = useMemo(() => calculateSkorPRD(transactions, isGuest), [transactions, isGuest])
+  const scorePRD = skorResult.total
 
   // 3. Guardrail 30% calculation
-  const maxInstallment30Pct = Math.round(Math.max(0, kasSummary.netProfit) * 0.30)
+  const maxInstallment30Pct = Math.round(Math.max(0, rataLabaBulanan(skorResult)) * 0.30)
   const simulatedBriInstallment = 2216000
   const simulatedKopInstallment = 2291000
 
@@ -475,6 +475,11 @@ export default function DashboardPage() {
       if (error) throw error
       if (data) {
         setTransactions((prev) => [data as TransaksiKas, ...prev])
+      }
+      if (profile?.id && profile.id !== 'user-default') {
+        const syncErr = await syncSkorSnapshot(supabase, profile.id)
+        if (syncErr) console.error('Gagal menyimpan skor kelayakan:', syncErr)
+        router.refresh()
       }
       setModalOpen(false)
       setTxDesc('')
@@ -778,17 +783,27 @@ export default function DashboardPage() {
                 <div key={c.key} className={`chart-col ${c.isLatest ? 'active-month' : ''}`}>
                   <div className="col-bars">
                     <div
-                      className={`bar bar-income ${c.isLatest ? 'highlight' : ''}`}
+                      className={`bar bar-income ${c.isLatest ? 'highlight' : ''} ${pinnedBar === `${c.key}-inc` || (pinnedBar === null && c.isLatest) ? 'show-tip' : ''}`}
                       style={{ height: `${c.incHeight}%` }}
-                      title={`${chartMode === 'omzet' ? 'Pemasukan' : 'Laba Bersih'} ${c.mName}: ${formatRupiah(c.displayVal)}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${chartMode === 'omzet' ? 'Pemasukan' : 'Laba Bersih'} ${c.mName}: ${formatRupiah(c.displayVal)}`}
+                      onClick={() => setPinnedBar((p) => (p === `${c.key}-inc` ? null : `${c.key}-inc`))}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPinnedBar((p) => (p === `${c.key}-inc` ? null : `${c.key}-inc`)) } }}
                     >
-                      {c.isLatest && <span className="bar-tooltip">{formatRupiah(c.displayVal)}</span>}
+                      <span className="bar-tooltip">{formatRupiah(c.displayVal)}</span>
                     </div>
                     <div
-                      className="bar bar-expense"
+                      className={`bar bar-expense ${pinnedBar === `${c.key}-exp` ? 'show-tip' : ''}`}
                       style={{ height: `${c.expHeight}%` }}
-                      title={`Pengeluaran ${c.mName}: ${formatRupiah(c.expense)}`}
-                    ></div>
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Pengeluaran ${c.mName}: ${formatRupiah(c.expense)}`}
+                      onClick={() => setPinnedBar((p) => (p === `${c.key}-exp` ? null : `${c.key}-exp`))}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPinnedBar((p) => (p === `${c.key}-exp` ? null : `${c.key}-exp`)) } }}
+                    >
+                      <span className="bar-tooltip bar-tooltip-expense">{formatRupiah(c.expense)}</span>
+                    </div>
                   </div>
                   <span className={`col-label ${c.isLatest ? 'font-bold' : ''}`}>{c.label}</span>
                 </div>
@@ -1256,7 +1271,7 @@ export default function DashboardPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <button
                     type="button"
-                    onClick={() => setTxType('pemasukan')}
+                    onClick={() => { setTxType('pemasukan'); setTxCategory(KAS_CATEGORIES.pemasukan[0]) }}
                     style={{
                       padding: '10px',
                       borderRadius: '8px',
@@ -1271,7 +1286,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTxType('pengeluaran')}
+                    onClick={() => { setTxType('pengeluaran'); setTxCategory(KAS_CATEGORIES.pengeluaran[0]) }}
                     style={{
                       padding: '10px',
                       borderRadius: '8px',

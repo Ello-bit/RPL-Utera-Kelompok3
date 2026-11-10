@@ -1,5 +1,9 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
+import { parseNominal, todayLocal, csvCell } from '@/lib/input'
+import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
@@ -18,6 +22,7 @@ type ProfilUsaha = Tables<'profil_usaha'>
 
 export default function BukuKasPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
   const [profiles, setProfiles] = useState<ProfilUsaha[]>([])
   const [activeProfile, setActiveProfile] = useState<ProfilUsaha | null>(null)
@@ -36,7 +41,7 @@ export default function BukuKasPage() {
   const [formNominal, setFormNominal] = useState<string>('')
   const [formKategori, setFormKategori] = useState<string>('Penjualan')
   const [formTanggal, setFormTanggal] = useState<string>(
-    new Date().toISOString().slice(0, 10)
+    todayLocal()
   )
   const [formKeterangan, setFormKeterangan] = useState<string>('')
   const [formMetode, setFormMetode] = useState<string>('Tunai')
@@ -65,20 +70,23 @@ export default function BukuKasPage() {
         .select('*')
         .order('created_at', { ascending: false })
 
+      let activeId: string | null = null
       if (profData && profData.length > 0) {
         const typedProfs = profData as ProfilUsaha[]
+        const picked = pickActiveProfile(typedProfs, getActiveProfilId())!
         setProfiles(typedProfs)
-        setActiveProfile(typedProfs[0])
+        setActiveProfile(picked)
+        activeId = picked.id
       }
 
-      // Fetch Transactions
-      const { data: txData, error } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      // Fetch Transactions (hanya milik usaha aktif)
+      let txQuery = supabase.from('transaksi_kas').select('*')
+      if (activeId) txQuery = txQuery.eq('profil_id', activeId)
+      const { data: txData, error } = await txQuery.order('tanggal', { ascending: false })
 
       if (error) {
         console.error('Error fetching transactions:', error)
+        alert('Gagal memuat transaksi: ' + error.message)
       } else if (txData) {
         setTransactions(txData as TransaksiKas[])
       }
@@ -124,11 +132,14 @@ export default function BukuKasPage() {
 
   // Monthly breakdown for SVG Area Chart
   const monthlyData = useMemo(() => {
-    const count = selectedRange === '1m' ? 2 : selectedRange === '3m' ? 3 : 6
+    const count = selectedRange === '1m' ? 1 : selectedRange === '3m' ? 3 : selectedRange === '6m' ? 6 : 120
     return getMonthlyBreakdown(transactions, count)
   }, [transactions, selectedRange])
 
-  // Build SVG Path points for the area chart
+  const barMax = Math.max(...monthlyData.map((m) => Math.max(m.pemasukan, m.pengeluaran)), 1)
+  const [pinnedBar, setPinnedBar] = useState<string | null>(null)
+
+  // (legacy) titik SVG
   const maxProfit = Math.max(...monthlyData.map((m) => Math.max(0, m.labaBersih)), 100_000)
   const svgWidth = 720
   const svgHeight = 180
@@ -152,12 +163,25 @@ export default function BukuKasPage() {
     svgAreaPath = `${svgLinePath} L ${points[points.length - 1].x} ${svgHeight} L ${points[0].x} ${svgHeight} Z`
   }
 
+  // PRD: setiap perubahan transaksi memicu hitung ulang skor, lalu skor disimpan.
+  const recomputeSkor = async () => {
+    if (!activeProfile) return
+    const err = await syncSkorSnapshot(supabase, activeProfile.id)
+    if (err) console.error('Gagal menyimpan skor kelayakan:', err)
+    router.refresh()
+  }
+
   // Handle Form Submit (INSERT or UPDATE)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const nominalNum = parseInt(formNominal.replace(/[^0-9]/g, ''), 10)
-    if (!nominalNum || nominalNum <= 0) {
-      alert('Nominal harus lebih dari 0.')
+    const parsed = parseNominal(formNominal)
+    if (parsed.error !== null) {
+      alert(parsed.error)
+      return
+    }
+    const nominalNum = parsed.value
+    if (!formTanggal) {
+      alert('Tanggal wajib diisi.')
       return
     }
 
@@ -178,7 +202,7 @@ export default function BukuKasPage() {
               : t
           )
         )
-        showToast('Transaksi berhasil diperbarui (Mode Tamu)')
+        showToast('Transaksi berhasil diperbarui (mode coba)')
       } else {
         const newTx: TransaksiKas = {
           id: 'tx_guest_' + Date.now(),
@@ -193,7 +217,7 @@ export default function BukuKasPage() {
           created_at: new Date().toISOString(),
         }
         setTransactions([newTx, ...transactions])
-        showToast('Transaksi baru berhasil dicatat (Mode Tamu)')
+        showToast('Transaksi baru berhasil dicatat (mode coba)')
       }
       resetForm()
       return
@@ -212,7 +236,6 @@ export default function BukuKasPage() {
             tanggal: formTanggal,
             keterangan: formKeterangan,
             metode_pembayaran: formMetode,
-            profil_id: activeProfile?.id || null,
           })
           .eq('id', editingId)
 
@@ -233,7 +256,7 @@ export default function BukuKasPage() {
               : t
           )
         )
-        showToast('Transaksi berhasil diperbarui di database!')
+        showToast('Transaksi berhasil diperbarui!')
       } else {
         // INSERT into Supabase
         const payload: TablesInsert<'transaksi_kas'> = {
@@ -254,8 +277,9 @@ export default function BukuKasPage() {
 
         if (error) throw error
         setTransactions([data as TransaksiKas, ...transactions])
-        showToast('Transaksi kas baru berhasil disimpan ke database!')
+        showToast('Transaksi kas baru berhasil disimpan!')
       }
+      await recomputeSkor()
       resetForm()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal menyimpan transaksi.'
@@ -270,7 +294,7 @@ export default function BukuKasPage() {
     setFormType(tx.tipe as 'pemasukan' | 'pengeluaran')
     setFormNominal(String(tx.nominal))
     setFormKategori(tx.kategori)
-    setFormTanggal(tx.tanggal || new Date().toISOString().slice(0, 10))
+    setFormTanggal(tx.tanggal || todayLocal())
     setFormKeterangan(tx.keterangan || '')
     setFormMetode(tx.metode_pembayaran || 'Tunai')
     window.scrollTo({ top: 300, behavior: 'smooth' })
@@ -289,7 +313,8 @@ export default function BukuKasPage() {
       const { error } = await supabase.from('transaksi_kas').delete().eq('id', id)
       if (error) throw error
       setTransactions(transactions.filter((t) => t.id !== id))
-      showToast('Transaksi berhasil dihapus dari database.')
+      showToast('Transaksi berhasil dihapus.')
+      await recomputeSkor()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal menghapus transaksi.'
       alert(msg)
@@ -300,7 +325,7 @@ export default function BukuKasPage() {
     setEditingId(null)
     setFormNominal('')
     setFormKeterangan('')
-    setFormTanggal(new Date().toISOString().slice(0, 10))
+    setFormTanggal(todayLocal())
     setFormType('pemasukan')
     setFormKategori(KAS_CATEGORIES.pemasukan[0])
     setFormMetode('Tunai')
@@ -308,23 +333,18 @@ export default function BukuKasPage() {
 
   const exportCSV = () => {
     const headers = ['ID', 'Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal', 'Metode Pembayaran']
-    const rows = filteredTransactions.map((t) => [
-      t.id,
-      t.tanggal,
-      t.tipe,
-      t.kategori,
-      `"${(t.keterangan || '').replace(/"/g, '""')}"`,
-      t.nominal,
-      t.metode_pembayaran || '-',
-    ])
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
+    const rows = filteredTransactions.map((t) =>
+      [t.id, t.tanggal, t.tipe, t.kategori, t.keterangan, t.nominal, t.metode_pembayaran || '-'].map(csvCell)
+    )
+    const csv = [headers.map(csvCell).join(','), ...rows.map((r) => r.join(','))].join('\r\n')
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `utera-buku-kas-${new Date().toISOString().slice(0, 10)}.csv`)
+    link.href = url
+    link.download = `utera-buku-kas-${todayLocal()}.csv`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -364,18 +384,18 @@ export default function BukuKasPage() {
           <section className="saas-card card-chart-profit">
             <div className="card-chart-header">
               <div>
-                <span className="chart-eyebrow">TOTAL LABA BERSIH (PROFIT KASIR)</span>
+                <span className="chart-eyebrow">UNTUNG BERSIH</span>
                 <div className="chart-metric-row">
                   <span className="chart-big-metric">
                     {formatRupiah(kasSummary.netProfit)}
                   </span>
                   <span className="trend-badge-positive">
                     <span className="material-symbols-rounded">trending_up</span>
-                    <span>Margin {kasSummary.marginPct}%</span>
+                    <span>Untung {kasSummary.marginPct}% dari penjualan</span>
                   </span>
                 </div>
                 <span className="chart-date-caption">
-                  Akumulasi dari {filteredTransactions.length} transaksi pembukuan kasir
+                  Dihitung dari {filteredTransactions.length} catatan transaksi
                 </span>
               </div>
 
@@ -401,37 +421,37 @@ export default function BukuKasPage() {
                   Belum ada data bulanan. Catat transaksi untuk menampilkan kurva profit.
                 </div>
               ) : (
-                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none" className="profit-svg">
-                  <defs>
-                    <linearGradient id="emeraldAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#1F6B4F" stopOpacity="0.32" />
-                      <stop offset="70%" stopColor="#1F6B4F" stopOpacity="0.06" />
-                      <stop offset="100%" stopColor="#1F6B4F" stopOpacity="0.00" />
-                    </linearGradient>
-                    <linearGradient id="emeraldLineGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#17543E" />
-                      <stop offset="100%" stopColor="#10B981" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* Grid Lines */}
-                  <line x1={paddingX} y1={svgHeight - 20} x2={svgWidth - paddingX} y2={svgHeight - 20} stroke="#E2E8F0" strokeWidth="1" />
-                  <line x1={paddingX} y1={svgHeight / 2} x2={svgWidth - paddingX} y2={svgHeight / 2} stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4 4" />
-
-                  {/* Area and Line */}
-                  <path d={svgAreaPath} fill="url(#emeraldAreaGradient)" />
-                  <path d={svgLinePath} fill="none" stroke="url(#emeraldLineGradient)" strokeWidth="3" strokeLinecap="round" />
-
-                  {/* Dots & Labels */}
-                  {points.map((p, i) => (
-                    <g key={i}>
-                      <circle cx={p.x} cy={p.y} r={5} className="chart-data-dot" />
-                      <text x={p.x} y={svgHeight - 4} className="chart-x-label">
-                        {p.m.label}
-                      </text>
-                    </g>
-                  ))}
-                </svg>
+                <div className="kas-bars" role="img" aria-label="Grafik pemasukan, pengeluaran, dan laba per bulan">
+                  {monthlyData.map((m) => {
+                    const h = (v: number) => (v > 0 ? Math.max(4, Math.round((v / barMax) * 100)) : 2)
+                    return (
+                      <div key={m.key} className="kas-bar-group">
+                        <div className="kas-bar-pair">
+                          {([
+                            { k: 'in', v: m.pemasukan, name: 'Pemasukan', cls: 'kas-bar-in' },
+                            { k: 'out', v: m.pengeluaran, name: 'Pengeluaran', cls: 'kas-bar-out' },
+                          ] as const).map((b) => {
+                            const id = `${m.key}-${b.k}`
+                            return (
+                              <button
+                                key={b.k}
+                                type="button"
+                                className={`kas-bar ${b.cls} ${pinnedBar === id ? 'show-tip' : ''}`}
+                                style={{ height: `${h(b.v)}%` }}
+                                aria-label={`${b.name} ${m.label}: ${formatRupiah(b.v)}`}
+                                onClick={() => setPinnedBar((p) => (p === id ? null : id))}
+                              >
+                                <span className="kas-bar-tip">{b.name}: {formatRupiah(b.v)}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <span className="kas-bar-label">{m.label}</span>
+                        <span className={`kas-bar-net ${m.labaBersih < 0 ? 'neg' : ''}`}>Laba {formatRupiah(m.labaBersih)}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           </section>
@@ -606,7 +626,7 @@ export default function BukuKasPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={3}>TOTAL REKAP FILTER</td>
+                    <td colSpan={3}>TOTAL</td>
                     <td style={{ textAlign: 'right', color: 'var(--emerald)', fontWeight: 800 }}>
                       {formatRupiah(kasSummary.totalIncome)}
                     </td>
@@ -614,7 +634,7 @@ export default function BukuKasPage() {
                       {formatRupiah(kasSummary.totalExpense)}
                     </td>
                     <td style={{ textAlign: 'center', fontSize: '11px', color: 'var(--slate-500)' }}>
-                      Saldo: {formatRupiah(kasSummary.netProfit)}
+                      Selisih: {formatRupiah(kasSummary.netProfit)}
                     </td>
                   </tr>
                 </tfoot>
@@ -644,14 +664,14 @@ export default function BukuKasPage() {
 
           {/* Rekap Kinerja 2x2 */}
           <div className="commission-grid-card">
-            <div className="commission-head-label">REKAP KINERJA KAS</div>
+            <div className="commission-head-label">RINGKASAN KAS</div>
             <div className="grid-2x2">
               <div className="comm-cell">
                 <span className="comm-val" style={{ color: 'var(--emerald)' }}>
                   {formatRupiah(kasSummary.totalIncome)}
                 </span>
                 <span className="comm-sub" style={{ color: 'var(--emerald)' }}>
-                  Total Omzet
+                  Total Penjualan
                 </span>
               </div>
               <div className="comm-cell">
@@ -659,7 +679,7 @@ export default function BukuKasPage() {
                   {formatRupiah(kasSummary.totalExpense)}
                 </span>
                 <span className="comm-sub" style={{ color: 'var(--slate-500)' }}>
-                  Total Biaya
+                  Total Pengeluaran
                 </span>
               </div>
               <div className="comm-cell">
@@ -667,7 +687,7 @@ export default function BukuKasPage() {
                   {kasSummary.marginPct}%
                 </span>
                 <span className="comm-sub" style={{ color: kasSummary.marginPct >= 20 ? 'var(--emerald)' : 'var(--terracotta)' }}>
-                  {kasSummary.marginPct >= 20 ? 'Arus kas sehat' : 'Margin tipis'}
+                  {kasSummary.marginPct >= 20 ? 'Keuntungan sehat' : 'Untung tipis'}
                 </span>
               </div>
               <div className="comm-cell">
@@ -675,7 +695,7 @@ export default function BukuKasPage() {
                   {formatRupiah(guardrailLimit)}
                 </span>
                 <span className="comm-sub" style={{ color: 'var(--slate-500)' }}>
-                  Batas Cicilan 30%
+                  Batas Cicilan Aman
                 </span>
               </div>
             </div>
@@ -688,14 +708,14 @@ export default function BukuKasPage() {
                 {editingId ? 'Edit Transaksi Kas' : 'Catat Transaksi Kas'}
               </h2>
               <span className="entry-badge-live">
-                {editingId ? 'Mode Edit' : 'Real-time'}
+                {editingId ? 'Sedang diubah' : 'Tersimpan otomatis'}
               </span>
             </div>
 
             <form onSubmit={handleSubmit} className="entry-saas-form">
               {/* Type Segmented Toggle */}
               <div className="form-group-clean">
-                <label className="form-label-clean">Tipe Arus Kas</label>
+                <label className="form-label-clean">Jenis Transaksi</label>
                 <div className="type-segmented-toggle">
                   <label
                     className={`type-pill-label type-pill-in ${formType === 'pemasukan' ? 'is-active' : ''}`}
@@ -704,7 +724,7 @@ export default function BukuKasPage() {
                       setFormKategori(KAS_CATEGORIES.pemasukan[0])
                     }}
                   >
-                    <span>+ Pemasukan (Omzet)</span>
+                    <span>+ Uang Masuk</span>
                   </label>
                   <label
                     className={`type-pill-label type-pill-out ${formType === 'pengeluaran' ? 'is-active' : ''}`}
@@ -713,7 +733,7 @@ export default function BukuKasPage() {
                       setFormKategori(KAS_CATEGORIES.pengeluaran[0])
                     }}
                   >
-                    <span>- Pengeluaran (Biaya)</span>
+                    <span>- Uang Keluar</span>
                   </label>
                 </div>
               </div>
@@ -721,7 +741,7 @@ export default function BukuKasPage() {
               {/* Nominal */}
               <div className="form-group-clean">
                 <label className="form-label-clean" htmlFor="nominal-input">
-                  Nominal Transaksi (Rp)
+                  Jumlah (Rp)
                 </label>
                 <div className="numeric-input-card">
                   <span className="currency-prefix">Rp</span>
@@ -741,7 +761,7 @@ export default function BukuKasPage() {
               {/* Tanggal */}
               <div className="form-group-clean">
                 <label className="form-label-clean" htmlFor="date-input">
-                  Tanggal Pembukuan
+                  Tanggal
                 </label>
                 <div className="numeric-input-card">
                   <input
@@ -758,7 +778,7 @@ export default function BukuKasPage() {
               {/* Kategori */}
               <div className="form-group-clean">
                 <label className="form-label-clean" htmlFor="category-select">
-                  Kategori Transaksi
+                  Kategori
                 </label>
                 <select
                   id="category-select"
@@ -796,7 +816,7 @@ export default function BukuKasPage() {
               {/* Keterangan */}
               <div className="form-group-clean">
                 <label className="form-label-clean" htmlFor="note-input">
-                  Keterangan / Rincian
+                  Catatan
                 </label>
                 <input
                   type="text"

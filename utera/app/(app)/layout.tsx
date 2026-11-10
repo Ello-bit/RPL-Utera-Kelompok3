@@ -1,3 +1,7 @@
+import { cookies } from 'next/headers'
+import { isAdminUser } from '@/lib/auth'
+import { calculateSkorPRD } from '@/lib/skor'
+import { PROFIL_COOKIE, pickActiveProfile } from '@/lib/profil-aktif'
 import { createClient } from '@/lib/supabase/server'
 import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
@@ -24,7 +28,7 @@ export default async function AppShellLayout({
 
   let isAdmin = false
   if (user) {
-    if (user.email?.toLowerCase().includes('admin') || user.user_metadata?.role === 'admin') {
+    if (isAdminUser(user)) {
       isAdmin = true
       businessName = 'Ekosistem UMKM UTERA'
       userName = 'Administrator'
@@ -34,36 +38,26 @@ export default async function AppShellLayout({
         .from('profil_usaha')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1)
 
-      const firstProfile = profiles && profiles[0] ? (profiles[0] as Tables<'profil_usaha'>) : null
+      const cookieStore = await cookies()
+      const activeId = cookieStore.get(PROFIL_COOKIE)?.value ?? null
+      const firstProfile = pickActiveProfile(
+        (profiles ?? []) as Tables<'profil_usaha'>[],
+        activeId
+      )
       if (firstProfile) {
         businessName = firstProfile.nama_usaha
         if (firstProfile.nama_pemilik) userName = firstProfile.nama_pemilik
       }
-    }
 
-    // 2. Fetch live transactions to calculate count and PRD score
-    const { data: txList } = await supabase
-      .from('transaksi_kas')
-      .select('*')
-
-    if (txList) {
-      const typedTx = txList as Tables<'transaksi_kas'>[]
-      totalTx = typedTx.length
-      if (totalTx > 0) {
-        let inc = 0
-        let exp = 0
-        typedTx.forEach((t) => {
-          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
-          else exp += Number(t.nominal)
-        })
-        if (inc > 0) {
-          const margin = (inc - exp) / inc
-          skor = Math.min(96, Math.max(40, Math.round(50 + margin * 45)))
-        } else {
-          skor = 50
-        }
+      // 2. Transaksi usaha aktif -> jumlah transaksi dan skor (rumus PRD yang sama dengan halaman skor)
+      let txQuery = supabase.from('transaksi_kas').select('*')
+      if (firstProfile) txQuery = txQuery.eq('profil_id', firstProfile.id)
+      const { data: txList } = await txQuery
+      if (txList) {
+        const typedTx = txList as Tables<'transaksi_kas'>[]
+        totalTx = typedTx.length
+        skor = calculateSkorPRD(typedTx).total
       }
     }
   } else {
@@ -71,14 +65,7 @@ export default async function AppShellLayout({
     businessName = DEMO_PROFILES[0].nama_usaha
     userName = DEMO_PROFILES[0].nama_pemilik || 'Budi Santoso'
     totalTx = DEMO_TRANSACTIONS.length
-    let inc = 0
-    let exp = 0
-    DEMO_TRANSACTIONS.forEach((t) => {
-      if (t.tipe === 'pemasukan') inc += t.nominal
-      else exp += t.nominal
-    })
-    const margin = (inc - exp) / inc
-    skor = Math.min(96, Math.max(40, Math.round(50 + margin * 45)))
+    skor = calculateSkorPRD(DEMO_TRANSACTIONS, true).total
   }
 
   return (

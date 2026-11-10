@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import './landing.css'
 
 function formatRupiah(number: number): string {
@@ -64,6 +65,37 @@ export default function LandingPage() {
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Status login: menu Dashboard hanya untuk pengguna yang sudah masuk
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data.session))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setIsLoggedIn(!!session))
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  // Fade-in setiap section saat masuk layar
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>('main section:not(.hero-section), footer'))
+    if (!('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add('in-view')
+            io.unobserve(en.target)
+          }
+        })
+      },
+      { threshold: 0.08 }
+    )
+    els.forEach((el) => {
+      el.classList.add('reveal')
+      io.observe(el)
+    })
+    return () => io.disconnect()
   }, [])
 
   // Calculations: Tab 1 Skor
@@ -147,20 +179,26 @@ export default function LandingPage() {
           <nav aria-label="Navigasi Utama">
             <ul className="header-nav">
               <li><Link href="#beranda">Beranda</Link></li>
-              <li><Link href="/buku-kas">Buku Kas</Link></li>
-              <li><Link href="/skor-kelayakan">Skor Kelayakan</Link></li>
-              <li><Link href="/guardrail">Guardrail 30%</Link></li>
-              <li><Link href="/simulasi-kur">Simulasi KUR</Link></li>
-              <li><Link href="/profil-usaha">Profil Usaha</Link></li>
+              <li><Link href="#fitur-utama">Fitur</Link></li>
+              <li><Link href="#solusi-bisnis">Solusi</Link></li>
+              <li><Link href="#playground-simulator">Coba Simulasi</Link></li>
+              <li><Link href="#kur-plafon">Plafon KUR</Link></li>
+              <li><Link href="#testimoni">Testimoni</Link></li>
               <li><Link href="#faq">FAQ</Link></li>
-              <li><Link href="/dashboard" className="nav-highlight-link">Dashboard</Link></li>
+              {isLoggedIn && <li><Link href="/dashboard" className="nav-highlight-link">Dashboard</Link></li>}
             </ul>
           </nav>
 
           {/* Action Group */}
           <div className="header-actions">
-            <Link href="/auth?mode=login" className="header-login-link" id="btn-login">Masuk</Link>
-            <Link href="/auth?mode=register" className="btn btn-primary btn-sm btn-pill" id="btn-register">Coba Gratis</Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard" className="btn btn-primary btn-sm btn-pill" id="btn-dashboard">Buka Dashboard</Link>
+            ) : (
+              <>
+                <Link href="/auth?mode=login" className="header-login-link" id="btn-login">Masuk</Link>
+                <Link href="/auth?mode=register" className="btn btn-primary btn-sm btn-pill" id="btn-register">Coba Gratis</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -979,7 +1017,7 @@ export default function LandingPage() {
         {/* ========================================================================
              8. TESTIMONIALS SECTION (Moka POS Real Merchant Stories)
              ======================================================================== */}
-        <section className="testimonials-section">
+        <section className="testimonials-section" id="testimoni">
           <div className="container">
             <div className="section-center-header">
               <h2 className="heading-section">

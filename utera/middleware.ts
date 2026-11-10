@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isAdminUser } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -35,10 +36,22 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const isAuthRoute = path.startsWith('/auth')
 
-  const isAdmin = Boolean(
-    user?.email?.toLowerCase().includes('admin') ||
-    user?.user_metadata?.role === 'admin'
-  )
+  const isAdmin = isAdminUser(user)
+
+  // 0. Rute admin: wajib login dan berperan admin (sebelumnya terbuka untuk siapa saja)
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    const url = request.nextUrl.clone()
+    if (!user) {
+      url.pathname = '/auth'
+      url.search = '?mode=login&redirect=/admin'
+      return NextResponse.redirect(url)
+    }
+    if (!isAdmin) {
+      url.pathname = '/dashboard'
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
+  }
 
   // 1. If already authenticated and trying to access /auth, redirect to their respective home
   if (user && isAuthRoute) {

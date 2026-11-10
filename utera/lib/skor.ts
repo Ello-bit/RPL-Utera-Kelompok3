@@ -20,6 +20,8 @@ export interface SkorResult {
   k2: ScoreComponent
   k3: ScoreComponent
   k4: ScoreComponent
+  /** true bila kurang dari 6 bulan punya transaksi (PRD: tampilkan peringatan data belum cukup) */
+  dataKurang: boolean
   monthlyData: Array<{
     bulan: string
     pemasukan: number
@@ -95,6 +97,7 @@ export function calculateSkorPRD(
         ratio: 0,
         detail: '0 dari 6 bulan laba positif',
       },
+      dataKurang: true,
       monthlyData: emptyMonthly,
       totals: { pemasukan: 0, pengeluaran: 0, laba: 0, margin: 0 },
     }
@@ -114,26 +117,24 @@ export function calculateSkorPRD(
     map[key].count++
   })
 
-  const sortedKeys = Object.keys(map).sort()
-  const recent6Keys = sortedKeys.slice(-6)
+  // PRD: jendela = 6 bulan kalender terakhir sampai bulan berjalan.
+  // Bulan tanpa transaksi tetap dihitung (kosong), tidak dilewati.
+  const now = new Date()
+  const recent6Keys = Array.from({ length: totalMonths }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (totalMonths - 1 - i), 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
 
-  const monthlyData = recent6Keys.map((k) => ({
-    bulan: k,
-    pemasukan: map[k].pemasukan,
-    pengeluaran: map[k].pengeluaran,
-    laba: map[k].pemasukan - map[k].pengeluaran,
-    tercatat: map[k].count > 0,
-  }))
-
-  while (monthlyData.length < 6) {
-    monthlyData.unshift({
-      bulan: `Bulan ${6 - monthlyData.length}`,
-      pemasukan: 0,
-      pengeluaran: 0,
-      laba: 0,
-      tercatat: false,
-    })
-  }
+  const monthlyData = recent6Keys.map((k) => {
+    const m = map[k] ?? { pemasukan: 0, pengeluaran: 0, count: 0 }
+    return {
+      bulan: k,
+      pemasukan: m.pemasukan,
+      pengeluaran: m.pengeluaran,
+      laba: m.pemasukan - m.pengeluaran,
+      tercatat: m.count > 0,
+    }
+  })
 
   // K1: Konsistensi Pencatatan (30 pts)
   const bCatat = monthlyData.filter((m) => m.tercatat).length
@@ -224,6 +225,7 @@ export function calculateSkorPRD(
       ratio: k4Raw,
       detail: `${bLaba} dari 6 bulan laba positif`,
     },
+    dataKurang: bCatat < totalMonths,
     monthlyData,
     totals: {
       pemasukan: totalPemasukan,
@@ -234,3 +236,36 @@ export function calculateSkorPRD(
   }
 }
 
+
+export interface SkorSnapshot {
+  skor: number
+  kategori: string
+  omzet_bulanan: number
+  laba_bersih: number
+  margin_profit: number
+  konsistensi_bulan: number
+  catatan: string
+}
+
+/** Nilai yang disimpan ke tabel skor_kelayakan (omzet = rata-rata per bulan tercatat, konsistensi = jumlah bulan). */
+export function buildSkorSnapshot(r: SkorResult): SkorSnapshot {
+  const bulanTercatat = r.monthlyData.filter((m) => m.tercatat).length
+  return {
+    skor: r.total,
+    kategori: r.category,
+    omzet_bulanan: Math.round(r.totals.pemasukan / Math.max(1, bulanTercatat)),
+    laba_bersih: r.totals.laba,
+    margin_profit: Math.round(r.totals.margin * 100),
+    konsistensi_bulan: bulanTercatat,
+    catatan: `Evaluasi otomatis: ${r.badgeLabel}${r.dataKurang ? ' (data kurang dari 6 bulan)' : ''}`,
+  }
+}
+
+/**
+ * Rata-rata laba bersih per bulan (PRD: dasar batas cicilan 30%).
+ * Dibagi jumlah bulan yang punya transaksi di jendela 6 bulan, minimal 1.
+ */
+export function rataLabaBulanan(r: SkorResult): number {
+  const bulan = r.monthlyData.filter((m) => m.tercatat).length
+  return bulan === 0 ? 0 : Math.round(r.totals.laba / bulan)
+}

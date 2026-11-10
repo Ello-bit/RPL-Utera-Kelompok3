@@ -6,9 +6,19 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
+import { calculateSkorPRD } from '@/lib/skor'
 import {
-  getStoredVerificationRecords,
-  updateVerificationStatus,
+  SORT_OPTIONS,
+  countByStatus,
+  filterByStatus,
+  formatWaktuPengajuan,
+  sortUmkm,
+  type UmkmSortKey,
+  type UmkmStatusFilter,
+} from '@/lib/admin-sort'
+import {
+  fetchAllVerifications,
+  reviewVerification,
   VerificationRequest,
   VerificationStatus,
 } from '@/lib/verification'
@@ -36,6 +46,8 @@ interface UmkmRecord {
   verificationNotes?: string
   verificationType?: string
   verificationSubmittedAt?: string
+  submittedAtIso?: string
+  adminNote?: string
   certificateNumber?: string
   registeredAt: string
 }
@@ -151,12 +163,11 @@ export default function AdminPage() {
 
   const supabase = createClient()
 
-  const syncWithVerificationStore = (records: UmkmRecord[]): UmkmRecord[] => {
-    const verifStore = getStoredVerificationRecords()
-    return records.map((r) => {
-      const match = verifStore.find(
-        (v) => v.businessId === r.id || v.businessName.toLowerCase() === r.namaUsaha.toLowerCase()
-      )
+  // Gabungkan status pengajuan dari tabel verifikasi_usaha ke daftar UMKM.
+  // Pengajuan yang profilnya tidak terbaca tetap ditampilkan dari data pengajuannya sendiri.
+  const applyVerifications = (records: UmkmRecord[], verifs: VerificationRequest[]): UmkmRecord[] => {
+    const result: UmkmRecord[] = records.map((r) => {
+      const match = verifs.find((v) => v.businessId === r.id)
       if (match) {
         return {
           ...r,
@@ -165,161 +176,164 @@ export default function AdminPage() {
           verificationNotes: match.notes,
           verificationType: match.applicationType,
           verificationSubmittedAt: match.submittedAt,
+          submittedAtIso: match.submittedAtIso,
+          adminNote: match.adminNote,
           certificateNumber: match.certificateNumber,
         }
       }
-      return {
-        ...r,
-        verificationStatus: r.isVerified ? 'verified' : 'unverified',
-      }
+      return { ...r, verificationStatus: r.isVerified ? 'verified' : 'unverified' }
     })
+    verifs.forEach((v) => {
+      if (result.some((r) => r.id === v.businessId)) return
+      result.unshift({
+        id: v.businessId,
+        namaUsaha: v.businessName,
+        namaPemilik: v.ownerName,
+        sektor: v.businessSector,
+        telepon: v.phoneNumber,
+        totalTx: v.totalTransactions,
+        pemasukan: 0,
+        pengeluaran: 0,
+        saldoKas: 0,
+        skor: v.skorPRD,
+        statusKur: v.skorPRD >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
+        hasNib: v.hasNib,
+        isVerified: v.status === 'verified',
+        verificationStatus: v.status,
+        verificationNotes: v.notes,
+        verificationType: v.applicationType,
+        verificationSubmittedAt: v.submittedAt,
+        submittedAtIso: v.submittedAtIso,
+        adminNote: v.adminNote,
+        certificateNumber: v.certificateNumber,
+        registeredAt: v.submittedAt,
+      })
+    })
+    return result
   }
 
-  const [umkmData, setUmkmData] = useState<UmkmRecord[]>(syncWithVerificationStore(DEFAULT_ECOSYSTEM_DATA))
+  const [umkmData, setUmkmData] = useState<UmkmRecord[]>(applyVerifications(DEFAULT_ECOSYSTEM_DATA, []))
   const [searchQuery, setSearchQuery] = useState('')
   const [sectorFilter, setSectorFilter] = useState('ALL')
+  const [statusFilter, setStatusFilter] = useState<UmkmStatusFilter>('ALL')
+  const [sortKey, setSortKey] = useState<UmkmSortKey>('terbaru')
   const [auditModal, setAuditModal] = useState<UmkmRecord | null>(null)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
 
-  // Fetch live profiles and transactions from Supabase
+  const showToastMsg = (msg: string) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 3500)
+  }
+
+  // Ambil profil, transaksi, legalitas, dan pengajuan verifikasi dari Supabase.
+  // Admin bisa membaca semua pengguna lewat policy "admin baca" (supabase/verifikasi.sql).
   useEffect(() => {
     async function fetchLive() {
-      const { data: profs } = await supabase.from('profil_usaha').select('*')
-      const { data: txs } = await supabase.from('transaksi_kas').select('*')
-      const { data: docs } = await supabase.from('legalitas_dokumen').select('*')
+      const [{ data: profs }, { data: txs }, { data: docs }, verifRes] = await Promise.all([
+        supabase.from('profil_usaha').select('*'),
+        supabase.from('transaksi_kas').select('*'),
+        supabase.from('legalitas_dokumen').select('*'),
+        fetchAllVerifications(supabase),
+      ])
+      if (verifRes.error) showToastMsg('Gagal memuat pengajuan verifikasi: ' + verifRes.error)
 
-      if (profs && profs.length > 0) {
-        const liveRecords: UmkmRecord[] = profs.map((p) => {
-          const userTxs = (txs || []).filter((t) => t.profil_id === p.id || t.user_id === p.user_id)
-          let inc = 0
-          let exp = 0
-          userTxs.forEach((t) => {
-            if (t.tipe === 'pemasukan') inc += Number(t.nominal)
-            else exp += Number(t.nominal)
-          })
-          const saldo = inc - exp
-          const margin = inc > 0 ? saldo / inc : 0
-          const skor = userTxs.length > 0 ? Math.min(96, Math.max(40, Math.round(50 + margin * 45))) : 50
-          const hasNib = (docs || []).some((d) => (d.user_id === p.user_id || d.profil_id === p.id) && d.kategori?.toUpperCase() === 'NIB')
-
-          return {
-            id: p.id,
-            namaUsaha: p.nama_usaha,
-            namaPemilik: p.nama_pemilik || 'Pemilik Usaha',
-            sektor: p.jenis_usaha || 'Kuliner & F&B',
-            telepon: p.nomor_telepon || '0812-xxxx-xxxx',
-            totalTx: userTxs.length,
-            pemasukan: inc,
-            pengeluaran: exp,
-            saldoKas: saldo,
-            skor,
-            statusKur: skor >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
-            hasNib,
-            isVerified: false,
-            verificationStatus: 'unverified',
-            registeredAt: p.created_at ? p.created_at.slice(0, 10) : '2026-03-01',
-          }
+      const liveRecords: UmkmRecord[] = (profs ?? []).map((p) => {
+        const usahaTxs = (txs ?? []).filter((t) => t.profil_id === p.id)
+        let inc = 0
+        let exp = 0
+        usahaTxs.forEach((t) => {
+          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
+          else exp += Number(t.nominal)
         })
+        const skor = calculateSkorPRD(usahaTxs).total
+        const hasNib = (docs ?? []).some(
+          (d) => d.profil_id === p.id && d.kategori?.toUpperCase() === 'NIB' && Boolean(d.nomor_dokumen || d.file_url)
+        )
 
-        // Merge without duplicating
-        const merged = [...liveRecords]
-        DEFAULT_ECOSYSTEM_DATA.forEach((def) => {
-          if (!merged.some((m) => m.namaUsaha.toLowerCase() === def.namaUsaha.toLowerCase())) {
-            merged.push(def)
-          }
-        })
-        setUmkmData(syncWithVerificationStore(merged))
-      }
+        return {
+          id: p.id,
+          namaUsaha: p.nama_usaha,
+          namaPemilik: p.nama_pemilik || 'Pemilik Usaha',
+          sektor: p.jenis_usaha || '-',
+          telepon: p.nomor_telepon || '-',
+          totalTx: usahaTxs.length,
+          pemasukan: inc,
+          pengeluaran: exp,
+          saldoKas: inc - exp,
+          skor,
+          statusKur: skor >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
+          hasNib,
+          isVerified: false,
+          verificationStatus: 'unverified',
+          registeredAt: p.created_at ? p.created_at.slice(0, 10) : '-',
+        }
+      })
+
+      // Data contoh hanya tampil bila belum ada usaha asli sama sekali, agar antrean
+      // pengajuan tidak bercampur dengan baris palsu.
+      const base = liveRecords.length > 0 ? liveRecords : DEFAULT_ECOSYSTEM_DATA
+      setUmkmData(applyVerifications(base, verifRes.data))
     }
 
     fetchLive()
   }, [])
 
-  // Listen to real-time verification changes
-  useEffect(() => {
-    const handleVerifChange = () => {
-      setUmkmData((prev) => syncWithVerificationStore(prev))
-    }
-    window.addEventListener('utera_verification_changed', handleVerifChange)
-    return () => window.removeEventListener('utera_verification_changed', handleVerifChange)
-  }, [])
+  const statusCounts = useMemo(() => countByStatus(umkmData), [umkmData])
 
   const filteredList = useMemo(() => {
-    return umkmData.filter((item) => {
+    const matched = umkmData.filter((item) => {
       const matchSearch =
         item.namaUsaha.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.namaPemilik.toLowerCase().includes(searchQuery.toLowerCase())
       const matchSector = sectorFilter === 'ALL' || item.sektor === sectorFilter
       return matchSearch && matchSector
     })
-  }, [umkmData, searchQuery, sectorFilter])
+    return sortUmkm(filterByStatus(matched, statusFilter), sortKey)
+  }, [umkmData, searchQuery, sectorFilter, statusFilter, sortKey])
 
-  // Approve verification
-  const handleApprove = (id: string, namaUsaha: string) => {
-    const certNo = `UTERA-VERIF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`
-    updateVerificationStatus(id, 'verified', { certificateNumber: certNo })
-    setUmkmData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              isVerified: true,
-              verificationStatus: 'verified',
-              certificateNumber: certNo,
-            }
-          : item
-      )
-    )
-    setToastMsg(`Status kredibilitas ${namaUsaha} telah resmi disahkan sebagai Mitra Kredibel UTERA! (No. ${certNo})`)
-    setTimeout(() => setToastMsg(null), 3500)
+  const setItemStatus = (id: string, patch: Partial<UmkmRecord>) => {
+    setUmkmData((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
   }
 
-  // Reject / Request revision
-  const handleReject = (id: string, namaUsaha: string, customReason?: string) => {
-    const reason = customReason || 'Kelengkapan dokumen NIB OSS dan catatan mutasi kas perlu diperbaiki.'
-    updateVerificationStatus(id, 'rejected', { rejectionReason: reason })
-    setUmkmData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              isVerified: false,
-              verificationStatus: 'rejected',
-            }
-          : item
-      )
-    )
-    setToastMsg(`Permohonan verifikasi ${namaUsaha} telah ditangguhkan dengan catatan revisi.`)
-    setTimeout(() => setToastMsg(null), 3500)
+  // Peninjauan pengajuan: hanya dua keputusan, sahkan atau tolak, masing-masing boleh disertai catatan.
+  const [reviewTarget, setReviewTarget] = useState<{ item: UmkmRecord; decision: 'verified' | 'rejected' } | null>(null)
+  const [reviewNote, setReviewNote] = useState('')
+  const [reviewing, setReviewing] = useState(false)
+
+  const closeReview = () => {
+    setReviewTarget(null)
+    setReviewNote('')
   }
 
-  // Suspend
-  const handleSuspend = (id: string, namaUsaha: string) => {
-    updateVerificationStatus(id, 'unverified')
-    setUmkmData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              isVerified: false,
-              verificationStatus: 'unverified',
-            }
-          : item
-      )
-    )
-    setToastMsg(`Status verifikasi ${namaUsaha} telah ditangguhkan.`)
-    setTimeout(() => setToastMsg(null), 3500)
-  }
+  const submitReview = async () => {
+    if (!reviewTarget) return
+    const { item, decision } = reviewTarget
+    const note = reviewNote.trim()
+    const certNo =
+      decision === 'verified'
+        ? `UTERA-VERIF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`
+        : undefined
 
-  // Toggle verification status (legacy helper)
-  const toggleVerification = (id: string) => {
-    const item = umkmData.find((u) => u.id === id)
-    if (!item) return
-    if (item.isVerified) {
-      handleSuspend(id, item.namaUsaha)
-    } else {
-      handleApprove(id, item.namaUsaha)
+    setReviewing(true)
+    const { error } = await reviewVerification(supabase, item.id, decision, { note, certificateNumber: certNo })
+    setReviewing(false)
+    if (error) {
+      showToastMsg((decision === 'verified' ? 'Gagal mengesahkan: ' : 'Gagal menolak: ') + error)
+      return
     }
+
+    setItemStatus(item.id, {
+      isVerified: decision === 'verified',
+      verificationStatus: decision,
+      certificateNumber: certNo,
+      adminNote: note || undefined,
+    })
+    showToastMsg(
+      decision === 'verified'
+        ? `Status kredibilitas ${item.namaUsaha} telah disahkan sebagai Mitra Kredibel UTERA! (No. ${certNo})`
+        : `Pengajuan verifikasi ${item.namaUsaha} ditolak. Pemilik dapat mengajukan kembali.`
+    )
+    closeReview()
   }
 
   // Aggregate stats
@@ -539,7 +553,83 @@ export default function AdminPage() {
                   <option value="Jasa & Layanan">Jasa &amp; Layanan</option>
                 </select>
               </div>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label htmlFor="sort-umkm" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                  Urutkan
+                </label>
+                <select
+                  id="sort-umkm"
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value as UmkmSortKey)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '0.85rem',
+                    fontFamily: 'inherit',
+                    background: '#fff',
+                    outline: 'none',
+                  }}
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+          </div>
+
+          <div role="group" aria-label="Filter status verifikasi" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            {(
+              [
+                ['ALL', 'Semua'],
+                ['pending', 'Menunggu Audit'],
+                ['verified', 'Terverifikasi'],
+                ['rejected', 'Perlu Revisi'],
+                ['unverified', 'Belum Mengajukan'],
+              ] as [UmkmStatusFilter, string][]
+            ).map(([value, label]) => {
+              const active = statusFilter === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setStatusFilter(value)}
+                  aria-pressed={active}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '9999px',
+                    border: `1px solid ${active ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                    background: active ? 'var(--primary)' : '#fff',
+                    color: active ? '#fff' : 'var(--text-main)',
+                    fontFamily: 'inherit',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span>{label}</span>
+                  <span
+                    style={{
+                      minWidth: '20px',
+                      padding: '0 6px',
+                      borderRadius: '9999px',
+                      background: active ? 'rgba(255,255,255,0.25)' : value === 'pending' && statusCounts.pending > 0 ? '#FEF3C7' : '#F1F5F3',
+                      color: active ? '#fff' : value === 'pending' && statusCounts.pending > 0 ? '#92400E' : 'var(--text-muted)',
+                      fontSize: '0.72rem',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {statusCounts[value]}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
@@ -616,11 +706,18 @@ export default function AdminPage() {
                           <span>Terverifikasi Kredibel</span>
                         </span>
                       ) : u.verificationStatus === 'pending' ? (
+                        <>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '9999px', background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D', fontSize: '0.75rem', fontWeight: 700 }}>
                           <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>hourglass_top</span>
                           <span>Menunggu Audit</span>
                           <span style={{ background: '#DC2626', color: '#fff', fontSize: '9px', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>BARU</span>
                         </span>
+                        {u.submittedAtIso && (
+                          <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            Diajukan {formatWaktuPengajuan(u.submittedAtIso)}
+                          </div>
+                        )}
+                        </>
                       ) : u.verificationStatus === 'rejected' ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '9999px', background: '#FEE2E2', color: '#991B1B', border: '1px solid #FCA5A5', fontSize: '0.75rem', fontWeight: 700 }}>
                           <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>cancel</span>
@@ -656,11 +753,11 @@ export default function AdminPage() {
                           <span>Audit Detail</span>
                         </button>
 
-                        {u.verificationStatus === 'pending' ? (
+                        {u.verificationStatus === 'pending' && (
                           <>
                             <button
                               type="button"
-                              onClick={() => handleApprove(u.id, u.namaUsaha)}
+                              onClick={() => setReviewTarget({ item: u, decision: 'verified' })}
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -675,14 +772,14 @@ export default function AdminPage() {
                                 fontWeight: 700,
                                 cursor: 'pointer',
                               }}
-                              title="Sahkan Status Kredibilitas Resmi"
+                              title="Sahkan status kredibilitas (bisa disertai catatan)"
                             >
                               <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>check</span>
                               <span>Sahkan</span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleReject(u.id, u.namaUsaha)}
+                              onClick={() => setReviewTarget({ item: u, decision: 'rejected' })}
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -697,56 +794,12 @@ export default function AdminPage() {
                                 fontWeight: 700,
                                 cursor: 'pointer',
                               }}
-                              title="Tangguhkan / Minta Revisi Berkas"
+                              title="Tolak pengajuan (bisa disertai catatan)"
                             >
                               <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>close</span>
-                              <span>Revisi</span>
+                              <span>Tolak</span>
                             </button>
                           </>
-                        ) : u.verificationStatus === 'verified' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleSuspend(u.id, u.namaUsaha)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '6px 10px',
-                              borderRadius: '6px',
-                              border: '1px solid #E5E7EB',
-                              background: '#FFF',
-                              color: '#6B7280',
-                              fontSize: '0.75rem',
-                              fontFamily: 'inherit',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>pause_circle</span>
-                            <span>Tangguhkan</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleApprove(u.id, u.namaUsaha)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '6px 10px',
-                              borderRadius: '6px',
-                              border: 'none',
-                              background: '#14532D',
-                              color: '#fff',
-                              fontSize: '0.75rem',
-                              fontFamily: 'inherit',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>verified</span>
-                            <span>Sahkan</span>
-                          </button>
                         )}
                       </div>
                     </td>
@@ -1006,38 +1059,6 @@ export default function AdminPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
             <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: '#FAFDFB' }}>
               <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="material-symbols-rounded" style={{ color: 'var(--primary)' }}>shield_person</span>
-                Kredensial Pengawas Aktif
-              </h3>
-              <table style={{ width: '100%', fontSize: '0.85rem' }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Identitas:</td>
-                    <td><strong>Super Administrator (Pengawas Resmi)</strong></td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Username / Email:</td>
-                    <td><code>admin123@utera.id</code> (alias <code>admin123</code>)</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Kata Sandi:</td>
-                    <td><code>bryanganteng</code></td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Status Akses:</td>
-                    <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#059669', fontWeight: 700 }}>
-                        <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>verified_user</span>
-                        <span>Aktif &amp; Terenkripsi</span>
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid var(--border-subtle)', background: '#FAFDFB' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="material-symbols-rounded" style={{ color: '#2563EB' }}>database</span>
                 Database &amp; Standar SAK EMKM
               </h3>
@@ -1144,6 +1165,16 @@ export default function AdminPage() {
                   No. Sertifikat Kredibilitas: <strong>{auditModal.certificateNumber}</strong>
                 </div>
               )}
+              {auditModal.verificationNotes && (
+                <div style={{ background: '#F8FAF9', border: '1px solid #E5E7EB', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem' }}>
+                  <strong>Catatan pemilik usaha:</strong> {auditModal.verificationNotes}
+                </div>
+              )}
+              {auditModal.adminNote && (
+                <div style={{ background: auditModal.verificationStatus === 'rejected' ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${auditModal.verificationStatus === 'rejected' ? '#FECACA' : '#BBF7D0'}`, padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem' }}>
+                  <strong>Catatan admin:</strong> {auditModal.adminNote}
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
                 <div style={{ padding: '10px', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
@@ -1210,53 +1241,96 @@ export default function AdminPage() {
                 Tutup
               </button>
 
-              {auditModal.verificationStatus === 'pending' ? (
+              {auditModal.verificationStatus === 'pending' && (
                 <>
                   <button
                     type="button"
                     className="btn btn-danger btn-sm"
                     style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5' }}
                     onClick={() => {
-                      handleReject(auditModal.id, auditModal.namaUsaha)
+                      setReviewTarget({ item: auditModal, decision: 'rejected' })
                       setAuditModal(null)
                     }}
                   >
-                    Minta Revisi Berkas
+                    Tolak
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary btn-sm"
                     onClick={() => {
-                      handleApprove(auditModal.id, auditModal.namaUsaha)
+                      setReviewTarget({ item: auditModal, decision: 'verified' })
                       setAuditModal(null)
                     }}
                   >
-                    Sahkan Status Kredibilitas
+                    Sahkan
                   </button>
                 </>
-              ) : auditModal.verificationStatus === 'verified' ? (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm"
-                  onClick={() => {
-                    handleSuspend(auditModal.id, auditModal.namaUsaha)
-                    setAuditModal(null)
-                  }}
-                >
-                  Tangguhkan Verifikasi
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    handleApprove(auditModal.id, auditModal.namaUsaha)
-                    setAuditModal(null)
-                  }}
-                >
-                  Sahkan Kredibilitas UMKM
-                </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reviewTarget && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="review-title"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+          onClick={() => !reviewing && closeReview()}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: '14px', width: '100%', maxWidth: '480px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+          >
+            <div>
+              <h3 id="review-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
+                {reviewTarget.decision === 'verified' ? 'Sahkan verifikasi' : 'Tolak pengajuan'}
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {reviewTarget.item.namaUsaha} · {reviewTarget.item.namaPemilik}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="review-note" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                Catatan untuk pemilik usaha (opsional)
+              </label>
+              <textarea
+                id="review-note"
+                value={reviewNote}
+                onChange={(e) => setReviewNote(e.target.value)}
+                maxLength={500}
+                rows={4}
+                placeholder={
+                  reviewTarget.decision === 'verified'
+                    ? 'Contoh: Pembukuan rapi, pertahankan pencatatan harian.'
+                    : 'Contoh: NIB belum terunggah dan catatan kas baru 3 hari. Lengkapi lalu ajukan kembali.'
+                }
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', fontFamily: 'inherit', fontSize: '0.875rem', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+              <div style={{ textAlign: 'right', fontSize: '0.72rem', color: 'var(--text-muted)' }}>{reviewNote.length}/500</div>
+            </div>
+
+            {reviewTarget.decision === 'rejected' && (
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#92400E', background: '#FEF3C7', padding: '8px 10px', borderRadius: '8px' }}>
+                Setelah ditolak, pemilik usaha dapat mengajukan verifikasi kembali.
+              </p>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={closeReview} disabled={reviewing}>
+                Batal
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={submitReview}
+                disabled={reviewing}
+                style={reviewTarget.decision === 'rejected' ? { background: '#DC2626', borderColor: '#DC2626' } : undefined}
+              >
+                {reviewing ? 'Menyimpan...' : reviewTarget.decision === 'verified' ? 'Sahkan' : 'Tolak'}
+              </button>
             </div>
           </div>
         </div>

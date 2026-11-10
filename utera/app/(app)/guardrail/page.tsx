@@ -6,7 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, formatRupiah } from '@/lib/kas'
-import { calculateInstallment, evaluateGuardrail } from '@/lib/kur'
+import { calculateInstallment, evaluateGuardrail, KUR_TIERS, type KurTier } from '@/lib/kur'
+import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import './guardrail.css'
 
 type TransaksiKas = Tables<'transaksi_kas'>
@@ -18,28 +20,29 @@ interface ProgramOption {
   icon: string
   rate: number // annual decimal, e.g. 0.06
   rateDisplay: string
+  minPlafon: number
   maxPlafon: number
+  minTenor: number
+  maxTenor: number
 }
 
+const fromTier = (t: KurTier, icon: string): ProgramOption => ({
+  id: t.id,
+  name: t.name,
+  subtitle: `Bunga ${t.rateDisplay} p.a. • Plafon ${formatRupiah(t.minPlafon)} s.d. ${formatRupiah(t.maxPlafon)} • Tenor ${t.minTenor}-${t.maxTenor} bulan`,
+  icon,
+  rate: t.rate,
+  rateDisplay: t.rateDisplay,
+  minPlafon: t.minPlafon,
+  maxPlafon: t.maxPlafon,
+  minTenor: t.minTenor,
+  maxTenor: t.maxTenor,
+})
+
+// Jenis KUR diambil dari lib/kur.ts (satu sumber sesuai PRD); koperasi memakai bunga jasa sendiri.
 const PROGRAMS: ProgramOption[] = [
-  {
-    id: 'kur-mikro',
-    name: 'KUR Mikro Bank (BRI / Mandiri)',
-    subtitle: 'Bunga subsidi pemerintah 6% p.a. • Plafon s.d. Rp 100 Juta',
-    icon: 'account_balance',
-    rate: 0.06,
-    rateDisplay: '6.0%',
-    maxPlafon: 100_000_000,
-  },
-  {
-    id: 'kur-super',
-    name: 'KUR Super Mikro',
-    subtitle: 'Bunga subsidi 3% p.a. • Plafon s.d. Rp 10 Juta',
-    icon: 'rocket_launch',
-    rate: 0.03,
-    rateDisplay: '3.0%',
-    maxPlafon: 10_000_000,
-  },
+  fromTier(KUR_TIERS['kur-mikro'], 'account_balance'),
+  fromTier(KUR_TIERS['kur-super'], 'rocket_launch'),
   {
     id: 'koperasi',
     name: 'Pinjaman Koperasi Usaha',
@@ -47,7 +50,10 @@ const PROGRAMS: ProgramOption[] = [
     icon: 'handshake',
     rate: 0.09,
     rateDisplay: '9.0%',
+    minPlafon: 1_000_000,
     maxPlafon: 50_000_000,
+    minTenor: 6,
+    maxTenor: 60,
   },
 ]
 
@@ -57,11 +63,12 @@ export default function GuardrailPage() {
   const [isGuest, setIsGuest] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
+  const [profilId, setProfilId] = useState<string | null>(null)
 
   // Simulator State
   const [selectedProgramId, setSelectedProgramId] = useState<string>('kur-mikro')
-  const [plafon, setPlafon] = useState<number>(50_000_000)
-  const [tenorMonths, setTenorMonths] = useState<number>(24)
+  const [plafon, setPlafon] = useState<number>(30_000_000)
+  const [tenorMonths, setTenorMonths] = useState<number>(36)
 
   useEffect(() => {
     async function loadData() {
@@ -75,15 +82,23 @@ export default function GuardrailPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('transaksi_kas')
-        .select('*')
-        .order('tanggal', { ascending: false })
+      const { data: profs } = await supabase
+        .from('profil_usaha')
+        .select('id')
+        .order('created_at', { ascending: false })
+      const active = pickActiveProfile(profs ?? [], getActiveProfilId())
+      setProfilId(active?.id ?? null)
 
-      if (!error && data) {
-        setTransactions(data as TransaksiKas[])
+      let query = supabase.from('transaksi_kas').select('*')
+      if (active) query = query.eq('profil_id', active.id)
+      const { data, error } = await query.order('tanggal', { ascending: false })
+
+      if (error) {
+        // Jangan tampilkan data demo ke pengguna yang login.
+        alert('Gagal memuat transaksi: ' + error.message)
+        setTransactions([])
       } else {
-        setTransactions(DEMO_TRANSACTIONS)
+        setTransactions((data ?? []) as TransaksiKas[])
       }
     }
 
@@ -96,11 +111,11 @@ export default function GuardrailPage() {
 
   // Kas Summary & Base Laba Bersih
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
-  const baseMonthlyProfit = useMemo(() => {
-    if (kasSummary.netProfit > 0) return kasSummary.netProfit
-    if (isGuest) return 18_450_000
-    return 0
-  }, [kasSummary, isGuest])
+  // PRD: rata-rata laba bersih bulanan dari 6 bulan terakhir (bukan total seluruh waktu, tanpa angka bawaan)
+  const baseMonthlyProfit = useMemo(
+    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions, isGuest))),
+    [transactions, isGuest]
+  )
 
   // Guardrail 30% Ceiling
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
@@ -123,16 +138,24 @@ export default function GuardrailPage() {
   const gaugeFillPct = Math.min(100, Math.round((guard.ratio / 30) * 100))
 
   // Tenor pill options
-  const TENOR_OPTIONS = [6, 12, 18, 24, 36, 48, 60]
+  const TENOR_OPTIONS = [6, 12, 18, 24, 36, 48, 60].filter(
+    (m) => m >= currentProgram.minTenor && m <= currentProgram.maxTenor
+  )
 
   const handleReset = () => {
     setSelectedProgramId('kur-mikro')
-    setPlafon(50_000_000)
-    setTenorMonths(24)
+    setPlafon(30_000_000)
+    setTenorMonths(36)
     setSaveSuccess(null)
   }
 
   const handleSaveSimulation = async () => {
+    // PRD: pengajuan hanya disimpan bila cicilan sesuai arus kas (maks 30% rata-rata laba bersih)
+    if (!guard.isSafe) {
+      setSaveSuccess(null)
+      alert('Cicilan ini melebihi 30% rata-rata laba bersih Anda. Coba tenor lebih panjang atau nominal lebih kecil.')
+      return
+    }
     setSaving(true)
     setSaveSuccess(null)
 
@@ -148,11 +171,12 @@ export default function GuardrailPage() {
       const { error } = await supabase.from('simulasi_kur').insert({
         program: currentProgram.name,
         plafon,
-        bunga_tahunan: currentProgram.rate,
+        bunga_tahunan: currentProgram.rate * 100,
+        profil_id: profilId,
         tenor_bulan: tenorMonths,
         angsuran_bulanan: calc.total,
-        rasio_kas: Math.round(guard.ratio),
-        status_guardrail: guard.statusText,
+        rasio_kas: Math.round(guard.ratio * 10) / 10,
+        status_guardrail: guard.isSafe ? (guard.ratio <= 25 ? 'aman' : 'waspada') : 'melebihi',
         catatan: `Guardrail 30%: ${guard.statusText} (${guard.ratio.toFixed(1)}% dari laba)`,
       })
 
@@ -345,7 +369,8 @@ export default function GuardrailPage() {
                 className={`program-tab ${selectedProgramId === prog.id ? 'active' : ''}`}
                 onClick={() => {
                   setSelectedProgramId(prog.id)
-                  if (plafon > prog.maxPlafon) setPlafon(prog.maxPlafon)
+                  setPlafon(Math.min(prog.maxPlafon, Math.max(prog.minPlafon, plafon)))
+                  setTenorMonths(Math.min(prog.maxTenor, Math.max(prog.minTenor, tenorMonths)))
                 }}
               >
                 <span className="material-symbols-rounded">{prog.icon}</span>
@@ -370,7 +395,7 @@ export default function GuardrailPage() {
                     id="display-plafon"
                     className="live-input-val"
                     value={plafon}
-                    onChange={(e) => setPlafon(Math.min(currentProgram.maxPlafon, Math.max(1000000, Number(e.target.value))))}
+                    onChange={(e) => setPlafon(Math.min(currentProgram.maxPlafon, Math.max(currentProgram.minPlafon, Number(e.target.value))))}
                     step={1000000}
                   />
                 </div>
@@ -436,7 +461,7 @@ export default function GuardrailPage() {
                 type="button"
                 className="btn btn-primary"
                 onClick={handleSaveSimulation}
-                disabled={saving}
+                disabled={saving || (!isGuest && !guard.isSafe)}
               >
                 <span className="material-symbols-rounded">bookmark</span>
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi ke Database'}</span>
