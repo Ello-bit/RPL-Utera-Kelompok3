@@ -94,8 +94,9 @@ function AuthContent() {
   const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword
 
   return (
-    <div className="auth-viewport">
-      <div className="auth-card">
+    <div className="auth-viewport-wrapper">
+      <div className="auth-viewport">
+        <div className="auth-card">
         {/* LEFT PANEL: Branded Visual Graphic Panel */}
         <div className="auth-visual-panel">
           <div className="auth-halftone-bg" aria-hidden="true"></div>
@@ -327,6 +328,7 @@ function AuthContent() {
         </div>
       </div>
     </div>
+  </div>
   )
 }
 

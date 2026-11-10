@@ -350,3 +350,4 @@ export default function SimulasiKurPage() {
     </div>
   )
 }
+

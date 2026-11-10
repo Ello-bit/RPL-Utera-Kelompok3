@@ -49,3 +49,4 @@ export function evaluateLegalitas(
 
   return { total, completed, pct, status }
 }
+

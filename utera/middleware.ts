@@ -34,18 +34,8 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname
   const isAuthRoute = path.startsWith('/auth')
-  const isPublicRoute = path === '/' || path.startsWith('/_next') || path.startsWith('/assets') || path.startsWith('/favicon')
 
-  if (!user && !isAuthRoute && !isPublicRoute) {
-    const isGuestDemo = request.nextUrl.searchParams.get('demo') === 'true' || request.cookies.get('utera_demo_mode')?.value === 'true'
-    if (!isGuestDemo && path !== '/demo') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth'
-      url.searchParams.set('redirect', path)
-      return NextResponse.redirect(url)
-    }
-  }
-
+  // If already authenticated and trying to access /auth, redirect to dashboard
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'

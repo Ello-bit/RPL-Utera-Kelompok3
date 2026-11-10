@@ -41,13 +41,14 @@
   padding: 0;
 }
 
-body {
+.auth-viewport-wrapper {
   font-family: var(--font-family);
   background-color: #EBF0ED;
   background-image: radial-gradient(#DDE6E1 1px, transparent 1px);
   background-size: 24px 24px;
   color: var(--neutral-800);
   min-height: 100vh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

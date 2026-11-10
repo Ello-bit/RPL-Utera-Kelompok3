@@ -145,3 +145,4 @@ export function getCategoryDistribution(
 export function formatRupiah(num: number): string {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID')
 }
+
