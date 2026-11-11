@@ -435,7 +435,7 @@ h1, h2, h3, h4, h5, h6 {
   padding-bottom: 84px;
   background-image: 
     linear-gradient(rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.88)),
-    url('/assets/hero-bg.png');
+    url('/assets/hero-bg.webp');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

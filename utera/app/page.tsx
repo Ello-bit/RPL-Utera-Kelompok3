@@ -403,7 +403,7 @@ export default function LandingPage() {
           <div className="moka-feature-row">
             <div className="moka-feature-img-col">
               <div className="moka-feature-img-card">
-                <img src="/assets/calculator-hands.jpg" alt="Kalkulator Keuangan UTERA" loading="lazy" />
+                <img src="/assets/calculator-hands.webp" alt="Kalkulator Keuangan UTERA" loading="lazy" />
               </div>
             </div>
             <div className="moka-feature-text-col">
@@ -423,7 +423,7 @@ export default function LandingPage() {
           <div className="moka-feature-row reverse">
             <div className="moka-feature-img-col">
               <div className="moka-feature-img-card">
-                <img src="/assets/financial-team.png" alt="Tim Analisis Keuangan UTERA" loading="lazy" />
+                <img src="/assets/financial-team.webp" alt="Tim Analisis Keuangan UTERA" loading="lazy" />
               </div>
             </div>
             <div className="moka-feature-text-col">
@@ -447,7 +447,7 @@ export default function LandingPage() {
           <div className="community-inner">
             <div className="community-photo-col">
               <div className="community-photo-card">
-                <img src="/assets/entrepreneurs-community.jpg" alt="Komunitas UMKM UTERA" className="community-photo" loading="lazy" />
+                <img src="/assets/entrepreneurs-community.webp" alt="Komunitas UMKM UTERA" className="community-photo" loading="lazy" />
               </div>
             </div>
             <div className="community-text-col">
