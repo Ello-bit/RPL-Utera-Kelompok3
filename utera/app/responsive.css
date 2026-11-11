@@ -2,7 +2,8 @@
    RESPONSIVE GLOBAL (HP & tablet) - dimuat terakhir, menimpa gaya per halaman
    Prefix `body` menaikkan prioritas tanpa memakai !important berlebihan.
    ========================================================================== */
-html, body { max-width: 100%; overflow-x: hidden; }
+html, body { max-width: 100%; }
+body { overflow-x: clip; }
 img, svg, video, canvas { max-width: 100%; }
 
 /* ---------- Tablet (<= 1100px) ---------- */
