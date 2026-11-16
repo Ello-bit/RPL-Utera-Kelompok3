@@ -309,7 +309,7 @@ export default function LandingPage() {
           <div className="container stats-grid">
             <div className="stat-item">
               <div className="stat-number tabular-nums">100 Poin</div>
-              <div className="stat-label">Formula Skor PRD Berdasarkan Konsistensi & Laba</div>
+              <div className="stat-label">Skor Kelayakan dari Konsistensi & Laba</div>
             </div>
             <div className="stat-item">
               <div className="stat-number tabular-nums">Maks. 30%</div>
@@ -366,7 +366,7 @@ export default function LandingPage() {
                   </div>
                   <h3>Engine Skor Kelayakan (0–100)</h3>
                   <p>
-                    Algoritma otomatis berbasis formula PRD resmi. Menguji 4 parameter objektif: konsistensi pencatatan, pertumbuhan omzet, margin laba, dan stabilitas kas 6 bulan.
+                    Dihitung otomatis dari 4 parameter objektif: konsistensi pencatatan, pertumbuhan omzet, margin laba, dan stabilitas kas 6 bulan.
                   </p>
                 </div>
                 <Link href="/skor-kelayakan" className="feature-link">
@@ -381,13 +381,13 @@ export default function LandingPage() {
                   <div className="feature-icon-container" aria-hidden="true">
                     <span className="material-symbols-rounded" style={{ fontSize: '28px', color: 'var(--primary)' }}>shield</span>
                   </div>
-                  <h3>Simulasi Guardrail Batas 30% Kas</h3>
+                  <h3>Batas Aman Cicilan 30%</h3>
                   <p>
                     Cegah jeratan cicilan yang mengancam likuiditas usaha. Sistem memvalidasi ketat agar total angsuran bulanan tidak melampaui 30% dari rata-rata laba kas riil.
                   </p>
                 </div>
                 <Link href="/guardrail" className="feature-link">
-                  <span>Uji Guardrail 30% Kas</span>
+                  <span>Cek Batas Aman Cicilan</span>
                   <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>arrow_forward</span>
                 </Link>
               </div>
@@ -430,7 +430,7 @@ export default function LandingPage() {
               <span className="moka-feature-kicker">UTERA Skor Kelayakan</span>
               <h2 className="moka-feature-heading">Dapatkan data analitik menarik dari setiap transaksi bisnis Anda</h2>
               <p className="moka-feature-desc">
-                Algoritma otomatis UTERA menganalisis 4 parameter objektif &mdash; konsistensi, pertumbuhan omzet, margin laba, dan stabilitas kas &mdash; untuk menghasilkan Skor PRD yang diakui perbankan.
+                Algoritma otomatis UTERA menganalisis 4 parameter objektif &mdash; konsistensi, pertumbuhan omzet, margin laba, dan stabilitas kas &mdash; untuk menghasilkan Skor Kelayakan usaha Anda.
               </p>
               <Link href="/skor-kelayakan" className="moka-feature-link" id="btn-fitur-skor" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <span>Buka Skor Kelayakan</span>
@@ -879,7 +879,7 @@ export default function LandingPage() {
                             </li>
                             <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                               <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
-                              <span><strong>Guardrail Koperasi:</strong> Memperbarui batas aman cicilan 30% berdasarkan saldo kas riil.</span>
+                              <span><strong>Batas Aman Cicilan Koperasi:</strong> Memperbarui batas aman cicilan 30% berdasarkan saldo kas riil.</span>
                             </li>
                             <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                               <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>check_circle</span>
@@ -1126,7 +1126,7 @@ export default function LandingPage() {
                   <span className="material-symbols-rounded faq-icon" style={{ fontSize: '24px', transition: 'transform 0.25s ease', transform: openFaq === 0 ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--primary)' }}>keyboard_arrow_down</span>
                 </div>
                 <div className="faq-body">
-                  UTERA menerapkan prinsip Satu Sumber Data Keuangan. Setiap catatan transaksi harian pada Buku Kas Warung secara otomatis mengalir ke neraca laba rugi, mesin hitung skor kelayakan, dan simulasi guardrail cicilan tanpa kemungkinan pengeditan ganda yang tidak konsisten.
+                  UTERA menerapkan prinsip Satu Sumber Data Keuangan. Setiap catatan transaksi harian pada Buku Kas Warung secara otomatis mengalir ke neraca laba rugi, mesin hitung skor kelayakan, dan simulasi batas aman cicilan tanpa kemungkinan pengeditan ganda yang tidak konsisten.
                 </div>
               </div>
 
@@ -1193,7 +1193,7 @@ export default function LandingPage() {
               <ul>
                 <li><a href="#playground-simulator">Buku Kas Warung Digital</a></li>
                 <li><Link href="/skor-kelayakan">Kalkulator Skor Kelayakan</Link></li>
-                <li><Link href="/guardrail">Simulasi Guardrail 30% Kas</Link></li>
+                <li><Link href="/guardrail">Batas Aman Cicilan 30%</Link></li>
                 <li><Link href="/simulasi-kur">Simulasi KUR BRI 2026</Link></li>
                 <li><Link href="/profil-usaha">Profil Usaha &amp; Legalitas</Link></li>
               </ul>
@@ -1224,7 +1224,7 @@ export default function LandingPage() {
 
           {/* Compliance Disclaimer Note Sesuai PRD */}
           <div className="footer-compliance-box">
-            <strong>Pemberitahuan Resmi:</strong> Fitur skor kelayakan, perhitungan estimasi KUR Planner, dan simulasi guardrail beban koperasi pada sistem UTERA disajikan sebagai instrumen analitik dan persiapan administratif. Platform UTERA tidak bertindak sebagai lembaga keuangan penyalur kredit dan tidak menerbitkan keputusan persetujuan pinjaman secara mandiri. Hak persetujuan sepenuhnya merupakan diskresi bank penyalur atau koperasi terkait.
+            <strong>Pemberitahuan Resmi:</strong> Fitur skor kelayakan, perhitungan estimasi KUR Planner, dan simulasi batas aman cicilan koperasi pada sistem UTERA disajikan sebagai instrumen analitik dan persiapan administratif. Platform UTERA tidak bertindak sebagai lembaga keuangan penyalur kredit dan tidak menerbitkan keputusan persetujuan pinjaman secara mandiri. Hak persetujuan sepenuhnya merupakan diskresi bank penyalur atau koperasi terkait.
           </div>
 
           {/* Bottom Bar */}

@@ -115,7 +115,7 @@ export default function SkorKelayakanPage() {
         <div className="dash-header-actions">
           <span className="estimasi-badge">
             <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>info</span>
-            Skor ini adalah estimasi analitik PRD UTERA
+            Skor ini adalah estimasi UTERA, bukan keputusan bank
           </span>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function SkorKelayakanPage() {
                 ></circle>
               </svg>
               <div className="skor-ring-value">
-                <span className="skor-badge-kicker">PRD ENGINE</span>
+                <span className="skor-badge-kicker">SKOR UTERA</span>
                 <span className="skor-number tabular-nums" id="skor-number">{totalScore}</span>
                 <span className="skor-of">/ 100 Poin</span>
               </div>
@@ -274,7 +274,7 @@ export default function SkorKelayakanPage() {
                 <span className="material-symbols-rounded text-blue">shield</span>
               </div>
               <div className="vital-info">
-                <span className="vital-label">Guardrail 30% Kas</span>
+                <span className="vital-label">Batas Aman Cicilan (30%)</span>
                 <span className="vital-val text-emerald">
                   Maks {formatRupiah(Math.max(0, Math.round(rataLabaBulanan(skorData) * 0.30)))} / bln
                 </span>
@@ -289,8 +289,8 @@ export default function SkorKelayakanPage() {
       <div className="dash-panel" style={{ marginTop: '24px', padding: '24px' }}>
         <div className="panel-header" style={{ marginBottom: '20px' }}>
           <div>
-            <h2 className="panel-title">Rincian 4 Parameter Formula PRD</h2>
-            <p className="panel-subtitle">Algoritma K1–K4 yang diverifikasi analis perbankan dan koperasi UMKM</p>
+            <h2 className="panel-title">Rincian 4 Komponen Skor</h2>
+            <p className="panel-subtitle">Cara skor dihitung dari catatan Buku Kas 6 bulan terakhir</p>
           </div>
           <button
             type="button"
@@ -304,7 +304,7 @@ export default function SkorKelayakanPage() {
         </div>
 
         {saveSuccess && (
-          <div style={{ padding: '10px 14px', borderRadius: '8px', background: '#ECFDF5', color: '#065F46', marginBottom: '16px', fontSize: '0.875rem', fontWeight: 600 }}>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: '#EEF7F2', color: '#12402F', marginBottom: '16px', fontSize: '0.875rem', fontWeight: 600 }}>
             ✓ {saveSuccess}
           </div>
         )}
@@ -357,7 +357,7 @@ export default function SkorKelayakanPage() {
 
         <div style={{ marginTop: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <Link href="/guardrail" className="btn btn-secondary">
-            <span>Uji Guardrail 30% Kas →</span>
+            <span>Cek Batas Aman Cicilan →</span>
           </Link>
           <Link href="/simulasi-kur" className="btn btn-primary">
             <span>Lanjut ke Simulasi KUR BRI →</span>

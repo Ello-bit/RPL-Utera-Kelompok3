@@ -20,6 +20,7 @@ export interface Database {
           alamat_usaha: string | null
           nomor_telepon: string | null
           deskripsi_usaha: string | null
+          foto_url: string | null
           created_at: string
           updated_at: string
         }
@@ -33,6 +34,7 @@ export interface Database {
           alamat_usaha?: string | null
           nomor_telepon?: string | null
           deskripsi_usaha?: string | null
+          foto_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -46,6 +48,7 @@ export interface Database {
           alamat_usaha?: string | null
           nomor_telepon?: string | null
           deskripsi_usaha?: string | null
+          foto_url?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -2,7 +2,7 @@
    UTERA — SKOR KELAYAKAN STYLESHEET
    Reuses dashboard design tokens. Buku Kas Warung aesthetic.
    Typography: Plus Jakarta Sans
-   Palette: Forest Green (#1F6B4F), Emerald (#10B981), Gold (#C98A1B),
+   Palette: Forest Green (#1F6B4F), Emerald (#2A8865), Gold (#C98A1B),
             Terracotta (#B5532F), Blue (#2563EB)
    ========================================================================== */
 
@@ -15,9 +15,9 @@
   --primary-soft: #EEF7F2;
   --primary-border: #D1E7DC;
 
-  --emerald: #10B981;
-  --emerald-soft: #ECFDF5;
-  --emerald-border: #A7F3D0;
+  --emerald: #2A8865;
+  --emerald-soft: #EEF7F2;
+  --emerald-border: #D1E7DC;
 
   --terracotta: #B5532F;
   --terracotta-soft: #FEF2F2;
@@ -713,7 +713,7 @@ body.dashboard-body {
   height: 7px;
   border-radius: 50%;
   background: var(--emerald);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.25);
   animation: pulseDot 2s infinite ease-in-out;
 }
 
@@ -825,7 +825,7 @@ body.dashboard-body {
 
 .seg-rendah { background: linear-gradient(90deg, #E06D53, #F87171); }
 .seg-cukup { background: linear-gradient(90deg, #EAB308, #F59E0B); }
-.seg-baik { background: linear-gradient(90deg, #10B981, #1F6B4F); }
+.seg-baik { background: linear-gradient(90deg, #2A8865, #1F6B4F); }
 
 .spectrum-threshold-line {
   position: absolute;
@@ -1523,7 +1523,7 @@ body.dashboard-body {
 }
 
 .tag-laba.text-emerald {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(31, 107, 79, 0.1);
 }
 
 .tag-laba.text-terracotta {

@@ -67,7 +67,7 @@
   --canvas-mint: #EEF7F2;
 
   /* Status Fungsional */
-  --status-good: #10B981;
+  --status-good: #2A8865;
   --status-warning: #F59E0B;
   --status-danger: #EF4444;
 
@@ -702,7 +702,7 @@ h1, h2, h3, h4, h5, h6 {
     repeating-linear-gradient(
       100deg,
       #1F6B4F 10%,   /* UTERA Forest Green */
-      #10B981 16%,   /* Fresh Emerald */
+      #2A8865 16%,   /* Fresh Emerald */
       #C98A1B 22%,   /* UTERA Amber Gold */
       #B5532F 28%,   /* UTERA Warm Terracotta */
       #2A8865 34%    /* Leaf Green */
@@ -723,7 +723,7 @@ h1, h2, h3, h4, h5, h6 {
       100deg,
       #1F6B4F 10%,
       #C98A1B 16%,
-      #10B981 22%,
+      #2A8865 22%,
       #B5532F 28%,
       #1F6B4F 34%
     );

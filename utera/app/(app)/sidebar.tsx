@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useLogout } from './use-logout'
 
 interface SidebarProps {
   businessName: string
+  /** Foto profil usaha aktif (Supabase Storage), bila ada */
+  fotoUrl?: string | null
   totalTx: number
   skor: number
   userEmail: string
@@ -32,6 +34,7 @@ interface NavSection {
 
 export default function Sidebar({
   businessName,
+  fotoUrl = null,
   totalTx,
   skor,
   userEmail,
@@ -41,6 +44,8 @@ export default function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const currentTab = searchParams.get('tab')
   const [internalMobileOpen, setInternalMobileOpen] = useState(false)
   const isMobileOpen = controlledMobileOpen !== undefined ? controlledMobileOpen : internalMobileOpen
 
@@ -49,20 +54,8 @@ export default function Sidebar({
     else setInternalMobileOpen(false)
   }
 
-  const supabase = createClient()
-
-  async function handleLogout() {
-    if (!confirm('Apakah Anda yakin ingin keluar dari akun UTERA?')) return
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      // Sesi di server mungkin sudah tidak ada; tetap hapus sesi lokal agar pengguna benar-benar keluar.
-      await supabase.auth.signOut({ scope: 'local' })
-    }
-    // Navigasi penuh (bukan router.push) agar cache router Next.js yang masih menyimpan
-    // halaman versi "sudah login" ikut dibuang dan middleware membaca cookie yang baru.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- logout butuh muat ulang penuh
-    window.location.assign('/auth?mode=login')
-  }
+  // Konfirmasi keluar memakai kotak dialog aplikasi (bukan window.confirm yang bisa diblokir browser)
+  const { requestLogout: handleLogout, logoutDialog } = useLogout()
 
   const navItems: NavSection[] = [
     {
@@ -86,7 +79,7 @@ export default function Sidebar({
           pill: skor > 0 ? skor : undefined,
         },
         {
-          name: 'Guardrail 30% Kas',
+          name: 'Batas Aman Cicilan',
           href: '/guardrail',
           icon: 'shield',
         },
@@ -146,13 +139,11 @@ export default function Sidebar({
           name: 'Direktori & Verifikasi UMKM',
           href: '/admin?tab=direktori',
           icon: 'storefront',
-          badge: 5,
         },
         {
           name: 'Audit Kredibilitas & Skor',
           href: '/admin?tab=skor',
           icon: 'verified',
-          pill: 79,
         },
       ],
     },
@@ -193,6 +184,7 @@ export default function Sidebar({
 
   return (
     <>
+      {logoutDialog}
       {/* Mobile Drawer Backdrop */}
       {isMobileOpen && (
         <div
@@ -205,7 +197,7 @@ export default function Sidebar({
       <aside className={`sidebar ${isMobileOpen ? 'mobile-open' : ''}`} id="app-sidebar">
         <div className="sidebar-header">
           <Link href={isUserAdmin ? '/admin' : '/dashboard'} className="sidebar-brand">
-            <div className="brand-symbol" style={isUserAdmin ? { background: '#14532D', color: '#FCD34D' } : {}}>
+            <div className="brand-symbol" style={isUserAdmin ? { background: '#12402F', color: '#FCD34D' } : {}}>
               {isUserAdmin ? (
                 <span className="material-symbols-rounded" style={{ fontSize: '22px', color: '#FCD34D' }}>
                   admin_panel_settings
@@ -237,7 +229,12 @@ export default function Sidebar({
               <div className="nav-section-title">{sec.section}</div>
               <ul className="nav-list">
                 {sec.items.map((item) => {
-                  const isActive = pathname === item.href || (item.href.includes('?') && pathname === item.href.split('?')[0])
+                  // Menu admin hanya beda di ?tab=..., jadi bandingkan path DAN tab-nya.
+                  // Tanpa ini semua menu /admin?tab=... ikut tersorot sekaligus.
+                  const [itemPath, itemQuery] = item.href.split('?')
+                  const itemTab = new URLSearchParams(itemQuery || '').get('tab')
+                  const isActive =
+                    pathname === itemPath && (itemPath !== '/admin' || itemTab === currentTab)
                   return (
                     <li key={item.name}>
                       <Link
@@ -272,10 +269,18 @@ export default function Sidebar({
             title={isUserAdmin ? 'Pengawas Ekosistem UTERA' : 'Profil Usaha'}
             style={{ textDecoration: 'none' }}
           >
-            <div className="business-avatar" aria-hidden="true" style={isUserAdmin ? { background: '#ECFDF5' } : {}}>
-              <span className="material-symbols-rounded" style={{ color: isUserAdmin ? '#059669' : '#1F6B4F' }}>
-                {isUserAdmin ? 'verified_user' : 'local_cafe'}
-              </span>
+            <div
+              className="business-avatar"
+              aria-hidden="true"
+              style={isUserAdmin ? { background: '#EEF7F2' } : fotoUrl ? { overflow: 'hidden', padding: 0 } : {}}
+            >
+              {!isUserAdmin && fotoUrl ? (
+                <img src={fotoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              ) : (
+                <span className="material-symbols-rounded" style={{ color: '#1F6B4F' }}>
+                  {isUserAdmin ? 'verified_user' : 'storefront'}
+                </span>
+              )}
             </div>
             <div className="business-details">
               <span className="business-title" id="sidebar-business-name">

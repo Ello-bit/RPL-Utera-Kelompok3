@@ -600,7 +600,7 @@
   font-weight: 600;
 }
 .input-hint.valid {
-  color: #16A34A;
+  color: #1F6B4F;
 }
 .input-hint.invalid {
   color: #DC2626;
@@ -660,8 +660,8 @@
 }
 
 .otp-simulated-banner {
-  background: #F0FDF4;
-  border: 1px dashed #86EFAC;
+  background: #EEF7F2;
+  border: 1px dashed #D1E7DC;
   border-radius: 12px;
   padding: 10px 14px;
   margin-bottom: 22px;
@@ -670,20 +670,20 @@
   justify-content: space-between;
   gap: 8px;
   font-size: 0.8125rem;
-  color: #166534;
+  color: #12402F;
 }
 
 .otp-simulated-banner strong {
   font-size: 1.05rem;
   letter-spacing: 3px;
-  color: #15803D;
+  color: #17543E;
   margin-left: 4px;
 }
 
 .btn-copy-otp {
-  background: #DCFCE7;
-  border: 1px solid #86EFAC;
-  color: #166534;
+  background: #D4EAE0;
+  border: 1px solid #D1E7DC;
+  color: #12402F;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 5px 10px;
@@ -693,7 +693,7 @@
 }
 
 .btn-copy-otp:hover {
-  background: #BBF7D0;
+  background: #D1E7DC;
 }
 
 .otp-inputs-row {

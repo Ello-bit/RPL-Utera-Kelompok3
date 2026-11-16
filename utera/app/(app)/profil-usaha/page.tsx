@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { unggahFotoUsaha, hapusFotoUsaha, validasiFoto } from '@/lib/foto-usaha'
 import { getActiveProfilId, setActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import { calculateSkorPRD } from '@/lib/skor'
 import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
@@ -46,6 +48,12 @@ export default function ProfilUsahaPage() {
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
+  // Foto profil usaha (Supabase Storage)
+  const router = useRouter()
+  const fotoInputRef = useRef<HTMLInputElement>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+
   // Verification states
   const [verifRecord, setVerifRecord] = useState<VerificationRequest | null>(null)
   const [isVerifModalOpen, setIsVerifModalOpen] = useState(false)
@@ -87,6 +95,7 @@ export default function ProfilUsahaPage() {
         return
       }
 
+      setUserId(user.id)
       let loadedProfilId: string | null = null
       // 1. Fetch user's profiles
       const { data: profData } = await supabase
@@ -249,6 +258,55 @@ export default function ProfilUsahaPage() {
   const showToast = (type: 'success' | 'error' | 'warning', text: string) => {
     setToast({ type, text })
     setTimeout(() => setToast(null), 3500)
+  }
+
+  // Simpan foto_url baru ke daftar profil & profil aktif, lalu segarkan sidebar (layout server)
+  const terapkanFoto = (url: string | null) => {
+    setActiveProfile((p) => ({ ...p, foto_url: url }))
+    setProfiles((list) => list.map((p) => (p.id === activeProfile.id ? { ...p, foto_url: url } : p)))
+    router.refresh()
+  }
+
+  const handlePilihFoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // agar file yang sama bisa dipilih ulang
+    if (!file) return
+    if (!userId || !activeProfile.id) {
+      showToast('warning', 'Simpan profil usaha terlebih dahulu sebelum menambahkan foto.')
+      return
+    }
+    const salah = validasiFoto(file)
+    if (salah) {
+      showToast('error', salah)
+      return
+    }
+    setUploadingFoto(true)
+    const { url, error } = await unggahFotoUsaha(supabase, {
+      userId,
+      profilId: activeProfile.id,
+      file,
+      fotoLama: activeProfile.foto_url,
+    })
+    setUploadingFoto(false)
+    if (error || !url) {
+      showToast('error', 'Gagal mengunggah foto: ' + (error ?? 'tidak diketahui'))
+      return
+    }
+    terapkanFoto(url)
+    showToast('success', 'Foto profil usaha diperbarui.')
+  }
+
+  const handleHapusFoto = async () => {
+    if (!activeProfile.id) return
+    setUploadingFoto(true)
+    const error = await hapusFotoUsaha(supabase, { profilId: activeProfile.id, fotoUrl: activeProfile.foto_url })
+    setUploadingFoto(false)
+    if (error) {
+      showToast('error', 'Gagal menghapus foto: ' + error)
+      return
+    }
+    terapkanFoto(null)
+    showToast('success', 'Foto profil usaha dihapus.')
   }
 
   const handleSave = async () => {
@@ -423,7 +481,7 @@ export default function ProfilUsahaPage() {
           </div>
           <span className="prd-badge">
             <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>verified_user</span>
-            F3 · F14 PRD UTERA
+            Profil & Legalitas
           </span>
         </div>
 
@@ -444,10 +502,36 @@ export default function ProfilUsahaPage() {
       {/* PROFILE HEADER CARD */}
       <div className="profile-header-card">
         <div className="profile-avatar-wrap">
-          <div className="profile-avatar">{initials}</div>
-          <div className="profile-avatar-edit" title="Ganti foto profil">
-            <span className="material-symbols-rounded">edit</span>
-          </div>
+          <button
+            type="button"
+            className="profile-avatar"
+            onClick={() => fotoInputRef.current?.click()}
+            disabled={uploadingFoto || isGuest}
+            aria-label={activeProfile.foto_url ? 'Ganti foto profil usaha' : 'Tambah foto profil usaha'}
+            title="JPG, PNG, atau WebP, maksimal 2 MB"
+          >
+            {activeProfile.foto_url ? (
+              <img src={activeProfile.foto_url} alt={`Foto ${activeProfile.nama_usaha || 'usaha'}`} className="profile-avatar-img" />
+            ) : (
+              initials
+            )}
+            {uploadingFoto && <span className="profile-avatar-loading">…</span>}
+          </button>
+          <span className="profile-avatar-edit" aria-hidden="true">
+            <span className="material-symbols-rounded">{activeProfile.foto_url ? 'edit' : 'photo_camera'}</span>
+          </span>
+          <input
+            ref={fotoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handlePilihFoto}
+            hidden
+          />
+          {activeProfile.foto_url && !uploadingFoto && (
+            <button type="button" className="profile-avatar-remove" onClick={handleHapusFoto}>
+              Hapus foto
+            </button>
+          )}
         </div>
 
         <div className="profile-header-info">
@@ -480,7 +564,7 @@ export default function ProfilUsahaPage() {
               style={{
                 background:
                   verifRecord?.status === 'verified'
-                    ? '#DCFCE7'
+                    ? '#D4EAE0'
                     : verifRecord?.status === 'pending'
                     ? '#DBEAFE'
                     : verifRecord?.status === 'rejected'
@@ -488,7 +572,7 @@ export default function ProfilUsahaPage() {
                     : '#F5F5F4',
                 color:
                   verifRecord?.status === 'verified'
-                    ? '#15803D'
+                    ? '#17543E'
                     : verifRecord?.status === 'pending'
                     ? '#1D4ED8'
                     : verifRecord?.status === 'rejected'
@@ -553,7 +637,7 @@ export default function ProfilUsahaPage() {
         style={{
           background:
             verifRecord?.status === 'verified'
-              ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)'
+              ? 'linear-gradient(135deg, #EEF7F2 0%, #D4EAE0 100%)'
               : verifRecord?.status === 'pending'
               ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
               : verifRecord?.status === 'rejected'
@@ -561,7 +645,7 @@ export default function ProfilUsahaPage() {
               : 'linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)',
           border:
             verifRecord?.status === 'verified'
-              ? '1.5px solid #86EFAC'
+              ? '1.5px solid #D1E7DC'
               : verifRecord?.status === 'pending'
               ? '1.5px solid #93C5FD'
               : verifRecord?.status === 'rejected'
@@ -585,7 +669,7 @@ export default function ProfilUsahaPage() {
               borderRadius: '12px',
               background:
                 verifRecord?.status === 'verified'
-                  ? '#16A34A'
+                  ? '#1F6B4F'
                   : verifRecord?.status === 'pending'
                   ? '#2563EB'
                   : verifRecord?.status === 'rejected'
@@ -628,7 +712,7 @@ export default function ProfilUsahaPage() {
                   borderRadius: '9999px',
                   background:
                     verifRecord?.status === 'verified'
-                      ? '#DCFCE7'
+                      ? '#D4EAE0'
                       : verifRecord?.status === 'pending'
                       ? '#DBEAFE'
                       : verifRecord?.status === 'rejected'
@@ -636,7 +720,7 @@ export default function ProfilUsahaPage() {
                       : '#E7E5E4',
                   color:
                     verifRecord?.status === 'verified'
-                      ? '#15803D'
+                      ? '#17543E'
                       : verifRecord?.status === 'pending'
                       ? '#1D4ED8'
                       : verifRecord?.status === 'rejected'
@@ -670,7 +754,7 @@ export default function ProfilUsahaPage() {
         <div>
           {verifRecord?.status === 'verified' ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#15803D', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#17543E', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified_user</span>
                 Sertifikat Kredibel Aktif
               </span>
@@ -888,7 +972,7 @@ export default function ProfilUsahaPage() {
             <span className="material-symbols-rounded">gavel</span>
             <div>
               <h3>Status Legalitas</h3>
-              <p>F14 PRD — Dokumen legal yang mendukung pengajuan KUR</p>
+              <p>Dokumen legal yang mendukung pengajuan KUR</p>
             </div>
           </div>
         </div>
@@ -1124,13 +1208,13 @@ export default function ProfilUsahaPage() {
                       width: '64px',
                       height: '64px',
                       borderRadius: '50%',
-                      background: '#ECFDF5',
-                      color: '#059669',
+                      background: '#EEF7F2',
+                      color: '#1F6B4F',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginBottom: '12px',
-                      border: '2px solid #A7F3D0',
+                      border: '2px solid #D1E7DC',
                     }}
                   >
                     <span className="material-symbols-rounded" style={{ fontSize: '36px' }}>verified</span>
@@ -1180,7 +1264,7 @@ export default function ProfilUsahaPage() {
                     </div>
                     <div>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Legalitas NIB</span>
-                      <strong style={{ color: '#059669' }}>{hasNib ? `Terdaftar (${nomorNib})` : 'Belum Ada'}</strong>
+                      <strong style={{ color: '#1F6B4F' }}>{hasNib ? `Terdaftar (${nomorNib})` : 'Belum Ada'}</strong>
                     </div>
                     <div>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Tanggal Disahkan</span>
@@ -1286,8 +1370,8 @@ export default function ProfilUsahaPage() {
                       width: '44px',
                       height: '44px',
                       borderRadius: '10px',
-                      background: '#ECFDF5',
-                      color: '#059669',
+                      background: '#EEF7F2',
+                      color: '#1F6B4F',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1331,7 +1415,7 @@ export default function ProfilUsahaPage() {
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)' }}>Legalitas NIB: </span>
-                      <strong style={{ color: hasNib ? '#059669' : '#D97706' }}>
+                      <strong style={{ color: hasNib ? '#1F6B4F' : '#D97706' }}>
                         {hasNib ? `✓ Ada (${nomorNib})` : '○ Belum diisi'}
                       </strong>
                     </div>
@@ -1385,12 +1469,12 @@ export default function ProfilUsahaPage() {
 
                 <div
                   style={{
-                    background: '#F0FDF4',
-                    border: '1px solid #BBF7D0',
+                    background: '#EEF7F2',
+                    border: '1px solid #D1E7DC',
                     borderRadius: '8px',
                     padding: '10px 12px',
                     fontSize: '0.78rem',
-                    color: '#15803D',
+                    color: '#17543E',
                     marginBottom: '20px',
                     display: 'flex',
                     alignItems: 'center',

@@ -102,6 +102,37 @@ export function calculateInstallment(
   return { total, pokok, bunga, totalKumulatif }
 }
 
+/**
+ * Status cek kelayakan KUR sesuai PRD:
+ * - Memenuhi syarat: syarat administratif terpenuhi dan skor Cukup/Baik (>= 40)
+ * - Belum siap: syarat administratif terpenuhi tetapi skor Rendah (< 40)
+ * - Belum memenuhi: ada syarat administratif yang gagal (disebutkan satu per satu)
+ * Syarat yang bisa dicek otomatis: usaha berjalan >= 6 bulan (bulan tercatat) dan punya NIB/SKU.
+ * Syarat deklarasi (usia, SLIK OJK, kredit lain) tidak bisa diverifikasi UTERA.
+ */
+export interface KelayakanKur {
+  status: 'Memenuhi syarat' | 'Belum siap' | 'Belum memenuhi'
+  siap: boolean
+  kekurangan: string[]
+}
+
+export function evaluateKelayakanKur(input: {
+  skor: number
+  bulanTercatat: number
+  punyaNibAtauSku: boolean
+}): KelayakanKur {
+  const kekurangan: string[] = []
+  if (input.bulanTercatat < 6) {
+    kekurangan.push(`Riwayat kas baru ${input.bulanTercatat} dari 6 bulan`)
+  }
+  if (!input.punyaNibAtauSku) kekurangan.push('Belum ada NIB atau SKU di Legalitas')
+  if (kekurangan.length > 0) return { status: 'Belum memenuhi', siap: false, kekurangan }
+  if (input.skor < 40) {
+    return { status: 'Belum siap', siap: false, kekurangan: ['Skor kelayakan masih Rendah (di bawah 40)'] }
+  }
+  return { status: 'Memenuhi syarat', siap: true, kekurangan: [] }
+}
+
 export interface GuardrailCheck {
   guardrailLimit: number
   ratio: number
@@ -124,7 +155,7 @@ export function evaluateGuardrail(
 
   if (ratio <= 25) {
     statusText = 'Kondisi Aman'
-    color = '#10B981'
+    color = '#2A8865'
   } else if (ratio <= 30) {
     statusText = 'Batas Waspada'
     color = '#C98A1B'

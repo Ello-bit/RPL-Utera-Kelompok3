@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, formatRupiah } from '@/lib/kas'
-import { calculateInstallment, evaluateGuardrail, KUR_TIERS, type KurTier } from '@/lib/kur'
+import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS, type KurTier } from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import './simulasi-kur.css'
@@ -36,6 +36,7 @@ export default function SimulasiKurPage() {
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [profilId, setProfilId] = useState<string | null>(null)
+  const [punyaNibAtauSku, setPunyaNibAtauSku] = useState(false)
 
   // Simulation Controls
   const [selectedTierId, setSelectedTierId] = useState<string>('kur-mikro')
@@ -61,6 +62,19 @@ export default function SimulasiKurPage() {
         .order('created_at', { ascending: false })
       const active = pickActiveProfile(profs ?? [], getActiveProfilId())
       setProfilId(active?.id ?? null)
+
+      // Syarat administratif KUR: NIB atau SKU yang sudah terisi di Legalitas
+      if (active) {
+        const { data: docs } = await supabase
+          .from('legalitas_dokumen')
+          .select('kategori, nomor_dokumen, file_url')
+          .eq('profil_id', active.id)
+        setPunyaNibAtauSku(
+          (docs ?? []).some(
+            (d) => ['NIB', 'SKU'].includes((d.kategori || '').toUpperCase()) && (d.nomor_dokumen || d.file_url)
+          )
+        )
+      }
 
       let query = supabase.from('transaksi_kas').select('*')
       if (active) query = query.eq('profil_id', active.id)
@@ -118,7 +132,13 @@ export default function SimulasiKurPage() {
   const totalSavings = monthlySavings * tenorMonths
 
   // Score estimate
-  const estimatedScore = calculateSkorPRD(transactions, isGuest).total
+  const skorDetail = calculateSkorPRD(transactions, isGuest)
+  const estimatedScore = skorDetail.total
+  const kelayakan = evaluateKelayakanKur({
+    skor: estimatedScore,
+    bulanTercatat: skorDetail.monthlyData.filter((m) => m.tercatat).length,
+    punyaNibAtauSku,
+  })
 
   const handleTierChange = (tierId: string) => {
     setSelectedTierId(tierId)
@@ -192,7 +212,7 @@ export default function SimulasiKurPage() {
             <span className="material-symbols-rounded" style={{ fontSize: '15px', color: 'var(--primary)' }}>
               account_balance
             </span>
-            <span>Pilar 2 PRD UTERA — Fasilitasi KUR Perbankan &amp; KUR Planner</span>
+            <span>Persiapan Pengajuan KUR</span>
           </div>
           <h1 className="dash-heading">Simulasi KUR 2026 &amp; Rencana Pembiayaan Usaha</h1>
           <p className="dash-subheading">
@@ -203,7 +223,7 @@ export default function SimulasiKurPage() {
         <div className="dash-header-actions">
           <div className="source-badge">
             <span className="source-dot"></span>
-            <span>Kriteria Resmi KUR Himbara 2026 • Bunga Subsidi 3% - 6%</span>
+            <span>Kriteria KUR BRI 2026 • Bunga 6% per tahun</span>
           </div>
         </div>
       </div>
@@ -336,11 +356,19 @@ export default function SimulasiKurPage() {
             </div>
           </div>
           <div className="metric-value-row">
-            <span className="metric-value text-main" id="val-status-pengajuan">Memenuhi</span>
-            <span className="badge-status-safe" id="badge-status-pengajuan">Siap Diajukan</span>
+            <span className="metric-value text-main" id="val-status-pengajuan">{kelayakan.status}</span>
+            <span
+              className="badge-status-safe"
+              id="badge-status-pengajuan"
+              style={kelayakan.siap ? undefined : { background: '#FEF3C7', color: '#92400E' }}
+            >
+              {kelayakan.siap ? 'Siap Diajukan' : 'Perlu Dilengkapi'}
+            </span>
           </div>
           <p className="metric-caption" id="val-desc-pengajuan">
-            Usaha &gt; 6 bln, NIB aktif, SLIK bersih &amp; dokumen lengkap.
+            {kelayakan.siap
+              ? 'Riwayat kas 6 bulan dan NIB/SKU terpenuhi. Pastikan juga syarat usia dan SLIK OJK.'
+              : kelayakan.kekurangan.join(' • ')}
           </p>
         </div>
       </section>
@@ -481,7 +509,7 @@ export default function SimulasiKurPage() {
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi KUR ke Database'}</span>
               </button>
               {saveSuccess && (
-                <span style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.85rem', color: '#2A8865', fontWeight: 600 }}>
                   ✓ {saveSuccess}
                 </span>
               )}

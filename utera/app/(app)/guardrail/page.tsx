@@ -121,9 +121,15 @@ export default function GuardrailPage() {
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
 
   // Installment calculation for selected program
+  // KUR memakai anuitas; koperasi memakai bunga jasa flat (bunga dari pokok awal tiap bulan)
+  const isFlat = currentProgram.id === 'koperasi'
   const calc = useMemo(() => {
-    return calculateInstallment(plafon, currentProgram.rate, tenorMonths)
-  }, [plafon, currentProgram.rate, tenorMonths])
+    if (!isFlat) return calculateInstallment(plafon, currentProgram.rate, tenorMonths)
+    if (plafon <= 0 || tenorMonths <= 0) return { total: 0, pokok: 0, bunga: 0, totalKumulatif: 0 }
+    const pokok = Math.round(plafon / tenorMonths)
+    const bunga = Math.round((plafon * currentProgram.rate) / 12)
+    return { total: pokok + bunga, pokok, bunga, totalKumulatif: (pokok + bunga) * tenorMonths }
+  }, [plafon, currentProgram.rate, tenorMonths, isFlat])
 
   // Guardrail evaluation
   const guard = useMemo(() => {
@@ -177,7 +183,7 @@ export default function GuardrailPage() {
         angsuran_bulanan: calc.total,
         rasio_kas: Math.round(guard.ratio * 10) / 10,
         status_guardrail: guard.isSafe ? (guard.ratio <= 25 ? 'aman' : 'waspada') : 'melebihi',
-        catatan: `Guardrail 30%: ${guard.statusText} (${guard.ratio.toFixed(1)}% dari laba)`,
+        catatan: `Batas aman cicilan 30%: ${guard.statusText} (${guard.ratio.toFixed(1)}% dari laba)`,
       })
 
       if (error) throw error
@@ -199,9 +205,9 @@ export default function GuardrailPage() {
             <span className="material-symbols-rounded" style={{ fontSize: '15px', color: 'var(--primary)' }}>
               shield
             </span>
-            <span>Pilar 3 PRD UTERA — Keamanan Pembiayaan Usaha</span>
+            <span>Keamanan Pembiayaan Usaha</span>
           </div>
-          <h1 className="dash-heading">Guardrail 30% Arus Kas &amp; Simulasi Pembiayaan</h1>
+          <h1 className="dash-heading">Batas Aman Cicilan &amp; Simulasi Pinjaman</h1>
           <p className="dash-subheading">
             Kalkulasi batas aman beban angsuran cicilan kredit perbankan agar likuiditas kas operasional warung tetap terjaga.
           </p>
@@ -238,7 +244,7 @@ export default function GuardrailPage() {
                 Mode Simulasi Awal — Belum Ada Catatan Kas Operasional
               </strong>
               <span style={{ color: '#1E3A8A', fontSize: '0.85rem' }}>
-                Laba bersih kas Anda saat ini masih Rp 0. Anda tetap dapat menggeser kalkulator simulasi di bawah untuk melihat estimasi angsuran, namun rasio Guardrail 30% akan aktif penuh setelah Anda mencatat transaksi di Buku Kas Warung.
+                Laba bersih kas Anda saat ini masih Rp 0. Anda tetap dapat menggeser kalkulator simulasi di bawah untuk melihat estimasi angsuran, namun batas aman cicilan 30% akan aktif penuh setelah Anda mencatat transaksi di Buku Kas Warung.
               </span>
             </div>
           </div>
@@ -274,7 +280,7 @@ export default function GuardrailPage() {
               <span className="material-symbols-rounded trend-icon">
                 {transactions.length > 0 ? 'trending_up' : 'info'}
               </span>
-              <span>{transactions.length > 0 ? '+14.2%' : 'Belum Ada Transaksi'}</span>
+              <span>{transactions.length > 0 ? 'Dari Buku Kas' : 'Belum Ada Transaksi'}</span>
             </span>
           </div>
           <p className="metric-caption">Rata-rata dari catatan Buku Kas Warung aktif.</p>
@@ -446,12 +452,12 @@ export default function GuardrailPage() {
                 <span className="setting-label">Suku Bunga / Jasa Efektif</span>
                 <div className="rate-badge">
                   <strong id="display-interest-rate">{currentProgram.rateDisplay}</strong>
-                  <small>per tahun (flat anuitas)</small>
+                  <small>per tahun</small>
                 </div>
               </div>
               <div className="setting-col">
                 <span className="setting-label">Metode Perhitungan</span>
-                <div className="method-text">Sistem Anuitas Resmi Perbankan</div>
+                <div className="method-text">{isFlat ? 'Bunga flat (jasa koperasi)' : 'Anuitas (cicilan tetap)'}</div>
               </div>
             </div>
 
@@ -467,7 +473,7 @@ export default function GuardrailPage() {
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi ke Database'}</span>
               </button>
               {saveSuccess && (
-                <span style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 600 }}>
+                <span style={{ fontSize: '0.85rem', color: '#2A8865', fontWeight: 600 }}>
                   ✓ {saveSuccess}
                 </span>
               )}
@@ -585,7 +591,7 @@ export default function GuardrailPage() {
         <div className="dash-panel panel-comparison">
           <div className="panel-header">
             <div>
-              <h2 className="panel-title">Tabel Perbandingan Opsi Pembiayaan (F17 PRD)</h2>
+              <h2 className="panel-title">Perbandingan Pilihan Pinjaman</h2>
               <p className="panel-subtitle">Bandingkan beban cicilan riil dari berbagai fasilitas kredit terhadap kemampuan bayar usaha</p>
             </div>
           </div>
@@ -599,7 +605,7 @@ export default function GuardrailPage() {
                   <th>Suku Bunga</th>
                   <th>Tenor</th>
                   <th className="text-right">Cicilan / Bln</th>
-                  <th className="text-center">Status Guardrail</th>
+                  <th className="text-center">Status Cicilan</th>
                 </tr>
               </thead>
               <tbody id="comparison-tbody">
@@ -686,7 +692,7 @@ export default function GuardrailPage() {
         <div className="dash-panel panel-planner">
           <div className="panel-header">
             <div>
-              <h2 className="panel-title">KUR Planner: Alokasi Dana (F10 PRD)</h2>
+              <h2 className="panel-title">Rencana Penggunaan Dana KUR</h2>
               <p className="panel-subtitle">Rencana produktif penggunaan modal kerja</p>
             </div>
           </div>
@@ -699,7 +705,7 @@ export default function GuardrailPage() {
                   <strong className="tabular-nums">{formatRupiah(plafon * 0.60)} (60%)</strong>
                 </div>
                 <div className="alloc-track" style={{ height: '8px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div className="alloc-fill bg-emerald" style={{ width: '60%', height: '100%', background: '#10B981' }}></div>
+                  <div className="alloc-fill bg-emerald" style={{ width: '60%', height: '100%', background: '#2A8865' }}></div>
                 </div>
               </div>
 

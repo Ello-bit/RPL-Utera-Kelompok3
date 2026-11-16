@@ -9,9 +9,9 @@
   --primary-soft: #EEF7F2;
   --primary-border: #D1E7DC;
 
-  --emerald: #10B981;
-  --emerald-soft: #ECFDF5;
-  --emerald-border: #A7F3D0;
+  --emerald: #2A8865;
+  --emerald-soft: #EEF7F2;
+  --emerald-border: #D1E7DC;
 
   --gold: #C98A1B;
   --gold-soft: #FEF7EC;
@@ -307,9 +307,9 @@ button, input, select, textarea {
 }
 .nav-pill-good {
   margin-left: auto;
-  background: #ECFDF5;
-  color: #10B981;
-  border: 1px solid #A7F3D0;
+  background: #EEF7F2;
+  color: #2A8865;
+  border: 1px solid #D1E7DC;
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -1307,8 +1307,8 @@ button, input, select, textarea {
 }
 
 .guardrail-card {
-  border-color: #A7F3D0;
-  background: #F0FDF4;
+  border-color: #D1E7DC;
+  background: #EEF7F2;
 }
 
 .kpi-label {
@@ -1583,7 +1583,7 @@ button, input, select, textarea {
   animation: toastSlide 0.2s ease forwards;
 }
 
-.toast-success { background: #14532D; }
+.toast-success { background: #12402F; }
 .toast-info { background: #1E3A8A; }
 .toast-warning { background: #854D0E; }
 .toast-error { background: #7F1D1D; }
@@ -1705,9 +1705,11 @@ button, input, select, textarea {
    @MEDIA PRINT — HIGH QUALITY A4 PORTRAIT SPECIFICATION
    ============================================================ */
 @media print {
+  /* Margin halaman 0 menghilangkan header/footer browser (tanggal, URL, nomor halaman);
+     jarak tepi kertas dipindah ke padding .laporan-page di bawah. */
   @page {
     size: A4 portrait;
-    margin: 12mm 15mm;
+    margin: 0;
   }
 
   *, *::before, *::after {
@@ -1716,6 +1718,9 @@ button, input, select, textarea {
   }
 
   /* Hide app shell chrome and screen controls */
+  .no-print,
+  .btn-mobile-menu,
+  nextjs-portal,
   .sidebar,
   .top-bar,
   .sidebar-backdrop,
@@ -1744,6 +1749,36 @@ button, input, select, textarea {
 
   #view-tab-preview {
     display: block !important;
+  }
+
+  /* Halaman laporan: hanya kertas laporan yang tercetak, tanpa bingkai layar */
+  .laporan-page {
+    padding: 14mm 16mm !important;
+    max-width: 100% !important;
+    /* jarak tepi berulang di setiap halaman, bukan hanya halaman pertama */
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  #printable-report {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  #printable-report table,
+  #printable-report tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Warna latar (kotak ringkasan, header tabel) ikut tercetak */
+  #printable-report * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Tabel di HP dibuat bisa digeser (display:block); kembalikan ke tabel biasa saat cetak */
+  #printable-report table {
+    display: table !important;
+    width: 100% !important;
   }
 
   .doc-a4-sheet {

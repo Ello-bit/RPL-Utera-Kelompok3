@@ -6,6 +6,7 @@ import TopBar from './topbar'
 
 interface AppShellProps {
   businessName: string
+  fotoUrl?: string | null
   totalTx: number
   skor: number
   userEmail: string
@@ -16,6 +17,7 @@ interface AppShellProps {
 
 export default function AppShell({
   businessName,
+  fotoUrl = null,
   totalTx,
   skor,
   userEmail,
@@ -29,6 +31,7 @@ export default function AppShell({
     <div className="app-layout">
       <Sidebar
         businessName={businessName}
+        fotoUrl={fotoUrl}
         totalTx={totalTx}
         skor={skor}
         userEmail={userEmail}

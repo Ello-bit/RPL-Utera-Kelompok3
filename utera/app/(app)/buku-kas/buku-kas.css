@@ -14,10 +14,10 @@
   --slate-800: #1E293B;
   --slate-900: #0F172A;
 
-  --emerald: #10B981;
-  --emerald-light: #ECFDF5;
-  --emerald-dark: #059669;
-  --shadow-emerald: 0 4px 14px rgba(16, 185, 129, 0.35);
+  --emerald: #1F6B4F; /* = --primary (warna utama aplikasi) */
+  --emerald-light: #EEF7F2; /* = --primary-soft */
+  --emerald-dark: #17543E; /* = --primary-hover */
+  --shadow-emerald: 0 4px 14px rgba(31, 107, 79, 0.35);
 
   --terracotta: #B5532F;
   --terracotta-light: #FEF2F2;
@@ -121,7 +121,7 @@
 }
 
 .btn-emerald-primary {
-  background: linear-gradient(135deg, #10B981, #059669);
+  background: linear-gradient(135deg, #2A8865, #1F6B4F);
   color: var(--white);
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -131,8 +131,8 @@
 }
 
 .btn-emerald-primary:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, #1F6B4F, #17543E);
+  box-shadow: 0 6px 18px rgba(31, 107, 79, 0.45);
   transform: translateY(-1px);
 }
 
@@ -287,7 +287,7 @@
 .time-btn.is-active {
   background-color: var(--emerald);
   color: var(--white);
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 2px 6px rgba(31, 107, 79, 0.35);
 }
 
 /* SVG Chart Area */
@@ -608,7 +608,7 @@
 .numeric-input-card:focus-within {
   background-color: var(--white);
   border-color: var(--emerald);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.15);
 }
 
 .currency-prefix {
@@ -656,7 +656,7 @@
 .text-input-clean:focus {
   background-color: var(--white);
   border-color: var(--emerald);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.15);
 }
 
 /* Toast */
@@ -687,16 +687,22 @@
 
 /* Grafik batang bulanan */
 .chart-svg-wrapper { height: auto; min-height: 220px; }
-.kas-bars { display: flex; align-items: flex-end; justify-content: space-around; gap: 16px; height: 220px; padding: 28px 8px 0; overflow-x: auto; }
-.kas-bar-group { flex: 1; min-width: 90px; max-width: 160px; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.kas-bars { display: flex; align-items: flex-end; justify-content: space-around; gap: 16px; height: 220px; padding: 28px 8px 0; overflow-x: auto; overflow-y: hidden; }
+.kas-bar-net { white-space: nowrap; }
+.kas-bar-group { flex: 1; min-width: 64px; max-width: 160px; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .kas-bar-pair { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 8px; border-bottom: 1px solid var(--slate-200); }
 .kas-bar { position: relative; width: 34px; max-width: 45%; border: 0; padding: 0; border-radius: 6px 6px 0 0; cursor: pointer; transition: height .4s ease, filter .15s; }
-.kas-bar-in { background: linear-gradient(180deg, #10B981, #17543E); }
+.kas-bar-in { background: linear-gradient(180deg, #2A8865, #1F6B4F); }
 .kas-bar-out { background: #CBD5E1; }
 .kas-bar:hover { filter: brightness(.92); }
 .kas-bar:focus-visible { outline: 2px solid var(--emerald); outline-offset: 2px; }
 .kas-bar-tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #0F172A; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .15s; z-index: 5; }
 .kas-bar:hover .kas-bar-tip, .kas-bar:focus-visible .kas-bar-tip, .kas-bar.show-tip .kas-bar-tip { opacity: 1; visibility: visible; }
+/* Tooltip tersembunyi tidak ikut dihitung lebar, jadi tidak memunculkan scrollbar */
+.kas-bar-tip { display: none; }
+.kas-bar:hover .kas-bar-tip, .kas-bar:focus-visible .kas-bar-tip, .kas-bar.show-tip .kas-bar-tip { display: block; }
+/* Tooltip batang paling kanan dibuka ke kiri supaya tidak keluar kotak */
+.kas-bar-group:last-child .kas-bar-out .kas-bar-tip { left: auto; right: 0; transform: none; }
 .kas-bar-label { font-size: 12px; font-weight: 600; color: var(--slate-500, #64748B); }
 .kas-bar-net { font-size: 11px; font-weight: 700; color: #17543E; }
-.kas-bar-net.neg { color: #DC2626; }
+.kas-bar-net.neg { color: var(--terracotta); }

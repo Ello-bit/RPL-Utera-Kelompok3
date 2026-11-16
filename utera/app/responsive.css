@@ -6,6 +6,27 @@ html, body { max-width: 100%; }
 body { overflow-x: clip; }
 img, svg, video, canvas { max-width: 100%; }
 
+/* Font konsisten: browser tidak menurunkan font ke tombol & kolom isian secara otomatis,
+   sehingga sebagian tombol tampil dengan Arial. Semua kontrol ikut font halaman. */
+button, input, select, textarea, optgroup {
+  font-family: inherit;
+}
+
+/* Judul & subjudul halaman aplikasi seragam di semua halaman */
+body .main-content h1 { font-size: 1.5rem; font-weight: 800; }
+body .main-content h1 + p { font-size: 0.875rem; }
+
+/* Dashboard saat data masih dimuat: angka Rp 0 sementara dibuat samar */
+.dashboard-scroll-wrap[data-loading="true"] .metrics-grid,
+.dashboard-scroll-wrap[data-loading="true"] .charts-split-grid,
+.dashboard-scroll-wrap[data-loading="true"] .dash-bottom-grid,
+.dashboard-grid[data-loading="true"] .commission-grid-card,
+.dashboard-grid[data-loading="true"] .selector-card-group {
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
 /* Logo UTERA di dalam kotak hijau brand (landing, sidebar, halaman masuk) */
 .brand-logo-img { width: 78%; height: 78%; object-fit: contain; display: block; }
 body .brand-badge,
@@ -122,11 +143,13 @@ body .brand-symbol { overflow: hidden; padding: 0; }
 
   /* Landing */
   body .container { padding-left: 16px; padding-right: 16px; }
+  body .sim-grid { grid-template-columns: minmax(0, 1fr); }
   body .hero-section .container,
   body .hero-grid { grid-template-columns: minmax(0, 1fr); }
 
-  /* Auth */
+  /* Auth: di HP formulir masuk langsung terlihat; panel ilustrasi disembunyikan */
   body .auth-card { margin: 12px; }
+  body .auth-visual-panel { display: none; }
   body .auth-mode-tabs { grid-template-columns: 1fr 1fr; }
 }
 
@@ -149,7 +172,7 @@ body .brand-symbol { overflow: hidden; padding: 0; }
   }
   body .chart-big-metric,
   body .chart-big-number { font-size: 1.6rem; }
-  body .page-main-heading, body .page-title { font-size: 1.35rem; }
+  body .page-main-heading, body .page-title, body .main-content h1 { font-size: 1.35rem; }
   body .heading-hero { font-size: 1.9rem; }
   body .heading-section { font-size: 1.6rem; }
 }

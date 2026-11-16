@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useLogout } from './use-logout'
 
 interface TopBarProps {
   businessName: string
@@ -40,8 +40,8 @@ const DEFAULT_ADMIN_NOTIFS: NotificationItem[] = [
     recommendation: 'Buka Direktori UMKM untuk meninjau data usaha yang terdaftar dan memeriksa status verifikasi mitra binaan.',
     time: 'Baru saja',
     icon: 'admin_panel_settings',
-    iconBg: '#ECFDF5',
-    iconColor: '#059669',
+    iconBg: '#EEF7F2',
+    iconColor: '#1F6B4F',
     href: '/admin?tab=direktori',
     actionLabel: 'Buka Direktori UMKM',
     read: false,
@@ -74,8 +74,8 @@ const DEFAULT_USER_NOTIFS: NotificationItem[] = [
     recommendation: 'Langkah pertama: Buka menu Profil Usaha untuk melengkapi nama usaha dan data pemilik, kemudian catat transaksi pertama Anda di Buku Kas Warung.',
     time: 'Baru saja',
     icon: 'waving_hand',
-    iconBg: '#ECFDF5',
-    iconColor: '#059669',
+    iconBg: '#EEF7F2',
+    iconColor: '#1F6B4F',
     href: '/profil-usaha',
     actionLabel: 'Lengkapi Profil Usaha Saya',
     read: false,
@@ -106,7 +106,6 @@ export default function TopBar({
   onToggleMobileMenu,
 }: TopBarProps) {
   const router = useRouter()
-  const supabase = createClient()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -231,21 +230,12 @@ export default function TopBar({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  async function handleLogout() {
-    if (!confirm('Apakah Anda yakin ingin keluar dari akun UTERA?')) return
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      // Sesi di server mungkin sudah tidak ada; tetap hapus sesi lokal agar pengguna benar-benar keluar.
-      await supabase.auth.signOut({ scope: 'local' })
-    }
-    // Navigasi penuh (bukan router.push) agar cache router Next.js yang masih menyimpan
-    // halaman versi "sudah login" ikut dibuang dan middleware membaca cookie yang baru.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- logout butuh muat ulang penuh
-    window.location.assign('/auth?mode=login')
-  }
+  // Konfirmasi keluar memakai kotak dialog aplikasi (bukan window.confirm yang bisa diblokir browser)
+  const { requestLogout: handleLogout, logoutDialog } = useLogout()
 
   return (
     <>
+      {logoutDialog}
       <header className="top-bar">
         <div className="top-bar-left">
           <button
@@ -380,7 +370,7 @@ export default function TopBar({
 
           {/* Quick Action */}
           {isUserAdmin ? (
-            <Link href="/admin?tab=direktori" className="btn btn-primary btn-sm" id="btn-open-tx-modal" style={{ background: '#14532D', borderColor: '#14532D' }}>
+            <Link href="/admin?tab=direktori" className="btn btn-primary btn-sm" id="btn-open-tx-modal" style={{ background: '#12402F', borderColor: '#12402F' }}>
               <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>verified</span>
               <span>Verifikasi UMKM</span>
             </Link>
@@ -402,7 +392,7 @@ export default function TopBar({
               onClick={() => setDropdownOpen(!dropdownOpen)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
             >
-              <div className="user-avatar-circle" id="user-top-avatar" style={isUserAdmin ? { background: '#14532D', color: '#FCD34D' } : {}}>
+              <div className="user-avatar-circle" id="user-top-avatar" style={isUserAdmin ? { background: '#12402F', color: '#FCD34D' } : {}}>
                 {isUserAdmin ? (
                   <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>admin_panel_settings</span>
                 ) : (
@@ -431,7 +421,7 @@ export default function TopBar({
                 </span>
                 {isUserAdmin && (
                   <div style={{ marginTop: '6px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', color: '#065F46', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#EEF7F2', color: '#12402F', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
                       <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>verified_user</span>
                       Otoritas Pengawas Platform
                     </span>
@@ -538,7 +528,7 @@ export default function TopBar({
                     {isUserAdmin ? 'Pusat Pemberitahuan & Audit Pengawasan' : 'Pusat Notifikasi Finansial UMKM'}
                   </h3>
                   <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {isUserAdmin ? 'Rekam jejak kepatuhan perizinan NIB, audit kas global, dan evaluasi kredit bank.' : 'Informasi kenaikan skor PRD, batas aman cicilan 30%, dan pembukuan kas warung.'}
+                    {isUserAdmin ? 'Rekam jejak kepatuhan perizinan NIB, audit kas global, dan evaluasi kredit bank.' : 'Informasi kenaikan skor kelayakan, batas aman cicilan 30%, dan pembukuan kas warung.'}
                   </p>
                 </div>
               </div>
@@ -549,7 +539,7 @@ export default function TopBar({
                     type="button"
                     className="notif-tab-btn"
                     onClick={handleMarkAllRead}
-                    style={{ background: '#ECFDF5', color: '#065F46', borderColor: '#A7F3D0' }}
+                    style={{ background: '#EEF7F2', color: '#12402F', borderColor: '#D1E7DC' }}
                   >
                     ✓ Tandai Semua Dibaca
                   </button>
@@ -714,7 +704,7 @@ export default function TopBar({
                     {/* Action buttons */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <span className="material-symbols-rounded" style={{ fontSize: '16px', color: '#059669' }}>check_circle</span>
+                        <span className="material-symbols-rounded" style={{ fontSize: '16px', color: '#1F6B4F' }}>check_circle</span>
                         Telah tercatat dalam sistem keamanan platform
                       </span>
 

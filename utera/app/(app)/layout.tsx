@@ -20,7 +20,9 @@ export default async function AppShellLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  let businessName = 'Kopi Nusantara'
+  // Akun baru belum punya profil: jangan tampilkan nama usaha contoh
+  let businessName = 'Usaha Saya'
+  let fotoUrl: string | null = null
   let totalTx = 0
   let skor = 0
   let userEmail = user?.email || 'Tamu (Demo Mode)'
@@ -47,6 +49,7 @@ export default async function AppShellLayout({
       )
       if (firstProfile) {
         businessName = firstProfile.nama_usaha
+        fotoUrl = firstProfile.foto_url ?? null
         if (firstProfile.nama_pemilik) userName = firstProfile.nama_pemilik
       }
 
@@ -71,6 +74,7 @@ export default async function AppShellLayout({
   return (
     <AppShell
       businessName={businessName}
+      fotoUrl={fotoUrl}
       totalTx={totalTx}
       skor={skor}
       userEmail={userEmail}

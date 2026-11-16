@@ -188,7 +188,7 @@ export default function LegalitasPage() {
       {/* Header */}
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
             Legalitas & NIB
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
@@ -204,9 +204,9 @@ export default function LegalitasPage() {
             marginBottom: '20px',
             padding: '12px 16px',
             borderRadius: '8px',
-            background: message.type === 'success' ? '#ECFDF5' : '#FEF2F2',
-            color: message.type === 'success' ? '#065F46' : '#991B1B',
-            border: `1px solid ${message.type === 'success' ? '#A7F3D0' : '#FECACA'}`,
+            background: message.type === 'success' ? '#EEF7F2' : '#FEF2F2',
+            color: message.type === 'success' ? '#12402F' : '#991B1B',
+            border: `1px solid ${message.type === 'success' ? '#D1E7DC' : '#FECACA'}`,
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
@@ -224,8 +224,8 @@ export default function LegalitasPage() {
       {/* Status Readiness Banner */}
       <div
         style={{
-          background: summary.pct >= 75 ? '#ECFDF5' : '#FEF7EC',
-          border: `1px solid ${summary.pct >= 75 ? '#A7F3D0' : '#FDE68A'}`,
+          background: summary.pct >= 75 ? '#EEF7F2' : '#FEF7EC',
+          border: `1px solid ${summary.pct >= 75 ? '#D1E7DC' : '#FDE68A'}`,
           borderRadius: '16px',
           padding: '24px',
           marginBottom: '28px',
@@ -240,8 +240,8 @@ export default function LegalitasPage() {
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: summary.pct >= 75 ? '#D1FAE5' : '#FEF3C7',
-            color: summary.pct >= 75 ? '#059669' : '#D97706',
+            background: summary.pct >= 75 ? '#D4EAE0' : '#FEF3C7',
+            color: summary.pct >= 75 ? '#1F6B4F' : '#D97706',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -254,18 +254,18 @@ export default function LegalitasPage() {
         </div>
 
         <div>
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: summary.pct >= 75 ? '#065F46' : '#92400E', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: summary.pct >= 75 ? '#12402F' : '#92400E', marginBottom: '4px' }}>
             {summary.pct === 100
               ? 'Seluruh Dokumen Legalitas Lengkap'
               : `Kelengkapan Legalitas: ${summary.completed} dari ${summary.total} Dokumen Terverifikasi`}
           </h2>
-          <p style={{ color: summary.pct >= 75 ? '#047857' : '#B45309', fontSize: '0.85rem' }}>
+          <p style={{ color: summary.pct >= 75 ? '#17543E' : '#B45309', fontSize: '0.85rem' }}>
             NIB (Nomor Induk Berusaha) berbasis risiko OSS-RBA merupakan syarat mutlak pengajuan KUR di bank Himbara (BRI, BNI, Mandiri).
           </p>
         </div>
 
         <div style={{ textAlign: 'center', padding: '0 10px' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 900, color: summary.pct >= 75 ? '#059669' : '#D97706' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 900, color: summary.pct >= 75 ? '#1F6B4F' : '#D97706' }}>
             {summary.pct}%
           </div>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status Kesiapan</span>
@@ -330,8 +330,8 @@ export default function LegalitasPage() {
                       borderRadius: '8px',
                       fontSize: '0.75rem',
                       fontWeight: 800,
-                      background: uploaded ? '#ECFDF5' : '#FEF2F2',
-                      color: uploaded ? '#065F46' : '#991B1B',
+                      background: uploaded ? '#EEF7F2' : '#FEF2F2',
+                      color: uploaded ? '#12402F' : '#991B1B',
                     }}
                   >
                     {uploaded ? '✓ Terdaftar' : 'Belum Terdaftar'}

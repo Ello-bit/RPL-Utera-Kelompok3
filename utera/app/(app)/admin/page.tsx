@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
@@ -50,116 +49,27 @@ interface UmkmRecord {
   adminNote?: string
   certificateNumber?: string
   registeredAt: string
+  /** Komponen skor asli (K1-K4) dari transaksi usaha ini */
+  komponen?: { k1: number; k2: number; k3: number; k4: number }
 }
 
-const DEFAULT_ECOSYSTEM_DATA: UmkmRecord[] = [
-  {
-    id: 'seed-dewo',
-    namaUsaha: 'Kopi Galer',
-    namaPemilik: 'Dewo',
-    sektor: 'Kuliner & F&B',
-    telepon: '0812-3456-7890',
-    totalTx: 18,
-    pemasukan: 32_500_000,
-    pengeluaran: 14_200_000,
-    saldoKas: 18_300_000,
-    skor: 84,
-    statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)',
-    hasNib: true,
-    isVerified: true,
-    verificationStatus: 'verified',
-    certificateNumber: 'UTERA-VERIF-2026-084',
-    registeredAt: '2026-03-01',
-  },
-  {
-    id: 'seed-berkah',
-    namaUsaha: 'Warung Berkah Jaya',
-    namaPemilik: 'Ibu Siti Aminah',
-    sektor: 'Perdagangan & Retail',
-    telepon: '0857-9876-5432',
-    totalTx: 42,
-    pemasukan: 48_600_000,
-    pengeluaran: 27_100_000,
-    saldoKas: 21_500_000,
-    skor: 88,
-    statusKur: 'Siap KUR Mikro (s.d. Rp 100 Jt)',
-    hasNib: true,
-    isVerified: true,
-    verificationStatus: 'verified',
-    certificateNumber: 'UTERA-VERIF-2026-088',
-    registeredAt: '2026-02-14',
-  },
-  {
-    id: 'seed-nusantara',
-    namaUsaha: 'Kedai Kopi Nusantara',
-    namaPemilik: 'Budi Santoso',
-    sektor: 'Kuliner & F&B',
-    telepon: '0813-8821-4401',
-    totalTx: 24,
-    pemasukan: 28_400_000,
-    pengeluaran: 12_800_000,
-    saldoKas: 15_600_000,
-    skor: 82,
-    statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)',
-    hasNib: true,
-    isVerified: true,
-    verificationStatus: 'verified',
-    certificateNumber: 'UTERA-VERIF-2026-082',
-    registeredAt: '2026-01-20',
-  },
-  {
-    id: 'seed-konveksi',
-    namaUsaha: 'Konveksi Berkah Makmur',
-    namaPemilik: 'Haji Ahmad',
-    sektor: 'Konveksi & Fashion',
-    telepon: '0821-4455-6677',
-    totalTx: 15,
-    pemasukan: 55_000_000,
-    pengeluaran: 38_000_000,
-    saldoKas: 17_000_000,
-    skor: 74,
-    statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)',
-    hasNib: true,
-    isVerified: false,
-    verificationStatus: 'pending',
-    verificationType: 'Verifikasi Kredibilitas Lengkap (Siap KUR)',
-    verificationNotes: 'Mohon validasi NIB OSS kami dan catatan kas 15 transaksi untuk rekomendasi pengajuan KUR Mikro ke Bank BRI.',
-    verificationSubmittedAt: 'Hari ini, 10 menit lalu',
-    registeredAt: '2026-02-28',
-  },
-  {
-    id: 'seed-bengkel',
-    namaUsaha: 'Bengkel Motor Sejahtera',
-    namaPemilik: 'Eko Wahyudi',
-    sektor: 'Jasa & Layanan',
-    telepon: '0878-1122-3344',
-    totalTx: 9,
-    pemasukan: 16_500_000,
-    pengeluaran: 10_200_000,
-    saldoKas: 6_300_000,
-    skor: 62,
-    statusKur: 'Rekomendasi KUR Super Mikro (s.d. Rp 10 Jt)',
-    hasNib: false,
-    isVerified: false,
-    verificationStatus: 'unverified',
-    registeredAt: '2026-03-05',
-  },
-]
+function statusKurDariSkor(skor: number): string {
+  if (skor >= 70) return 'Baik: layak diajukan'
+  if (skor >= 40) return 'Cukup: layak diajukan'
+  return 'Rendah: perlu perbaikan keuangan'
+}
 
 export default function AdminPage() {
   const searchParams = useSearchParams()
-  const initialTab = searchParams.get('tab') || 'direktori'
+  const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<'direktori' | 'skor' | 'kas' | 'kur' | 'sistem'>(
-    initialTab as any || 'direktori'
-  )
-
-  useEffect(() => {
-    const tabParam = searchParams.get('tab')
-    if (tabParam && ['direktori', 'skor', 'kas', 'kur', 'sistem'].includes(tabParam)) {
-      setActiveTab(tabParam as any)
-    }
-  }, [searchParams])
+  // Tab aktif dibaca langsung dari URL (?tab=...), sehingga tombol tab di halaman ini
+  // dan menu sidebar selalu sinkron menyorot halaman yang sama.
+  type AdminTab = 'direktori' | 'skor' | 'kas' | 'kur' | 'sistem'
+  const TABS: AdminTab[] = ['direktori', 'skor', 'kas', 'kur', 'sistem']
+  const tabParam = searchParams.get('tab')
+  const activeTab: AdminTab = TABS.includes(tabParam as AdminTab) ? (tabParam as AdminTab) : 'direktori'
+  const setActiveTab = (tab: AdminTab) => router.replace(`/admin?tab=${tab}`, { scroll: false })
 
   const supabase = createClient()
 
@@ -196,7 +106,7 @@ export default function AdminPage() {
         pengeluaran: 0,
         saldoKas: 0,
         skor: v.skorPRD,
-        statusKur: v.skorPRD >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
+        statusKur: statusKurDariSkor(v.skorPRD),
         hasNib: v.hasNib,
         isVerified: v.status === 'verified',
         verificationStatus: v.status,
@@ -212,7 +122,11 @@ export default function AdminPage() {
     return result
   }
 
-  const [umkmData, setUmkmData] = useState<UmkmRecord[]>(applyVerifications(DEFAULT_ECOSYSTEM_DATA, []))
+  const [umkmData, setUmkmData] = useState<UmkmRecord[]>([])
+  const [allTxs, setAllTxs] = useState<TransaksiKas[]>([])
+  const [allSims, setAllSims] = useState<SimulasiKur[]>([])
+  const [liveLoading, setLiveLoading] = useState(true)
+  const [adminEmail, setAdminEmail] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [sectorFilter, setSectorFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState<UmkmStatusFilter>('ALL')
@@ -229,12 +143,17 @@ export default function AdminPage() {
   // Admin bisa membaca semua pengguna lewat policy "admin baca" (supabase/verifikasi.sql).
   useEffect(() => {
     async function fetchLive() {
-      const [{ data: profs }, { data: txs }, { data: docs }, verifRes] = await Promise.all([
+      // Email admin yang sedang login (sebelumnya tertulis tetap "admin123@utera.id")
+      supabase.auth.getUser().then(({ data }) => setAdminEmail(data.user?.email ?? ''))
+      const [{ data: profs }, { data: txs }, { data: docs }, { data: sims }, verifRes] = await Promise.all([
         supabase.from('profil_usaha').select('*'),
-        supabase.from('transaksi_kas').select('*'),
+        supabase.from('transaksi_kas').select('*').order('tanggal', { ascending: false }),
         supabase.from('legalitas_dokumen').select('*'),
+        supabase.from('simulasi_kur').select('*').order('created_at', { ascending: false }),
         fetchAllVerifications(supabase),
       ])
+      setAllTxs((txs ?? []) as TransaksiKas[])
+      setAllSims((sims ?? []) as SimulasiKur[])
       if (verifRes.error) showToastMsg('Gagal memuat pengajuan verifikasi: ' + verifRes.error)
 
       const liveRecords: UmkmRecord[] = (profs ?? []).map((p) => {
@@ -245,7 +164,8 @@ export default function AdminPage() {
           if (t.tipe === 'pemasukan') inc += Number(t.nominal)
           else exp += Number(t.nominal)
         })
-        const skor = calculateSkorPRD(usahaTxs).total
+        const skorDetail = calculateSkorPRD(usahaTxs)
+        const skor = skorDetail.total
         const hasNib = (docs ?? []).some(
           (d) => d.profil_id === p.id && d.kategori?.toUpperCase() === 'NIB' && Boolean(d.nomor_dokumen || d.file_url)
         )
@@ -261,7 +181,8 @@ export default function AdminPage() {
           pengeluaran: exp,
           saldoKas: inc - exp,
           skor,
-          statusKur: skor >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
+          statusKur: statusKurDariSkor(skor),
+          komponen: { k1: skorDetail.k1.score, k2: skorDetail.k2.score, k3: skorDetail.k3.score, k4: skorDetail.k4.score },
           hasNib,
           isVerified: false,
           verificationStatus: 'unverified',
@@ -269,10 +190,9 @@ export default function AdminPage() {
         }
       })
 
-      // Data contoh hanya tampil bila belum ada usaha asli sama sekali, agar antrean
-      // pengajuan tidak bercampur dengan baris palsu.
-      const base = liveRecords.length > 0 ? liveRecords : DEFAULT_ECOSYSTEM_DATA
-      setUmkmData(applyVerifications(base, verifRes.data))
+      // Hanya data asli; tidak ada lagi usaha contoh/fiktif.
+      setUmkmData(applyVerifications(liveRecords, verifRes.data))
+      setLiveLoading(false)
     }
 
     fetchLive()
@@ -340,6 +260,12 @@ export default function AdminPage() {
   const totalOmzet = umkmData.reduce((acc, curr) => acc + curr.pemasukan, 0)
   const avgSkor = Math.round(umkmData.reduce((acc, curr) => acc + curr.skor, 0) / (umkmData.length || 1))
   const verifiedCount = umkmData.filter((u) => u.isVerified).length
+  const namaUsahaById = useMemo(() => new Map(umkmData.map((u) => [u.id, u.namaUsaha])), [umkmData])
+  const denganKomponen = umkmData.filter((u) => u.komponen && u.totalTx > 0)
+  const rataKomponen = (k: 'k1' | 'k2' | 'k3' | 'k4') =>
+    denganKomponen.length === 0
+      ? 0
+      : Math.round((denganKomponen.reduce((a, u) => a + (u.komponen?.[k] ?? 0), 0) / denganKomponen.length) * 10) / 10
 
   return (
     <div className="dashboard-scroll-wrap" style={{ fontFamily: 'var(--font-family)' }}>
@@ -348,7 +274,7 @@ export default function AdminPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
             <h1 className="dash-heading">Pusat Pengawasan &amp; Kredibilitas UMKM</h1>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#14532D', color: '#FCD34D', padding: '3px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 800 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#12402F', color: '#FCD34D', padding: '3px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 800 }}>
               <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified_user</span>
               Otoritas Pengawas Platform
             </span>
@@ -361,19 +287,16 @@ export default function AdminPage() {
         <div className="dash-header-actions">
           <div className="date-range-badge">
             <span className="material-symbols-rounded date-icon">shield</span>
-            <span>Auditor: admin123@utera.id</span>
+            <span>Auditor: {adminEmail || '…'}</span>
           </div>
-
-          <Link href="/laporan-siap-bank" className="btn btn-outline btn-sm">
-            <span className="material-symbols-rounded btn-icon">download</span>
-            <span>Laporan Audit A4</span>
-          </Link>
+          {/* Tombol "Laporan Audit A4" dihapus: tombol itu membuka Laporan Siap Bank milik pemilik
+              usaha, dan untuk admin halaman itu menampilkan laporan usaha orang lain secara acak. */}
         </div>
       </div>
 
       {toastMsg && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 18px', borderRadius: '10px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', marginBottom: '20px', fontWeight: 700, fontSize: '0.875rem' }}>
-          <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#059669' }}>check_circle</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 18px', borderRadius: '10px', background: '#EEF7F2', color: '#12402F', border: '1px solid #D1E7DC', marginBottom: '20px', fontWeight: 700, fontSize: '0.875rem' }}>
+          <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#1F6B4F' }}>check_circle</span>
           <span>{toastMsg}</span>
         </div>
       )}
@@ -391,7 +314,7 @@ export default function AdminPage() {
             <span className="metric-value">{umkmData.length} Usaha</span>
             <span className="trend-pill trend-up">
               <span className="material-symbols-rounded trend-icon">check_circle</span>
-              <span>100% Aktif</span>
+              <span>{umkmData.filter((u) => u.totalTx > 0).length} mencatat kas</span>
             </span>
           </div>
           <p className="metric-subtext">Terdaftar dalam pengawasan platform</p>
@@ -423,9 +346,15 @@ export default function AdminPage() {
           </div>
           <div className="metric-value-row">
             <span className="metric-value">{avgSkor} / 100</span>
-            <span className="badge-kur-ready">Siap KUR</span>
+            {/* Kategori dari rata-rata skor: Baik >= 70, Cukup 40-69, Rendah < 40 */}
+            <span
+              className="badge-kur-ready"
+              style={avgSkor < 40 ? { background: '#FEF3C7', color: '#92400E' } : undefined}
+            >
+              {avgSkor >= 70 ? 'Baik' : avgSkor >= 40 ? 'Cukup' : 'Rendah'}
+            </span>
           </div>
-          <p className="metric-subtext">Formula resmi PRD (K1–K4 SAK EMKM)</p>
+          <p className="metric-subtext">Rata-rata skor kelayakan (4 komponen)</p>
         </div>
 
         <div className="metric-card">
@@ -484,7 +413,7 @@ export default function AdminPage() {
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, whiteSpace: 'nowrap' }}
         >
           <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>account_balance</span>
-          <span>Pengawasan KUR &amp; Guardrail 30%</span>
+          <span>Pengawasan KUR &amp; Batas Cicilan</span>
         </button>
 
         <button
@@ -639,7 +568,7 @@ export default function AdminPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Mitra UMKM &amp; Pemilik</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Sektor</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Saldo Kas</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor PRD</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor Kelayakan</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Legalitas NIB</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Status Kredibilitas</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'right' }}>Aksi Pengawas</th>
@@ -660,7 +589,7 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      <strong style={{ color: u.saldoKas >= 0 ? '#059669' : '#DC2626' }}>
+                      <strong style={{ color: u.saldoKas >= 0 ? '#1F6B4F' : '#DC2626' }}>
                         {formatRupiah(u.saldoKas)}
                       </strong>
                       <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{u.totalTx} Transaksi Kas</div>
@@ -675,12 +604,12 @@ export default function AdminPage() {
                           borderRadius: '9999px',
                           fontWeight: 700,
                           fontSize: '0.75rem',
-                          background: u.skor >= 70 ? '#ECFDF5' : '#FEF3C7',
-                          color: u.skor >= 70 ? '#059669' : '#D97706',
-                          border: `1px solid ${u.skor >= 70 ? '#A7F3D0' : '#FCD34D'}`,
+                          background: u.skor >= 70 ? '#EEF7F2' : '#FEF3C7',
+                          color: u.skor >= 70 ? '#1F6B4F' : '#D97706',
+                          border: `1px solid ${u.skor >= 70 ? '#D1E7DC' : '#FCD34D'}`,
                         }}
                       >
-                        <span className="material-symbols-rounded" style={{ fontSize: '14px', color: u.skor >= 70 ? '#059669' : '#D97706' }}>
+                        <span className="material-symbols-rounded" style={{ fontSize: '14px', color: u.skor >= 70 ? '#1F6B4F' : '#D97706' }}>
                           star
                         </span>
                         <span>{u.skor} Poin</span>
@@ -701,7 +630,7 @@ export default function AdminPage() {
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       {u.verificationStatus === 'verified' ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '9999px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '9999px', background: '#EEF7F2', color: '#12402F', border: '1px solid #D1E7DC', fontSize: '0.75rem', fontWeight: 700 }}>
                           <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>verified</span>
                           <span>Terverifikasi Kredibel</span>
                         </span>
@@ -765,7 +694,7 @@ export default function AdminPage() {
                                 padding: '6px 10px',
                                 borderRadius: '6px',
                                 border: 'none',
-                                background: '#14532D',
+                                background: '#12402F',
                                 color: '#fff',
                                 fontSize: '0.75rem',
                                 fontFamily: 'inherit',
@@ -817,50 +746,32 @@ export default function AdminPage() {
           <div className="panel-header" style={{ marginBottom: '20px' }}>
             <div>
               <h2 className="panel-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
-                Audit Kredibilitas Finansial &amp; Algoritma PRD
+                Audit Kredibilitas Finansial &amp; Skor Kelayakan
               </h2>
               <p className="panel-subtitle" style={{ margin: '4px 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                Evaluasi 4 pilar standar SAK EMKM: K1 Konsistensi Kas (30%), K2 Pertumbuhan (25%), K3 Margin Laba (25%), K4 Kestabilan (20%).
+                Rata-rata 4 komponen skor dari {denganKomponen.length} usaha yang sudah mencatat transaksi: konsistensi pencatatan (30), tren pemasukan (25), margin laba (25), dan stabilitas kas (20).
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-            <div style={{ padding: '18px', borderRadius: '12px', background: '#F8FAF9', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>K1 • KONSISTENSI PENCATATAN</span>
-                <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)' }}>history_edu</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            {([
+              { k: 'k1', label: 'K1 • KONSISTENSI PENCATATAN', max: 30, icon: 'history_edu', desc: 'Jumlah bulan bertransaksi dari 6 bulan terakhir.' },
+              { k: 'k2', label: 'K2 • TREN PEMASUKAN', max: 25, icon: 'trending_up', desc: 'Pemasukan 3 bulan terakhir dibanding 3 bulan sebelumnya.' },
+              { k: 'k3', label: 'K3 • MARGIN LABA', max: 25, icon: 'account_balance_wallet', desc: 'Laba bersih dibanding pemasukan; penuh pada margin 20%.' },
+              { k: 'k4', label: 'K4 • STABILITAS KAS', max: 20, icon: 'savings', desc: 'Jumlah bulan dengan laba positif dari 6 bulan terakhir.' },
+            ] as const).map((c) => (
+              <div key={c.k} style={{ padding: '18px', borderRadius: '12px', background: '#F8FAF9', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>{c.label}</span>
+                  <span className="material-symbols-rounded" style={{ fontSize: '18px', color: 'var(--primary)' }}>{c.icon}</span>
+                </div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', margin: '4px 0' }}>
+                  {liveLoading ? '…' : `${rataKomponen(c.k)} / ${c.max} poin`}
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>{c.desc}</p>
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', margin: '4px 0' }}>85% Kepatuhan</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Catatan kas kontinu minimal 6 bulan berturut-turut.</p>
-            </div>
-
-            <div style={{ padding: '18px', borderRadius: '12px', background: '#F8FAF9', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>K2 • PERTUMBUHAN OMZET</span>
-                <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#059669' }}>trending_up</span>
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#059669', margin: '4px 0' }}>+14.2% Tren Positif</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Rasio perputaran omzet 3 bulan terakhir vs periode lalu.</p>
-            </div>
-
-            <div style={{ padding: '18px', borderRadius: '12px', background: '#F8FAF9', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>K3 • MARGIN OPERASIONAL</span>
-                <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#2563EB' }}>account_balance_wallet</span>
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2563EB', margin: '4px 0' }}>38.5% Margin Rata-rata</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Efisiensi biaya kulakan &amp; operasional warung.</p>
-            </div>
-
-            <div style={{ padding: '18px', borderRadius: '12px', background: '#F8FAF9', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>K4 • KESTABILAN KAS</span>
-                <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#D97706' }}>savings</span>
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#D97706', margin: '4px 0' }}>92% Kas Positif</div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Tidak ada defisit kas dalam 3 bulan terakhir.</p>
-            </div>
+            ))}
           </div>
 
           <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
@@ -873,45 +784,53 @@ export default function AdminPage() {
                   <th style={{ padding: '12px 16px' }}>K3 (25)</th>
                   <th style={{ padding: '12px 16px' }}>K4 (20)</th>
                   <th style={{ padding: '12px 16px' }}>Total Skor</th>
-                  <th style={{ padding: '12px 16px' }}>Rekomendasi Analis Bank</th>
+                  <th style={{ padding: '12px 16px' }}>Kategori</th>
                 </tr>
               </thead>
               <tbody>
-                {umkmData.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
-                    <td style={{ padding: '14px 16px' }}><strong>{u.namaUsaha}</strong></td>
-                    <td style={{ padding: '14px 16px' }}>{Math.round((u.skor * 0.3))} Poin</td>
-                    <td style={{ padding: '14px 16px' }}>{Math.round((u.skor * 0.25))} Poin</td>
-                    <td style={{ padding: '14px 16px' }}>{Math.round((u.skor * 0.25))} Poin</td>
-                    <td style={{ padding: '14px 16px' }}>{Math.round((u.skor * 0.2))} Poin</td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 800, color: u.skor >= 70 ? '#059669' : '#D97706' }}>
-                        <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified</span>
-                        <span>{u.skor} / 100</span>
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 70 ? '#065F46' : '#92400E' }}>
-                        {u.statusKur}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {liveLoading ? (
+                  <tr><td colSpan={7} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Memuat data usaha…</td></tr>
+                ) : umkmData.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada usaha terdaftar.</td></tr>
+                ) : (
+                  [...umkmData].sort((a, b) => b.skor - a.skor).map((u) => (
+                    <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
+                      <td style={{ padding: '14px 16px' }}><strong>{u.namaUsaha}</strong></td>
+                      <td style={{ padding: '14px 16px' }}>{u.komponen ? `${u.komponen.k1} poin` : '-'}</td>
+                      <td style={{ padding: '14px 16px' }}>{u.komponen ? `${u.komponen.k2} poin` : '-'}</td>
+                      <td style={{ padding: '14px 16px' }}>{u.komponen ? `${u.komponen.k3} poin` : '-'}</td>
+                      <td style={{ padding: '14px 16px' }}>{u.komponen ? `${u.komponen.k4} poin` : '-'}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 800, color: u.skor >= 40 ? '#1F6B4F' : '#D97706' }}>
+                          <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified</span>
+                          <span>{u.skor} / 100</span>
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 40 ? '#12402F' : '#92400E' }}>
+                          {u.totalTx === 0 ? 'Belum ada transaksi' : u.statusKur}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* 6. TAB CONTENT 3: AUDIT MUTASI KAS GLOBAL */}
+      {/* 6. TAB CONTENT 3: AUDIT MUTASI KAS (data asli semua usaha) */}
       {activeTab === 'kas' && (
         <div className="dash-panel" style={{ padding: '24px' }}>
           <div className="panel-header" style={{ marginBottom: '16px' }}>
             <h2 className="panel-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
-              Audit Mutasi Kas Ekosistem (Global Ledger)
+              Audit Mutasi Kas Semua Usaha
             </h2>
             <p className="panel-subtitle" style={{ margin: '4px 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Pemantauan arus kas harian seluruh toko dan warung untuk memastikan tidak ada rekayasa pembukuan.
+              {allTxs.length > 50
+                ? `50 transaksi terbaru dari ${allTxs.length} transaksi yang tercatat di semua usaha.`
+                : `${allTxs.length} transaksi yang tercatat di semua usaha, terbaru di atas.`}
             </p>
           </div>
 
@@ -920,6 +839,7 @@ export default function AdminPage() {
               <thead>
                 <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-subtle)' }}>
                   <th style={{ padding: '12px 16px' }}>Tanggal</th>
+                  <th style={{ padding: '12px 16px' }}>Usaha</th>
                   <th style={{ padding: '12px 16px' }}>Kategori</th>
                   <th style={{ padding: '12px 16px' }}>Keterangan Transaksi</th>
                   <th style={{ padding: '12px 16px' }}>Metode</th>
@@ -928,63 +848,66 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { tanggal: '2026-03-10', cat: 'Penjualan', desc: 'Pesanan Kopi Galer 50 Cup Acara Seminar', metode: 'QRIS', tipe: 'pemasukan', nominal: 1850000 },
-                  { tanggal: '2026-03-09', cat: 'Bahan Baku', desc: 'Restock Biji Kopi Arabika 5kg', metode: 'Tunai', tipe: 'pengeluaran', nominal: 650000 },
-                  { tanggal: '2026-03-09', cat: 'Penjualan', desc: 'Penjualan Grosir Sembako Warung Berkah', metode: 'Transfer Bank', tipe: 'pemasukan', nominal: 3200000 },
-                  { tanggal: '2026-03-08', cat: 'Operasional', desc: 'Listrik & Distribusi Barang', metode: 'Transfer Bank', tipe: 'pengeluaran', nominal: 1400000 },
-                  { tanggal: '2026-03-07', cat: 'Penjualan', desc: 'Omzet Harian Kedai Kopi Nusantara', metode: 'QRIS', tipe: 'pemasukan', nominal: 2450000 },
-                  { tanggal: '2026-03-06', cat: 'Penjualan', desc: 'Pesanan Seragam Konveksi Berkah Makmur', metode: 'Transfer Bank', tipe: 'pemasukan', nominal: 6500000 },
-                ].map((tx, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid #F1F5F3' }}>
-                    <td style={{ padding: '12px 16px' }}>{tx.tanggal}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#F1F5F3', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {tx.cat}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>{tx.desc}</td>
-                    <td style={{ padding: '12px 16px' }}>{tx.metode}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '0.725rem',
-                          fontWeight: 700,
-                          background: tx.tipe === 'pemasukan' ? '#ECFDF5' : '#FEE2E2',
-                          color: tx.tipe === 'pemasukan' ? '#065F46' : '#DC2626',
-                        }}
-                      >
-                        <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>
-                          {tx.tipe === 'pemasukan' ? 'arrow_downward' : 'arrow_upward'}
-                        </span>
-                        <span>{tx.tipe === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}</span>
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: tx.tipe === 'pemasukan' ? '#059669' : '#DC2626' }}>
-                      {tx.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(tx.nominal)}
-                    </td>
-                  </tr>
-                ))}
+                {liveLoading ? (
+                  <tr><td colSpan={7} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Memuat transaksi…</td></tr>
+                ) : allTxs.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada transaksi tercatat.</td></tr>
+                ) : (
+                  allTxs.slice(0, 50).map((tx) => {
+                    const masuk = tx.tipe === 'pemasukan'
+                    return (
+                      <tr key={tx.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{tx.tanggal}</td>
+                        <td style={{ padding: '12px 16px' }}>{(tx.profil_id && namaUsahaById.get(tx.profil_id)) || '-'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#F1F5F3', fontSize: '0.75rem', fontWeight: 600 }}>
+                            {tx.kategori || '-'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>{tx.keterangan || '-'}</td>
+                        <td style={{ padding: '12px 16px' }}>{tx.metode_pembayaran || '-'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.725rem',
+                              fontWeight: 700,
+                              background: masuk ? '#EEF7F2' : '#FEE2E2',
+                              color: masuk ? '#12402F' : '#B5532F',
+                            }}
+                          >
+                            <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>
+                              {masuk ? 'arrow_downward' : 'arrow_upward'}
+                            </span>
+                            <span>{masuk ? 'Pemasukan' : 'Pengeluaran'}</span>
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', color: masuk ? '#1F6B4F' : '#B5532F' }}>
+                          {masuk ? '+' : '-'} {formatRupiah(Number(tx.nominal))}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* 7. TAB CONTENT 4: PENGAWASAN KUR & GUARDRAIL */}
+      {/* 7. TAB CONTENT 4: PENGAWASAN KUR & BATAS AMAN CICILAN (simulasi yang disimpan pengguna) */}
       {activeTab === 'kur' && (
         <div className="dash-panel" style={{ padding: '24px' }}>
           <div className="panel-header" style={{ marginBottom: '16px' }}>
             <h2 className="panel-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
-              Pengawasan Penyaluran KUR &amp; Kepatuhan Guardrail 30%
+              Pengawasan Simulasi KUR &amp; Batas Aman Cicilan 30%
             </h2>
             <p className="panel-subtitle" style={{ margin: '4px 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Memastikan beban angsuran kredit UMKM tidak melebihi 30% dari laba bersih untuk mencegah risiko kredit macet.
+              Simulasi pinjaman yang disimpan pengguna. Cicilan tidak boleh melebihi 30% dari rata-rata laba bersih bulanan.
             </p>
           </div>
 
@@ -992,52 +915,65 @@ export default function AdminPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
               <thead>
                 <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <th style={{ padding: '12px 16px' }}>Mitra UMKM</th>
+                  <th style={{ padding: '12px 16px' }}>Tanggal</th>
+                  <th style={{ padding: '12px 16px' }}>Usaha</th>
                   <th style={{ padding: '12px 16px' }}>Program Pembiayaan</th>
-                  <th style={{ padding: '12px 16px' }}>Plafon Diajukan</th>
-                  <th style={{ padding: '12px 16px' }}>Bunga Subsidi</th>
+                  <th style={{ padding: '12px 16px' }}>Plafon</th>
+                  <th style={{ padding: '12px 16px' }}>Bunga</th>
                   <th style={{ padding: '12px 16px' }}>Tenor</th>
-                  <th style={{ padding: '12px 16px' }}>Estimasi Cicilan</th>
-                  <th style={{ padding: '12px 16px' }}>Evaluasi Guardrail 30%</th>
+                  <th style={{ padding: '12px 16px' }}>Cicilan</th>
+                  <th style={{ padding: '12px 16px' }}>Batas Cicilan 30%</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { nama: 'Kopi Galer (Dewo)', prog: 'KUR Mikro Bank BRI', plafon: 50000000, bunga: '6% p.a.', tenor: '24 Bulan', cicilan: 2216031, status: 'Kondisi Aman (12% dari laba)' },
-                  { nama: 'Warung Berkah Jaya', prog: 'KUR Mikro Bank Mandiri', plafon: 75000000, bunga: '6% p.a.', tenor: '36 Bulan', cicilan: 2281488, status: 'Kondisi Aman (11% dari laba)' },
-                  { nama: 'Kedai Kopi Nusantara', prog: 'KUR Super Mikro', plafon: 10000000, bunga: '3% p.a.', tenor: '12 Bulan', cicilan: 846937, status: 'Kondisi Aman (5% dari laba)' },
-                  { nama: 'Konveksi Berkah Makmur', prog: 'KUR Mikro Bank BNI', plafon: 50000000, bunga: '6% p.a.', tenor: '24 Bulan', cicilan: 2216031, status: 'Kondisi Aman (13% dari laba)' },
-                  { nama: 'Bengkel Motor Sejahtera', prog: 'Pinjaman Koperasi Usaha', plafon: 25000000, bunga: '9% p.a.', tenor: '18 Bulan', cicilan: 1490000, status: 'Batas Waspada (24% dari laba)' },
-                ].map((k, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid #F1F5F3' }}>
-                    <td style={{ padding: '14px 16px' }}><strong>{k.nama}</strong></td>
-                    <td style={{ padding: '14px 16px' }}>{k.prog}</td>
-                    <td style={{ padding: '14px 16px' }}>{formatRupiah(k.plafon)}</td>
-                    <td style={{ padding: '14px 16px' }}>{k.bunga}</td>
-                    <td style={{ padding: '14px 16px' }}>{k.tenor}</td>
-                    <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--primary)' }}>{formatRupiah(k.cicilan)} / bln</td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          background: k.status.includes('Aman') ? '#ECFDF5' : '#FEF3C7',
-                          color: k.status.includes('Aman') ? '#065F46' : '#92400E',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>
-                          {k.status.includes('Aman') ? 'check_circle' : 'warning'}
-                        </span>
-                        <span>{k.status}</span>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {liveLoading ? (
+                  <tr><td colSpan={8} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Memuat simulasi…</td></tr>
+                ) : allSims.length === 0 ? (
+                  <tr><td colSpan={8} style={{ padding: '20px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>Belum ada simulasi KUR atau pinjaman yang disimpan pengguna.</td></tr>
+                ) : (
+                  allSims.map((k) => {
+                    // Status dihitung dari rasio cicilan/laba (data lama bisa menyimpan status yang tidak sesuai rasionya)
+                    const rasio = k.rasio_kas
+                    const status = rasio == null ? k.status_guardrail || 'aman' : rasio <= 25 ? 'aman' : rasio <= 30 ? 'waspada' : 'melebihi'
+                    // Data lama menyimpan bunga sebagai pecahan (0,06); data baru dalam persen (6)
+                    const bungaPersen = Number(k.bunga_tahunan) < 1 ? Number(k.bunga_tahunan) * 100 : Number(k.bunga_tahunan)
+                    const aman = status === 'aman'
+                    const waspada = status === 'waspada'
+                    const label = aman ? 'Kondisi Aman' : waspada ? 'Batas Waspada' : 'Melebihi Batas'
+                    return (
+                      <tr key={k.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
+                        <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}>{k.created_at?.slice(0, 10)}</td>
+                        <td style={{ padding: '14px 16px' }}><strong>{(k.profil_id && namaUsahaById.get(k.profil_id)) || 'Tanpa profil usaha'}</strong></td>
+                        <td style={{ padding: '14px 16px' }}>{k.program}</td>
+                        <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}>{formatRupiah(Number(k.plafon))}</td>
+                        <td style={{ padding: '14px 16px' }}>{Math.round(bungaPersen * 10) / 10}% / tahun</td>
+                        <td style={{ padding: '14px 16px' }}>{k.tenor_bulan} bulan</td>
+                        <td style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>{formatRupiah(Number(k.angsuran_bulanan))} / bln</td>
+                        <td style={{ padding: '14px 16px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              background: aman ? '#EEF7F2' : waspada ? '#FEF3C7' : '#FEE2E2',
+                              color: aman ? '#12402F' : waspada ? '#92400E' : '#B5532F',
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>
+                              {aman ? 'check_circle' : 'warning'}
+                            </span>
+                            <span>{label}{k.rasio_kas != null ? ` (${k.rasio_kas}% dari laba)` : ''}</span>
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -1074,7 +1010,7 @@ export default function AdminPage() {
                   </tr>
                   <tr>
                     <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Engine Skor:</td>
-                    <td><strong>Algoritma PRD UTERA (K1–K4) 100 Poin</strong></td>
+                    <td><strong>Skor Kelayakan UTERA (4 komponen, 100 poin)</strong></td>
                   </tr>
                   <tr>
                     <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Ambang Bank:</td>
@@ -1161,7 +1097,7 @@ export default function AdminPage() {
               )}
 
               {auditModal.certificateNumber && (
-                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem', color: '#15803D' }}>
+                <div style={{ background: '#EEF7F2', border: '1px solid #D1E7DC', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem', color: '#17543E' }}>
                   No. Sertifikat Kredibilitas: <strong>{auditModal.certificateNumber}</strong>
                 </div>
               )}
@@ -1171,7 +1107,7 @@ export default function AdminPage() {
                 </div>
               )}
               {auditModal.adminNote && (
-                <div style={{ background: auditModal.verificationStatus === 'rejected' ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${auditModal.verificationStatus === 'rejected' ? '#FECACA' : '#BBF7D0'}`, padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem' }}>
+                <div style={{ background: auditModal.verificationStatus === 'rejected' ? '#FEF2F2' : '#EEF7F2', border: `1px solid ${auditModal.verificationStatus === 'rejected' ? '#FECACA' : '#D1E7DC'}`, padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.8rem' }}>
                   <strong>Catatan admin:</strong> {auditModal.adminNote}
                 </div>
               )}
@@ -1186,7 +1122,7 @@ export default function AdminPage() {
                 </div>
                 <div style={{ padding: '10px', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SALDO KAS OPERASIONAL</div>
-                  <strong style={{ fontSize: '1.1rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <strong style={{ fontSize: '1.1rem', color: '#1F6B4F', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>account_balance_wallet</span>
                     <span>{formatRupiah(auditModal.saldoKas)}</span>
                   </strong>
@@ -1197,7 +1133,7 @@ export default function AdminPage() {
                 <strong style={{ display: 'block', marginBottom: '6px' }}>Status Kepatuhan Audit:</strong>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: auditModal.hasNib ? '#059669' : '#D97706', marginTop: '2px' }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: auditModal.hasNib ? '#1F6B4F' : '#D97706', marginTop: '2px' }}>
                       {auditModal.hasNib ? 'verified' : 'warning'}
                     </span>
                     <span>
@@ -1205,7 +1141,7 @@ export default function AdminPage() {
                     </span>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#059669', marginTop: '2px' }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: '#1F6B4F', marginTop: '2px' }}>
                       receipt_long
                     </span>
                     <span>
@@ -1221,7 +1157,7 @@ export default function AdminPage() {
                     </span>
                   </li>
                   <li style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: auditModal.isVerified ? '#059669' : '#D97706', marginTop: '2px' }}>
+                    <span className="material-symbols-rounded" style={{ fontSize: '18px', color: auditModal.isVerified ? '#1F6B4F' : '#D97706', marginTop: '2px' }}>
                       {auditModal.isVerified ? 'verified_user' : 'hourglass_empty'}
                     </span>
                     <span>

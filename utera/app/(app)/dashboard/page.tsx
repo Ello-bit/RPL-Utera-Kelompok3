@@ -108,6 +108,7 @@ export default function DashboardPage() {
           alamat_usaha: 'Pusat Komando UTERA Finansial',
           tanggal_mulai_usaha: '2026-01-01',
           deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
+          foto_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -160,6 +161,7 @@ export default function DashboardPage() {
             alamat_usaha: null,
             tanggal_mulai_usaha: null,
             deskripsi_usaha: null,
+            foto_url: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             user_id: user.id,
@@ -195,6 +197,7 @@ export default function DashboardPage() {
         alamat_usaha: 'Pusat Komando UTERA Finansial',
         tanggal_mulai_usaha: '2026-01-01',
         deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
+        foto_url: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -433,6 +436,10 @@ export default function DashboardPage() {
     e.preventDefault()
     const nominal = Number(txAmount)
     if (!txDesc.trim() || isNaN(nominal) || nominal <= 0) return
+    if (txDate > todayLocal()) {
+      alert('Tanggal transaksi tidak boleh melewati hari ini.')
+      return
+    }
 
     setSubmitting(true)
     const newTx: TransaksiKas = {
@@ -493,14 +500,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="dashboard-scroll-wrap">
+    <div className="dashboard-scroll-wrap" data-loading={loading ? 'true' : undefined} aria-busy={loading}>
       {/* Header Row: Title + Period Selector & Export */}
       <div className="dash-header-row">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
             <h1 className="dash-heading">Dashboard Finansial</h1>
             {isAdmin && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#EEF7F2', color: '#12402F', border: '1px solid #D1E7DC', padding: '3px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
                 <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>shield</span>
                 Mode Administrator
               </span>
@@ -509,7 +516,7 @@ export default function DashboardPage() {
           <p className="dash-subheading">
             {isAdmin
               ? `Memantau kesehatan kas dan rasio kelayakan kredit: ${profile?.nama_usaha || 'Ekosistem UMKM'}`
-              : 'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan guardrail beban cicilan.'}
+              : 'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan batas aman cicilan.'}
           </p>
         </div>
 
@@ -537,7 +544,7 @@ export default function DashboardPage() {
 
           <div className="date-range-badge">
             <span className="material-symbols-rounded date-icon">calendar_today</span>
-            <span>Okt 2026 • Real-time</span>
+            <span>{new Date().toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })} • Real-time</span>
           </div>
 
           <select className="select-period" id="select-period" aria-label="Pilih Periode Waktu">
@@ -554,7 +561,13 @@ export default function DashboardPage() {
       </div>
 
       {/* UMKM Financial Insight & Notification Banner */}
-      {!isAdmin && (
+      {/* Saat data masih dimuat, jangan tampilkan pesan "belum mencatat transaksi" */}
+      {!isAdmin && loading && (
+        <div role="status" style={{ padding: '14px 18px', borderRadius: '12px', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', color: 'var(--primary-dark, #12402F)', fontSize: '0.875rem', marginBottom: '20px' }}>
+          Memuat data usaha Anda…
+        </div>
+      )}
+      {!isAdmin && !loading && (
         transactions.length === 0 ? (
           <div style={{
             display: 'flex',
@@ -574,7 +587,7 @@ export default function DashboardPage() {
                 info
               </span>
               <span style={{ color: '#0C4A6E', lineHeight: 1.5 }}>
-                <strong>Selamat Datang di UTERA!</strong> Anda belum mencatat transaksi kas. Mulai catat transaksi pertama Anda di <strong>Buku Kas Warung</strong> untuk mengaktifkan perhitungan Skor Kelayakan Bank &amp; batas aman Guardrail 30%.
+                <strong>Selamat Datang di UTERA!</strong> Anda belum mencatat transaksi kas. Mulai catat transaksi pertama Anda di <strong>Buku Kas Warung</strong> untuk mengaktifkan perhitungan Skor Kelayakan Bank &amp; batas aman cicilan 30%.
               </span>
             </div>
             <Link
@@ -602,8 +615,8 @@ export default function DashboardPage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#F0FDF4',
-            border: '1px solid #BBF7D0',
+            background: '#EEF7F2',
+            border: '1px solid #D1E7DC',
             borderRadius: '12px',
             padding: '12px 18px',
             marginBottom: '20px',
@@ -612,11 +625,11 @@ export default function DashboardPage() {
             gap: '10px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="material-symbols-rounded" style={{ color: '#059669', fontSize: '20px' }}>
+              <span className="material-symbols-rounded" style={{ color: '#1F6B4F', fontSize: '20px' }}>
                 verified
               </span>
               <span>
-                <strong>Kabar Baik:</strong> Skor Kelayakan Bank Anda saat ini <strong>{scorePRD}/100</strong>. Kapasitas cicilan aman Guardrail 30% mencapai <strong>{formatRupiah(maxInstallment30Pct)}/bln</strong>.
+                <strong>Kabar Baik:</strong> Skor Kelayakan Bank Anda saat ini <strong>{scorePRD}/100</strong>. Batas aman cicilan Anda (30% dari laba) mencapai <strong>{formatRupiah(maxInstallment30Pct)}/bln</strong>.
               </span>
             </div>
             <Link href="/skor-kelayakan" style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -693,7 +706,7 @@ export default function DashboardPage() {
           title="Buka Detail Analisis Skor Kelayakan"
         >
           <div className="metric-top">
-            <span className="metric-label">Skor Kelayakan Bank (PRD)</span>
+            <span className="metric-label">Skor Kelayakan Bank</span>
             <div className="metric-icon-wrap bg-gold" aria-hidden="true">
               <span className="material-symbols-rounded text-gold">hotel_class</span>
             </div>
@@ -824,7 +837,7 @@ export default function DashboardPage() {
             <div className="health-indicator">
               <span
                 className="status-circle"
-                style={{ background: transactions.length > 0 ? '#10B981' : '#94A3B8' }}
+                style={{ background: transactions.length > 0 ? '#2A8865' : '#94A3B8' }}
               ></span>
               {transactions.length > 0 ? (
                 <span>
@@ -843,7 +856,7 @@ export default function DashboardPage() {
         <div className="dash-panel panel-guardrail" id="section-guardrail">
           <div className="panel-header">
             <div>
-              <h2 className="panel-title">Guardrail Cicilan 30%</h2>
+              <h2 className="panel-title">Batas Aman Cicilan 30%</h2>
               <p className="panel-subtitle">Batas aman angsuran kredit kas UMKM</p>
             </div>
             <span
@@ -874,7 +887,7 @@ export default function DashboardPage() {
               <span className="capacity-formula">
                 {transactions.length === 0
                   ? 'Belum ada transaksi kas untuk menghitung laba bersih'
-                  : `30% x Rata-rata Laba Bersih (${formatRupiah(kasSummary.netProfit)})`}
+                  : `30% x rata-rata laba bersih per bulan (${formatRupiah(Math.max(0, Math.round(rataLabaBulanan(skorResult))))})`}
               </span>
             </div>
 
@@ -919,7 +932,7 @@ export default function DashboardPage() {
                 {transactions.length === 0 || kasSummary.netProfit <= 0 ? (
                   <span className="loan-status" style={{ color: '#94A3B8' }}>○ Belum Ada Saldo Kas</span>
                 ) : maxInstallment30Pct >= simulatedBriInstallment ? (
-                  <span className="loan-status text-emerald" style={{ color: '#10B981', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
+                  <span className="loan-status text-emerald" style={{ color: '#2A8865', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
                 ) : (
                   <span className="loan-status text-terracotta" style={{ color: '#B5532F', fontWeight: 600 }}>⚠️ Melebihi Batas 30%</span>
                 )}
@@ -939,7 +952,7 @@ export default function DashboardPage() {
                 {transactions.length === 0 || kasSummary.netProfit <= 0 ? (
                   <span className="loan-status" style={{ color: '#94A3B8' }}>○ Belum Ada Saldo Kas</span>
                 ) : maxInstallment30Pct >= simulatedKopInstallment ? (
-                  <span className="loan-status text-emerald" style={{ color: '#10B981', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
+                  <span className="loan-status text-emerald" style={{ color: '#2A8865', fontWeight: 600 }}>✓ Masuk Batas Kas</span>
                 ) : (
                   <span className="loan-status text-terracotta" style={{ color: '#B5532F', fontWeight: 600 }}>⚠️ Melebihi Batas 30%</span>
                 )}
@@ -950,7 +963,7 @@ export default function DashboardPage() {
           <div className="guardrail-cta">
             <Link href="/guardrail" className="btn btn-secondary btn-block btn-sm" id="btn-quick-simulasi">
               <span className="material-symbols-rounded btn-icon" style={{ fontSize: '16px' }}>shield</span>
-              <span>Buka Simulator Guardrail Lengkap</span>
+              <span>Buka Hitung Batas Aman Cicilan</span>
             </Link>
           </div>
         </div>
@@ -1157,7 +1170,7 @@ export default function DashboardPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Nama Usaha &amp; Pemilik</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Sektor</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Saldo Kas</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor PRD</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor Kelayakan</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Status KUR</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Legalitas NIB</th>
                   <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'right' }}>Aksi</th>
@@ -1178,7 +1191,7 @@ export default function DashboardPage() {
                       </span>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      <strong style={{ color: u.saldoKas >= 0 ? '#059669' : '#DC2626' }}>
+                      <strong style={{ color: u.saldoKas >= 0 ? '#1F6B4F' : '#DC2626' }}>
                         {formatRupiah(u.saldoKas)}
                       </strong>
                       <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{u.totalTx} Transaksi</div>
@@ -1193,15 +1206,15 @@ export default function DashboardPage() {
                           borderRadius: '9999px',
                           fontWeight: 700,
                           fontSize: '0.75rem',
-                          background: u.skor >= 70 ? '#ECFDF5' : '#FEF3C7',
-                          color: u.skor >= 70 ? '#059669' : '#D97706',
-                          border: `1px solid ${u.skor >= 70 ? '#A7F3D0' : '#FCD34D'}`,
+                          background: u.skor >= 70 ? '#EEF7F2' : '#FEF3C7',
+                          color: u.skor >= 70 ? '#1F6B4F' : '#D97706',
+                          border: `1px solid ${u.skor >= 70 ? '#D1E7DC' : '#FCD34D'}`,
                         }}
                       >
                         ★ {u.skor} Poin
                       </span>
                     </td>
-                    <td style={{ padding: '14px 16px', fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 70 ? '#065F46' : '#92400E' }}>
+                    <td style={{ padding: '14px 16px', fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 70 ? '#12402F' : '#92400E' }}>
                       {u.statusKur}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
@@ -1363,6 +1376,7 @@ export default function DashboardPage() {
                   className="form-input"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem' }}
                   value={txDate}
+                  max={todayLocal()}
                   onChange={(e) => setTxDate(e.target.value)}
                   required
                 />

@@ -165,8 +165,8 @@ function AuthContent() {
 
             <p className="feature-card-desc">
               {activeVisualTab === 'kas'
-                ? 'Satu sumber data transaksi yang otomatis terhubung ke perhitungan margin laba, guardrail batas kas 30%, dan berkas siap kredit bank.'
-                : 'Algoritma resmi PRD mengukur konsistensi pencatatan dan kestabilan kas untuk mempercepat pengajuan KUR Mikro hingga 100 juta.'}
+                ? 'Satu sumber data transaksi yang otomatis terhubung ke perhitungan margin laba, batas aman cicilan 30%, dan berkas siap kredit bank.'
+                : 'Skor kelayakan mengukur konsistensi pencatatan dan kestabilan kas untuk mempercepat pengajuan KUR Mikro hingga 100 juta.'}
             </p>
 
             <div className="feature-chips">
@@ -228,7 +228,7 @@ function AuthContent() {
           </div>
 
           {searchParams.get('redirect') && (
-            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+            <div style={{ background: '#EEF7F2', border: '1px solid #D1E7DC', color: '#12402F', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
               {redirectTarget.startsWith('/simulasi-kur')
                 ? 'Masuk atau daftar gratis dulu untuk mencoba simulasi KUR dengan data usaha Anda.'
                 : 'Masuk atau daftar gratis dulu untuk membuka halaman ini.'}
@@ -242,7 +242,7 @@ function AuthContent() {
           )}
 
           {successMessage && (
-            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#047857', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+            <div style={{ background: '#EEF7F2', border: '1px solid #D1E7DC', color: '#17543E', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
               ✅ {successMessage}
             </div>
           )}
@@ -330,7 +330,7 @@ function AuthContent() {
                   </button>
                 </div>
                 {confirmPassword.length > 0 && (
-                  <small style={{ color: passwordsMatch ? '#10B981' : '#EF4444', fontSize: '0.75rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
+                  <small style={{ color: passwordsMatch ? '#2A8865' : '#EF4444', fontSize: '0.75rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
                     {passwordsMatch ? '✓ Kata sandi cocok' : '✗ Kata sandi belum cocok'}
                   </small>
                 )}

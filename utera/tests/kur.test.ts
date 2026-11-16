@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { calculateInstallment, evaluateGuardrail, KUR_TIERS } from '../lib/kur'
+import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS } from '../lib/kur'
+
+describe('F8 status cek kelayakan KUR (PRD)', () => {
+  it('KUR-ST1 6 bulan + NIB + skor 40 = Memenuhi syarat', () => {
+    expect(evaluateKelayakanKur({ skor: 40, bulanTercatat: 6, punyaNibAtauSku: true }).status).toBe('Memenuhi syarat')
+  })
+  it('KUR-ST2 syarat terpenuhi tapi skor Rendah = Belum siap', () => {
+    expect(evaluateKelayakanKur({ skor: 39, bulanTercatat: 6, punyaNibAtauSku: true }).status).toBe('Belum siap')
+  })
+  it('KUR-ST3 data 3 bulan tanpa NIB = Belum memenuhi, dua kekurangan disebut', () => {
+    const r = evaluateKelayakanKur({ skor: 75, bulanTercatat: 3, punyaNibAtauSku: false })
+    expect(r.status).toBe('Belum memenuhi')
+    expect(r.kekurangan).toHaveLength(2)
+  })
+})
 
 describe('F12 simulasi cicilan (anuitas)', () => {
   it('KUR-01 Rp10jt, 6%/thn, 12 bulan = Rp860.664', () => {

@@ -184,6 +184,11 @@ export default function BukuKasPage() {
       alert('Tanggal wajib diisi.')
       return
     }
+    // Transaksi belum terjadi tidak boleh dicatat (merusak skor & laporan)
+    if (formTanggal > todayLocal()) {
+      alert('Tanggal transaksi tidak boleh melewati hari ini.')
+      return
+    }
 
     if (isGuest) {
       if (editingId) {
@@ -352,7 +357,7 @@ export default function BukuKasPage() {
       {/* Toast Notification */}
       {toastText && (
         <div className="toast-popup">
-          <span className="material-symbols-rounded" style={{ color: '#10B981', fontSize: '18px' }}>
+          <span className="material-symbols-rounded" style={{ color: 'var(--primary)', fontSize: '18px' }}>
             check_circle
           </span>
           <span>{toastText}</span>
@@ -377,7 +382,7 @@ export default function BukuKasPage() {
       </div>
 
       {/* TWO COLUMN MAIN DASHBOARD GRID */}
-      <div className="dashboard-grid">
+      <div className="dashboard-grid" data-loading={loading ? 'true' : undefined} aria-busy={loading}>
         {/* LEFT COLUMN: Charts & Transactions Ledger */}
         <div className="grid-col-left">
           {/* CARD 1: GRAFIK LABA BERSIH BULANAN */}
@@ -387,15 +392,17 @@ export default function BukuKasPage() {
                 <span className="chart-eyebrow">UNTUNG BERSIH</span>
                 <div className="chart-metric-row">
                   <span className="chart-big-metric">
-                    {formatRupiah(kasSummary.netProfit)}
+                    {loading ? 'Rp …' : formatRupiah(kasSummary.netProfit)}
                   </span>
-                  <span className="trend-badge-positive">
-                    <span className="material-symbols-rounded">trending_up</span>
-                    <span>Untung {kasSummary.marginPct}% dari penjualan</span>
-                  </span>
+                  {!loading && (
+                    <span className="trend-badge-positive">
+                      <span className="material-symbols-rounded">trending_up</span>
+                      <span>Untung {kasSummary.marginPct}% dari penjualan</span>
+                    </span>
+                  )}
                 </div>
                 <span className="chart-date-caption">
-                  Dihitung dari {filteredTransactions.length} catatan transaksi
+                  {loading ? 'Memuat catatan transaksi…' : `Dihitung dari ${filteredTransactions.length} catatan transaksi`}
                 </span>
               </div>
 
@@ -416,9 +423,13 @@ export default function BukuKasPage() {
 
             {/* SVG Interactive Area Chart Container */}
             <div className="chart-svg-wrapper">
-              {monthlyData.length === 0 ? (
+              {loading ? (
+                <div role="status" style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--slate-400)', fontSize: '13px' }}>
+                  Memuat grafik…
+                </div>
+              ) : monthlyData.length === 0 ? (
                 <div style={{ textAlign: 'center', paddingTop: '60px', color: 'var(--slate-400)', fontSize: '13px' }}>
-                  Belum ada data bulanan. Catat transaksi untuk menampilkan kurva profit.
+                  Belum ada data bulanan. Catat transaksi untuk menampilkan grafik.
                 </div>
               ) : (
                 <div className="kas-bars" role="img" aria-label="Grafik pemasukan, pengeluaran, dan laba per bulan">
@@ -648,12 +659,12 @@ export default function BukuKasPage() {
           {/* Selector Card */}
           <div className="selector-card-group">
             <div className="selector-card">
-              <div className="selector-icon-wrap" style={{ background: '#ECFDF5', color: '#10B981' }}>
+              <div className="selector-icon-wrap" style={{ background: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <span className="material-symbols-rounded">storefront</span>
               </div>
               <div className="selector-meta">
                 <span className="selector-title">
-                  {activeProfile?.nama_usaha || 'Kopi Nusantara'}
+                  {activeProfile?.nama_usaha || 'Usaha Saya'}
                 </span>
                 <span className="selector-desc">
                   {activeProfile?.jenis_usaha || 'Usaha Aktif • UMKM'}
@@ -769,6 +780,7 @@ export default function BukuKasPage() {
                     id="date-input"
                     className="date-input-clean"
                     required
+                    max={todayLocal()}
                     value={formTanggal}
                     onChange={(e) => setFormTanggal(e.target.value)}
                   />

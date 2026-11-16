@@ -5,7 +5,7 @@ import './responsive.css'
 export const metadata: Metadata = {
   title: 'UTERA (UMKM Sejahtera) — Satu Aplikasi Finansial untuk Semua Kebutuhan Usaha',
   description:
-    'Sistem tata kelola keuangan, pembukuan kas warung, skor kelayakan kredit perbankan, dan guardrail cicilan 30% untuk UMKM Indonesia.',
+    'Sistem tata kelola keuangan, pembukuan kas warung, skor kelayakan kredit perbankan, dan batas aman cicilan 30% untuk UMKM Indonesia.',
 }
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 }

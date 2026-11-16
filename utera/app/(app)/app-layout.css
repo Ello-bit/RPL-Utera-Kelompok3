@@ -2,7 +2,7 @@
    UTERA DASHBOARD STYLESHEET
    Design System: antislop-ui compliant, Nexus.io layout inspired, ATM crafted
    Typography: 100% Plus Jakarta Sans
-   Palette: Forest Green (#1F6B4F), Emerald (#10B981), Amber Gold (#C98A1B), Terracotta (#B5532F)
+   Palette: Forest Green (#1F6B4F), Emerald (#2A8865), Amber Gold (#C98A1B), Terracotta (#B5532F)
    ========================================================================== */
 
 :root {
@@ -15,9 +15,9 @@
   --primary-soft: #EEF7F2;
   --primary-border: #D1E7DC;
 
-  --emerald: #10B981;
-  --emerald-soft: #ECFDF5;
-  --emerald-border: #A7F3D0;
+  --emerald: #2A8865;
+  --emerald-soft: #EEF7F2;
+  --emerald-border: #D1E7DC;
 
   --terracotta: #B5532F;
   --terracotta-soft: #FEF2F2;

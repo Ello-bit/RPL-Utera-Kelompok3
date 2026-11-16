@@ -98,6 +98,7 @@ export default function LaporanSiapBankPage() {
           alamat_usaha: null,
           nomor_telepon: null,
           deskripsi_usaha: null,
+          foto_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -133,11 +134,11 @@ export default function LaporanSiapBankPage() {
   }
 
   return (
-    <div style={{ padding: '28px', maxWidth: '1080px', margin: '0 auto' }}>
-      {/* Header Controls */}
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="laporan-page" style={{ padding: '28px', maxWidth: '1080px', margin: '0 auto' }}>
+      {/* Header Controls (tidak ikut dicetak) */}
+      <div className="no-print" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
             Laporan Siap Bank
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
@@ -168,7 +169,7 @@ export default function LaporanSiapBankPage() {
       </div>
 
       {/* Tab Switcher */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div className="no-print" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button
           onClick={() => setActiveTab('preview')}
           style={{
@@ -211,7 +212,7 @@ export default function LaporanSiapBankPage() {
 
       {/* View: Tab Dashboard */}
       {activeTab === 'dashboard' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '28px' }}>
           <div style={{ background: '#fff', padding: '20px', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Pilar 1: Profil Usaha
@@ -228,7 +229,7 @@ export default function LaporanSiapBankPage() {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Pilar 2: Total Omzet Terverifikasi
             </span>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2A8865', marginTop: '6px' }}>
               {formatRupiah(kasSummary.totalIncome)}
             </div>
             <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
@@ -252,7 +253,7 @@ export default function LaporanSiapBankPage() {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Pilar 4: Status Legalitas
             </span>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: legalitas.pct >= 75 ? '#10B981' : '#C98A1B', marginTop: '6px' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: legalitas.pct >= 75 ? '#2A8865' : '#C98A1B', marginTop: '6px' }}>
               {legalitas.pct}% Lengkap
             </div>
             <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
@@ -283,7 +284,7 @@ export default function LaporanSiapBankPage() {
               LAPORAN KELAYAKAN USAHA &amp; ARUS KAS
             </div>
             <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              Dokumen resmi kesiapan kredit perbankan mitra (Standar PRD UTERA)
+              Ringkasan kesiapan kredit usaha untuk bank atau koperasi
             </small>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -335,7 +336,7 @@ export default function LaporanSiapBankPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '16px' }}>
             <div style={{ padding: '12px', background: '#F8FAF9', borderRadius: '8px' }}>
               <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Total Omzet:</small>
-              <div style={{ fontWeight: 800, color: '#10B981', fontSize: '1.05rem', marginTop: '2px' }}>
+              <div style={{ fontWeight: 800, color: '#2A8865', fontSize: '1.05rem', marginTop: '2px' }}>
                 {formatRupiah(kasSummary.totalIncome)}
               </div>
             </div>
@@ -374,7 +375,7 @@ export default function LaporanSiapBankPage() {
                 {monthly.map((m) => (
                   <tr key={m.key} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                     <td style={{ padding: '8px 12px', fontWeight: 600 }}>{m.label}</td>
-                    <td style={{ padding: '8px 12px', textAlign: 'right', color: '#10B981' }}>{formatRupiah(m.pemasukan)}</td>
+                    <td style={{ padding: '8px 12px', textAlign: 'right', color: '#2A8865' }}>{formatRupiah(m.pemasukan)}</td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', color: '#B5532F' }}>{formatRupiah(m.pengeluaran)}</td>
                     <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>{formatRupiah(m.labaBersih)}</td>
                   </tr>
@@ -402,14 +403,14 @@ export default function LaporanSiapBankPage() {
 
             <div style={{ padding: '16px', background: '#F8FAF9', borderRadius: '10px' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status Legalitas Dokumen:</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: legalitas.pct >= 75 ? '#10B981' : '#C98A1B', margin: '4px 0' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: legalitas.pct >= 75 ? '#2A8865' : '#C98A1B', margin: '4px 0' }}>
                 {legalitas.pct}% Terverifikasi
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '6px 0 0', fontSize: '0.8rem' }}>
                 {legalDocs.map((d) => (
                   <li key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                     {d.nomor_dokumen || d.file_url ? (
-                      <span style={{ color: '#10B981' }} aria-label="Lengkap">✓</span>
+                      <span style={{ color: '#2A8865' }} aria-label="Lengkap">✓</span>
                     ) : (
                       <span style={{ color: '#B5532F' }} aria-label="Belum lengkap">✗</span>
                     )}

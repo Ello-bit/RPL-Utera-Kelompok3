@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isAdminUser } from '@/lib/auth'
+import { isAdminUser, safeRedirect } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -70,8 +70,9 @@ export async function middleware(request: NextRequest) {
 
   // 1. If already authenticated and trying to access /auth, redirect to their respective home
   if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = isAdmin ? '/admin' : '/dashboard'
+    // Sudah login: langsung ke halaman tujuan (parameter redirect) atau beranda masing-masing
+    const target = isAdmin ? '/admin' : safeRedirect(request.nextUrl.searchParams.get('redirect'))
+    const url = new URL(target, request.url)
     return NextResponse.redirect(url)
   }
 
@@ -101,6 +102,13 @@ export async function middleware(request: NextRequest) {
     if (path === '/guardrail' || path === '/simulasi-kur') {
       url.pathname = '/admin'
       url.search = '?tab=kur'
+      return NextResponse.redirect(url)
+    }
+    // Halaman milik pemilik usaha. Admin bisa membaca semua profil, sehingga halaman ini
+    // akan menampilkan laporan/dokumen usaha orang lain secara acak. Arahkan ke direktori.
+    if (path === '/laporan-siap-bank' || path === '/legalitas') {
+      url.pathname = '/admin'
+      url.search = '?tab=direktori'
       return NextResponse.redirect(url)
     }
   }
