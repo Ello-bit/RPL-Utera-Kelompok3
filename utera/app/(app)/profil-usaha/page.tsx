@@ -450,10 +450,6 @@ export default function ProfilUsahaPage() {
             <h1 className="page-title">Profil Usaha</h1>
             <p className="page-subtitle">Kelola identitas dan legalitas usaha Anda sebagai dasar semua fitur UTERA</p>
           </div>
-          <span className="prd-badge">
-            <span className="material-symbols-rounded" style={{ fontSize: '13px' }}>verified_user</span>
-            Profil & Legalitas
-          </span>
         </div>
 
         {/* Kelengkapan Profil */}

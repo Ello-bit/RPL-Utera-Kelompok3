@@ -238,7 +238,7 @@ function AuthContent() {
           )}
 
           {errorMessage && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+            <div style={{ background: 'var(--terracotta-soft)', border: '1px solid var(--terracotta-border)', color: 'var(--terracotta)', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
               ⚠️ {errorMessage}
             </div>
           )}
@@ -332,7 +332,7 @@ function AuthContent() {
                   </button>
                 </div>
                 {confirmPassword.length > 0 && (
-                  <small style={{ color: passwordsMatch ? '#2A8865' : '#EF4444', fontSize: '0.75rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
+                  <small style={{ color: passwordsMatch ? 'var(--primary-light)' : 'var(--terracotta)', fontSize: '0.75rem', marginTop: '4px', display: 'block', fontWeight: 600 }}>
                     {passwordsMatch ? '✓ Kata sandi cocok' : '✗ Kata sandi belum cocok'}
                   </small>
                 )}

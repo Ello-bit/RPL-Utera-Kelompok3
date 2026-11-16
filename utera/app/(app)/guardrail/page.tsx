@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import PlafonInput from '../plafon-input'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
@@ -188,12 +189,6 @@ export default function GuardrailPage() {
       {/* Header Row */}
       <div className="dash-header-row">
         <div>
-          <div className="breadcrumbs-tag">
-            <span className="material-symbols-rounded" style={{ fontSize: '15px', color: 'var(--primary)' }}>
-              shield
-            </span>
-            <span>Keamanan Pembiayaan Usaha</span>
-          </div>
           <h1 className="dash-heading">Batas Aman Cicilan &amp; Simulasi Pinjaman</h1>
           <p className="dash-subheading">
             Kalkulasi batas aman beban angsuran cicilan kredit perbankan agar likuiditas kas operasional warung tetap terjaga.
@@ -383,20 +378,19 @@ export default function GuardrailPage() {
                 <label htmlFor="range-plafon" className="control-label">Nominal Pengajuan Pinjaman (Plafon)</label>
                 <div className="control-live-val">
                   <span className="currency-prefix">Rp</span>
-                  <input
-                    type="number"
+                  <PlafonInput
                     id="display-plafon"
-                    className="live-input-val"
                     value={plafon}
-                    onChange={(e) => setPlafon(Math.min(currentProgram.maxPlafon, Math.max(currentProgram.minPlafon, Number(e.target.value))))}
-                    step={1000000}
+                    min={currentProgram.minPlafon}
+                    max={currentProgram.maxPlafon}
+                    onChange={setPlafon}
                   />
                 </div>
               </div>
               <input
                 type="range"
                 id="range-plafon"
-                min={2000000}
+                min={currentProgram.minPlafon}
                 max={currentProgram.maxPlafon}
                 step={1000000}
                 value={plafon}
@@ -404,7 +398,7 @@ export default function GuardrailPage() {
                 className="custom-slider"
               />
               <div className="slider-ticks">
-                <span>Rp 2 Jt</span>
+                <span>{formatRupiah(currentProgram.minPlafon)}</span>
                 <span>Rp 25 Jt</span>
                 <span>Rp 50 Jt (Rekomendasi)</span>
                 <span>{formatRupiah(currentProgram.maxPlafon)}</span>

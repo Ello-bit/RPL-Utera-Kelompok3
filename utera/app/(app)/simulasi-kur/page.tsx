@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import PlafonInput from '../plafon-input'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
@@ -196,12 +197,6 @@ export default function SimulasiKurPage() {
       {/* Header Row */}
       <div className="dash-header-row">
         <div>
-          <div className="breadcrumbs-tag">
-            <span className="material-symbols-rounded" style={{ fontSize: '15px', color: 'var(--primary)' }}>
-              account_balance
-            </span>
-            <span>Persiapan Pengajuan KUR</span>
-          </div>
           <h1 className="dash-heading">Simulasi KUR 2026 &amp; Rencana Pembiayaan Usaha</h1>
           <p className="dash-subheading">
             Kalkulasi simulasi Kredit Usaha Rakyat bersubsidi pemerintah (BRI, Mandiri, BNI), perencanaan alokasi dana produktif (KUR Planner), dan checklist kelayakan administratif.
@@ -436,13 +431,12 @@ export default function SimulasiKurPage() {
                 <label htmlFor="range-plafon-kur" className="control-label">Nominal Pengajuan Modal Kerja (Plafon)</label>
                 <div className="control-live-val">
                   <span className="currency-prefix">Rp</span>
-                  <input
-                    type="number"
+                  <PlafonInput
                     id="display-plafon-kur"
-                    className="live-input-val"
                     value={plafon}
-                    onChange={(e) => setPlafon(Math.min(currentTier.maxPlafon, Math.max(currentTier.minPlafon, Number(e.target.value))))}
-                    step={1000000}
+                    min={currentTier.minPlafon}
+                    max={currentTier.maxPlafon}
+                    onChange={setPlafon}
                   />
                 </div>
               </div>
