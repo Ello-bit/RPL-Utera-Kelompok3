@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateSkorPRD, buildSkorSnapshot, rataLabaBulanan, SkorResult } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
@@ -18,7 +17,6 @@ export default function SkorKelayakanPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
-  const [isGuest, setIsGuest] = useState(false)
   const [profilId, setProfilId] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -29,9 +27,8 @@ export default function SkorKelayakanPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setTransactions(DEMO_TRANSACTIONS)
         setLoading(false)
         return
       }
@@ -61,8 +58,8 @@ export default function SkorKelayakanPage() {
   }, [])
 
   const skorData: SkorResult = useMemo(() => {
-    return calculateSkorPRD(transactions, isGuest)
-  }, [transactions, isGuest])
+    return calculateSkorPRD(transactions)
+  }, [transactions])
 
   const totalScore = skorData.total
   // SVG Ring calculation: circumference = 2 * PI * 52 = ~326.73
@@ -78,14 +75,6 @@ export default function SkorKelayakanPage() {
   const handleSaveSnapshot = async () => {
     setSaving(true)
     setSaveSuccess(null)
-
-    if (isGuest) {
-      setTimeout(() => {
-        setSaving(false)
-        setSaveSuccess('Snapshot tersimpan di memori (Mode Tamu).')
-      }, 500)
-      return
-    }
 
     try {
       const { error } = await supabase
@@ -125,7 +114,7 @@ export default function SkorKelayakanPage() {
           Gagal memuat transaksi: {loadError}
         </p>
       )}
-      {!loading && !isGuest && skorData.dataKurang && skorData.category !== 'Belum Ada Data' && (
+      {!loading && skorData.dataKurang && skorData.category !== 'Belum Ada Data' && (
         <p role="status" className="dash-subheading" style={{ color: '#8A5E0F' }}>
           Data belum cukup: baru {skorData.k1.detail}. Skor dihitung dari bulan yang ada dan
           akan lebih akurat setelah 6 bulan tercatat.

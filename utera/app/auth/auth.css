@@ -123,26 +123,6 @@
   color: var(--neutral-900);
 }
 
-.auth-wave-icon {
-  display: flex;
-  align-items: center;
-  gap: 2.5px;
-  height: 18px;
-}
-
-.auth-wave-icon span {
-  width: 3px;
-  background-color: var(--primary);
-  border-radius: 2px;
-  animation: pulse-wave 1.8s ease-in-out infinite alternate;
-}
-
-.auth-wave-icon span:nth-child(1) { height: 8px; animation-delay: 0.1s; }
-.auth-wave-icon span:nth-child(2) { height: 16px; animation-delay: 0.3s; }
-.auth-wave-icon span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
-.auth-wave-icon span:nth-child(4) { height: 18px; animation-delay: 0.4s; }
-.auth-wave-icon span:nth-child(5) { height: 10px; animation-delay: 0.15s; }
-
 @keyframes pulse-wave {
   0% { transform: scaleY(0.6); }
   100% { transform: scaleY(1.15); }
@@ -400,33 +380,6 @@
   line-height: 1.5;
 }
 
-/* Checkbox Row */
-.form-checkbox-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.form-checkbox {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--primary);
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.form-checkbox-label {
-  font-family: var(--font-family);
-  font-size: 0.82rem;
-  color: var(--neutral-600);
-  cursor: pointer;
-  user-select: none;
-  line-height: 1.45;
-}
-
 /* Form Body */
 .auth-form {
   display: flex;
@@ -435,27 +388,6 @@
 }
 
 /* Collapsible Form Group for Smooth Transition */
-.form-group-collapsible {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 100px;
-  opacity: 1;
-  transform: translateY(0);
-  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity 0.25s ease, 
-              transform 0.25s ease,
-              margin 0.3s ease;
-  overflow: hidden;
-}
-
-.form-group-collapsible.collapsed {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-8px);
-  margin: 0;
-  pointer-events: none;
-}
 
 .form-group {
   display: flex;
@@ -519,22 +451,6 @@
   color: var(--neutral-800);
 }
 
-/* Terms Disclaimer */
-.form-terms {
-  font-family: var(--font-family);
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--neutral-500);
-  margin-top: -2px;
-}
-
-.form-terms a {
-  color: var(--primary);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* Primary Action Button (UTERA Forest Green Hover) */
 .btn-submit {
   width: 100%;
@@ -590,198 +506,7 @@
   color: var(--primary-dark);
 }
 
-/* ==========================================================================
-   PASSWORD CONFIRMATION & OTP VERIFICATION MODAL
-   ========================================================================== */
-.input-hint {
-  font-size: 0.75rem;
-  margin-top: 5px;
-  display: block;
-  font-weight: 600;
-}
-.input-hint.valid {
-  color: #1F6B4F;
-}
-.input-hint.invalid {
-  color: #DC2626;
-}
-
 /* OTP Verification Modal Overlay */
-.verify-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(25, 34, 29, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 16px;
-  animation: fadeIn 0.2s ease;
-}
-
-.verify-modal-card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  max-width: 440px;
-  width: 100%;
-  padding: 32px 28px;
-  box-shadow: 0 25px 50px -12px rgba(25, 34, 29, 0.25);
-  border: 1px solid rgba(31, 107, 79, 0.15);
-  text-align: center;
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.verify-icon-wrap {
-  width: 56px;
-  height: 56px;
-  background: #EAF4EF;
-  color: #1F6B4F;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.verify-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--neutral-900);
-  margin-bottom: 8px;
-}
-
-.verify-desc {
-  font-size: 0.875rem;
-  color: var(--neutral-600);
-  line-height: 1.5;
-  margin-bottom: 18px;
-}
-
-.otp-simulated-banner {
-  background: #EEF7F2;
-  border: 1px dashed #D1E7DC;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.8125rem;
-  color: #12402F;
-}
-
-.otp-simulated-banner strong {
-  font-size: 1.05rem;
-  letter-spacing: 3px;
-  color: #17543E;
-  margin-left: 4px;
-}
-
-.btn-copy-otp {
-  background: #D4EAE0;
-  border: 1px solid #D1E7DC;
-  color: #12402F;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-copy-otp:hover {
-  background: #D1E7DC;
-}
-
-.otp-inputs-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.otp-digit {
-  width: 46px;
-  height: 54px;
-  border: 2px solid var(--neutral-300);
-  border-radius: 12px;
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--neutral-900);
-  font-family: inherit;
-  transition: all 0.2s ease;
-  background: #FAFAFA;
-}
-
-.otp-digit:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 4px var(--primary-glow);
-}
-
-.otp-resend-row {
-  font-size: 0.8125rem;
-  color: var(--neutral-500);
-  margin-bottom: 22px;
-}
-
-.btn-resend-link {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0 4px;
-  font-family: inherit;
-}
-
-.btn-resend-link:disabled {
-  color: var(--neutral-400);
-  cursor: not-allowed;
-}
-
-.verify-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn-verify-cancel {
-  flex: 1;
-  height: 46px;
-  background: var(--neutral-100);
-  border: 1px solid var(--neutral-200);
-  border-radius: 12px;
-  font-weight: 600;
-  color: var(--neutral-700);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.btn-verify-cancel:hover {
-  background: var(--neutral-200);
-}
-
-.btn-verify-submit {
-  flex: 1.4;
-  height: 46px;
-  background: var(--primary);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s ease;
-}
-
-.btn-verify-submit:hover {
-  background: var(--primary-hover);
-}
 
 @keyframes fadeIn {
   from { opacity: 0; }

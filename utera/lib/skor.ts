@@ -45,13 +45,12 @@ function formatShort(num: number): string {
 }
 
 export function calculateSkorPRD(
-  transactions: TransaksiKas[],
-  isDemo = false
+  transactions: TransaksiKas[]
 ): SkorResult {
   const totalMonths = 6
 
-  // If no transactions and not demo: score is 0
-  if (transactions.length === 0 && !isDemo) {
+  // Belum ada transaksi: skor 0
+  if (transactions.length === 0) {
     const emptyMonthly = [
       'Bulan 1',
       'Bulan 2',

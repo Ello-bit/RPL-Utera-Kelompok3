@@ -12,7 +12,6 @@ interface SidebarProps {
   totalTx: number
   skor: number
   userEmail: string
-  userName: string
   isAdmin?: boolean
   mobileOpen?: boolean
   onCloseMobile?: () => void
@@ -38,7 +37,6 @@ export default function Sidebar({
   totalTx,
   skor,
   userEmail,
-  userName,
   isAdmin = false,
   mobileOpen: controlledMobileOpen,
   onCloseMobile,

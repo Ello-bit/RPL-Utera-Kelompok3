@@ -89,16 +89,6 @@
 .btn-icon { font-size: 18px !important; }
 .search-icon { font-size: 18px !important; color: var(--text-light); }
 
-body.dashboard-body {
-  font-family: var(--font-family);
-  background-color: var(--bg-app);
-  color: var(--text-main);
-  min-height: 100vh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* ==========================================================================
    APP SHELL (same as dashboard)
    ========================================================================== */
@@ -550,27 +540,6 @@ body.dashboard-body {
   margin-top: 2px;
 }
 
-/* Section header (for komponen area) */
-.section-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.section-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-main);
-}
-
-.section-subtitle {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
 /* ==========================================================================
    1. SKOR HERO GRID
    ========================================================================== */
@@ -761,7 +730,7 @@ body.dashboard-body {
 
 .spectrum-bar-wrap {
   position: relative;
-  padding: 30px 0 6px; /* Top space dedicated for pointer tag */
+  padding: 30px 0 6px;
 }
 
 .spectrum-pointer {
@@ -970,244 +939,19 @@ body.dashboard-body {
   color: var(--text-muted);
   font-weight: 500;
 }
-
-/* Kategori Legend Panel */
-.skor-legend-panel {
-  padding: 22px;
-}
-
-.kategori-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.kategori-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--r-md);
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-}
-
-.kategori-row.active {
-  background: var(--primary-soft);
-  border-color: var(--primary-border);
-}
-
-.kat-color-bar {
-  width: 4px;
-  height: 36px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.kat-rendah { background: var(--terracotta); }
-.kat-cukup { background: var(--gold); }
-.kat-baik { background: var(--primary); }
-
-.kat-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 72px;
-}
-
-.kat-info strong {
-  font-size: 0.8125rem;
-  color: var(--text-main);
-}
-
-.kat-info span {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.kat-desc {
-  font-size: 0.75rem;
-  color: var(--text-body);
-  flex: 1;
-}
-
-
-/* Checklist Kesiapan Berkas Bank */
-.bank-readiness-checklist {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.readiness-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
-}
-
-.readiness-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: var(--text-body);
-  line-height: 1.4;
-}
-
-.item-icon-check {
-  font-size: 16px;
-  color: var(--emerald);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.legend-action-box {
-  margin-top: 16px;
-}
 /* ==========================================================================
    2. KOMPONEN SKOR GRID
    ========================================================================== */
-.komponen-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.komponen-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: border-color 0.15s ease;
-}
-
-.komponen-card:hover {
-  border-color: var(--border-hover);
-}
-
-.komponen-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.komponen-icon-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
 
 .bg-primary-soft { background: var(--primary-soft); }
 .bg-emerald-soft { background: var(--emerald-soft); }
 .bg-gold-soft { background: var(--gold-soft); }
 .bg-blue-soft { background: var(--blue-soft); }
 
-.komponen-title-area {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.komponen-name {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.komponen-bobot {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.komponen-score-pill {
-  display: flex;
-  align-items: baseline;
-  gap: 1px;
-  flex-shrink: 0;
-}
-
-.komponen-score-val {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-main);
-  letter-spacing: -0.02em;
-}
-
-.komponen-score-max {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.komponen-desc {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.komponen-meter {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.meter-track {
-  height: 8px;
-  background: #E2E8F0;
-  border-radius: var(--r-pill);
-  overflow: hidden;
-}
-
-.meter-fill {
-  height: 100%;
-  border-radius: var(--r-pill);
-  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .bg-primary { background: var(--primary); }
 .bg-emerald { background: var(--emerald); }
 .bg-gold { background: var(--gold); }
 .bg-blue { background: var(--blue); }
-
-.meter-detail {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.komponen-pct {
-  font-weight: 700;
-  color: var(--text-body);
-}
-
-/* ==========================================================================
-   3. BOTTOM GRID (riwayat + rekomendasi)
-   ========================================================================== */
-.skor-bottom-grid {
-  display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 20px;
-}
 
 /* Segmented Control */
 .segmented-control {
@@ -1279,107 +1023,6 @@ body.dashboard-body {
   background: rgba(31, 107, 79, 0.03);
 }
 
-.row-period-divider td {
-  border-top: 2px dashed #CBD5E1;
-}
-
-.month-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.month-name {
-  font-weight: 700;
-  color: var(--text-main);
-  font-size: 0.8125rem;
-}
-
-.period-sub-chip {
-  font-size: 0.625rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  width: fit-content;
-}
-
-.chip-q1 {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
-.chip-q2 {
-  background: var(--primary-soft);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
-}
-
-.tag-note {
-  display: inline-block;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  background: var(--terracotta-soft);
-  color: var(--terracotta);
-  border: 1px solid var(--terracotta-border);
-  padding: 1px 5px;
-  border-radius: 3px;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-.table-margin-badge {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--r-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.table-margin-badge.pill-good {
-  background: var(--emerald-soft);
-  color: var(--emerald);
-}
-
-.table-margin-badge.pill-ok {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-.table-margin-badge.pill-low {
-  background: var(--gold-soft);
-  color: var(--gold);
-}
-
-.table-margin-badge.pill-neg {
-  background: var(--terracotta-soft);
-  color: var(--terracotta);
-}
-
-.status-recorded-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--emerald);
-  background: var(--emerald-soft);
-  padding: 2px 8px;
-  border-radius: var(--r-full);
-}
-
-.status-missing-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--terracotta);
-  background: var(--terracotta-soft);
-  padding: 2px 8px;
-  border-radius: var(--r-full);
-}
-
 .data-table tfoot td {
   padding: 12px 14px;
   font-weight: 700;
@@ -1387,38 +1030,6 @@ body.dashboard-body {
   background: #F8FAFC;
   border-top: 2px solid var(--border-subtle);
   font-size: 0.8125rem;
-}
-
-/* Bar Chart Summary Strip */
-.chart-summary-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--bg-app);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  margin-bottom: 12px;
-}
-
-.chart-summary-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.css-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.css-val {
-  font-size: 0.9375rem;
-  font-weight: 800;
-  color: var(--text-main);
 }
 
 /* Bar Chart Container */
@@ -1429,53 +1040,6 @@ body.dashboard-body {
   border-bottom: 1px solid var(--border-subtle);
   position: relative;
   gap: 12px;
-}
-
-.chart-y-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: calc(100% - 54px);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  min-width: 44px;
-  text-align: right;
-  padding-right: 8px;
-  border-right: 1px solid #E2E8F0;
-  user-select: none;
-}
-
-.chart-stage {
-  flex: 1;
-  height: 100%;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.chart-grid-lines {
-  position: absolute;
-  inset: 0 0 54px 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.grid-line {
-  width: 100%;
-  height: 1px;
-  background: #F1F5F9;
-}
-
-.grid-line.avg-line {
-  position: absolute;
-  top: 22.4%;
-  width: 100%;
-  border-top: 1px dashed #94A3B8;
-  background: transparent;
-  z-index: 1;
 }
 
 .chart-columns {
@@ -1496,38 +1060,6 @@ body.dashboard-body {
   align-items: center;
   height: 100%;
   justify-content: flex-end;
-}
-
-.col-amount-tags {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-
-.tag-income {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: var(--primary);
-  background: rgba(31, 107, 79, 0.08);
-  padding: 1px 4px;
-  border-radius: 3px;
-}
-
-.tag-laba {
-  font-size: 0.625rem;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 3px;
-}
-
-.tag-laba.text-emerald {
-  background: rgba(31, 107, 79, 0.1);
-}
-
-.tag-laba.text-terracotta {
-  background: rgba(181, 83, 47, 0.1);
 }
 
 .col-bars {
@@ -1555,42 +1087,6 @@ body.dashboard-body {
 }
 
 .bar-income { background: var(--primary); }
-.bar-laba { background: var(--emerald); }
-.bar-defisit { background: var(--terracotta); }
-
-.col-footer-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin-top: 6px;
-  height: 48px;
-}
-
-.col-month-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.col-period-tag {
-  font-size: 0.5625rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-  text-transform: uppercase;
-}
-
-.tag-q1 {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
-.tag-q2 {
-  background: var(--primary-soft);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
-}
 
 .chart-legend {
   display: flex;
@@ -1614,204 +1110,12 @@ body.dashboard-body {
 }
 
 .dot-income { background: var(--primary); }
-.dot-laba { background: var(--emerald); }
-.dot-defisit { background: var(--terracotta); }
-
-.dashed-guide-line {
-  display: inline-block;
-  width: 18px;
-  border-bottom: 2px dashed #94A3B8;
-  vertical-align: middle;
-  margin-right: 4px;
-}
-
-.legend-guide-item {
-  margin-left: auto;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-/* Rekomendasi List */
-.rekomendasi-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.rekom-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  background: var(--bg-app);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-}
-
-.rekom-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.rekom-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.rekom-title {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.rekom-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.rekom-priority {
-  display: inline-block;
-  font-size: 0.625rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 3px;
-  margin-top: 2px;
-  width: fit-content;
-}
-
-.priority-high {
-  background: var(--terracotta-soft);
-  color: var(--terracotta);
-}
-
-.priority-medium {
-  background: var(--gold-soft);
-  color: var(--gold);
-}
-
-.priority-low {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-/* Status check */
-.rekom-check {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  margin-top: 2px;
-  width: fit-content;
-}
-
-.rekom-check.done {
-  color: var(--emerald);
-}
-
-/* Rumus Card */
-.rumus-card {
-  padding: 14px;
-  background: var(--bg-app);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rumus-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8125rem;
-  color: var(--text-main);
-}
-
-.rumus-formula {
-  font-size: 0.75rem;
-  color: var(--text-body);
-  font-family: 'Courier New', monospace;
-  line-height: 1.5;
-  padding: 8px;
-  background: #FFFFFF;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  overflow-x: auto;
-}
-
-.rumus-note {
-  font-size: 0.6875rem;
-  color: var(--text-light);
-  line-height: 1.4;
-}
-
-/* KUR Status Card */
-.kur-status-card {
-  padding: 14px;
-  border-radius: var(--r-md);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.kur-status-card.status-baik {
-  background: var(--emerald-soft);
-  border: 1px solid var(--emerald-border);
-}
-
-.kur-status-card.status-cukup {
-  background: var(--gold-soft);
-  border: 1px solid var(--gold-border);
-}
-
-.kur-status-card.status-rendah {
-  background: var(--terracotta-soft);
-  border: 1px solid var(--terracotta-border);
-}
-
-.kur-status-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8125rem;
-  color: var(--text-main);
-}
-
-.kur-status-body {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}
-
-.kur-status-label {
-  font-weight: 700;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.kur-status-desc {
-  font-size: 0.75rem;
-  color: var(--text-body);
-}
 
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 1100px) {
   .skor-hero-grid {
-    grid-template-columns: 1fr;
-  }
-  .komponen-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .skor-bottom-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1868,19 +1172,10 @@ body.dashboard-body {
   .skor-vitals-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .chart-summary-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 640px) {
-  .komponen-grid {
-    grid-template-columns: 1fr;
-  }
   .skor-vitals-grid {
-    grid-template-columns: 1fr;
-  }
-  .chart-summary-strip {
     grid-template-columns: 1fr;
   }
   .spectrum-scale-labels {

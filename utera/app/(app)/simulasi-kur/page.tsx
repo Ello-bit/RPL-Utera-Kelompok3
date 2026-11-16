@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
-import { calculateKasSummary, formatRupiah } from '@/lib/kas'
+import { formatRupiah } from '@/lib/kas'
 import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS, type KurTier } from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
@@ -32,17 +32,23 @@ const KUR_TIERS_CONFIG: Record<string, TierConfig> = Object.fromEntries(
 export default function SimulasiKurPage() {
   const supabase = createClient()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
-  const [isGuest, setIsGuest] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [profilId, setProfilId] = useState<string | null>(null)
   const [punyaNibAtauSku, setPunyaNibAtauSku] = useState(false)
 
   // Simulation Controls
-  const [selectedTierId, setSelectedTierId] = useState<string>('kur-mikro')
+  // Tombol "Uji Syarat ..." di landing membuka halaman ini dengan ?jenis=kur-super|kur-mikro|kur-kecil
+  const jenisAwal = useSearchParams().get('jenis')
+  const tierAwal = (jenisAwal && KUR_TIERS_CONFIG[jenisAwal]) || KUR_TIERS_CONFIG['kur-mikro']
+  const [selectedTierId, setSelectedTierId] = useState<string>(tierAwal.id)
   const [selectedBank, setSelectedBank] = useState<string>('bri')
-  const [plafon, setPlafon] = useState<number>(30_000_000)
-  const [tenorMonths, setTenorMonths] = useState<number>(36)
+  const [plafon, setPlafon] = useState<number>(() =>
+    30_000_000 > tierAwal.maxPlafon ? tierAwal.defaultPlafon : Math.max(tierAwal.minPlafon, 30_000_000)
+  )
+  const [tenorMonths, setTenorMonths] = useState<number>(() =>
+    Math.min(tierAwal.maxTenor, Math.max(tierAwal.minTenor, 36))
+  )
 
   useEffect(() => {
     async function loadData() {
@@ -50,9 +56,8 @@ export default function SimulasiKurPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setTransactions(DEMO_TRANSACTIONS)
         return
       }
 
@@ -92,21 +97,12 @@ export default function SimulasiKurPage() {
     loadData()
   }, [])
 
-  // Tombol "Uji Syarat ..." di landing membuka halaman ini dengan ?jenis=kur-super|kur-mikro|kur-kecil
-  useEffect(() => {
-    const jenis = new URLSearchParams(window.location.search).get('jenis')
-    if (jenis && KUR_TIERS_CONFIG[jenis]) handleTierChange(jenis)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const currentTier = KUR_TIERS_CONFIG[selectedTierId] || KUR_TIERS_CONFIG['kur-mikro']
 
-  // Kas summary & effective monthly profit
-  const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
   // PRD: rata-rata laba bersih bulanan 6 bulan terakhir; tanpa angka bawaan
   const baseMonthlyProfit = useMemo(
-    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions, isGuest))),
-    [transactions, isGuest]
+    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions))),
+    [transactions]
   )
 
   // Guardrail 30% limit
@@ -132,7 +128,7 @@ export default function SimulasiKurPage() {
   const totalSavings = monthlySavings * tenorMonths
 
   // Score estimate
-  const skorDetail = calculateSkorPRD(transactions, isGuest)
+  const skorDetail = calculateSkorPRD(transactions)
   const estimatedScore = skorDetail.total
   const kelayakan = evaluateKelayakanKur({
     skor: estimatedScore,
@@ -159,20 +155,12 @@ export default function SimulasiKurPage() {
 
   const handleSaveSimulation = async () => {
     // PRD: pengajuan hanya disimpan bila cicilan sesuai arus kas (maks 30% rata-rata laba bersih)
-    if (!isGuest && !guard.isSafe) {
+    if (!guard.isSafe) {
       alert('Cicilan ini melebihi 30% rata-rata laba bersih Anda. Coba tenor lebih panjang atau nominal lebih kecil.')
       return
     }
     setSaving(true)
     setSaveSuccess(null)
-
-    if (isGuest) {
-      setTimeout(() => {
-        setSaving(false)
-        setSaveSuccess('Simulasi tersimpan di memori (Mode Tamu).')
-      }, 500)
-      return
-    }
 
     try {
       const bankNames: Record<string, string> = {
@@ -229,7 +217,7 @@ export default function SimulasiKurPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {transactions.length === 0 && !isGuest && (
+      {transactions.length === 0 && (
         <div style={{
           background: '#EFF6FF',
           border: '1px solid #BFDBFE',
@@ -503,7 +491,7 @@ export default function SimulasiKurPage() {
                 type="button"
                 className="btn btn-primary"
                 onClick={handleSaveSimulation}
-                disabled={saving || (!isGuest && !guard.isSafe)}
+                disabled={saving || !guard.isSafe}
               >
                 <span className="material-symbols-rounded">bookmark</span>
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi KUR ke Database'}</span>

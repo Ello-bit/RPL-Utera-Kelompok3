@@ -1,6 +1,5 @@
 'use client'
 
-import { isAdminUser } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
@@ -9,7 +8,6 @@ import { todayLocal } from '@/lib/input'
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import {
   calculateKasSummary,
@@ -30,17 +28,9 @@ export default function DashboardPage() {
   const router = useRouter()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
   const [profile, setProfile] = useState<ProfilUsaha | null>(null)
-  const [isGuest, setIsGuest] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // Admin state
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [allProfiles, setAllProfiles] = useState<ProfilUsaha[]>([])
-  const [allRawTransactions, setAllRawTransactions] = useState<TransaksiKas[]>([])
-  const [selectedProfileId, setSelectedProfileId] = useState<string>('all')
-  const [adminViewTab, setAdminViewTab] = useState<'ringkasan' | 'direktori' | 'audit-kas'>('ringkasan')
-  const [adminSearch, setAdminSearch] = useState('')
-  const [adminSector, setAdminSector] = useState('ALL')
 
   // Chart state
   const [chartMode, setChartMode] = useState<'omzet' | 'laba'>('omzet')
@@ -66,52 +56,8 @@ export default function DashboardPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setProfile(DEMO_PROFILES[0])
-        setTransactions(DEMO_TRANSACTIONS)
-        setLoading(false)
-        return
-      }
-
-      const isUserAdmin = isAdminUser(user)
-      setIsAdmin(isUserAdmin)
-
-      if (isUserAdmin) {
-        // Fetch all profiles across platform
-        const { data: allProfs } = await supabase.from('profil_usaha').select('*')
-        if (allProfs && allProfs.length > 0) {
-          setAllProfiles(allProfs as ProfilUsaha[])
-        }
-
-        // Fetch all transactions across platform
-        const { data: allTxs } = await supabase
-          .from('transaksi_kas')
-          .select('*')
-          .order('tanggal', { ascending: false })
-
-        if (allTxs && allTxs.length > 0) {
-          setAllRawTransactions(allTxs as TransaksiKas[])
-          setTransactions(allTxs as TransaksiKas[])
-        } else {
-          setAllRawTransactions(DEMO_TRANSACTIONS)
-          setTransactions(DEMO_TRANSACTIONS)
-        }
-
-        setProfile({
-          id: 'admin-platform',
-          user_id: user.id,
-          nama_usaha: 'Seluruh Ekosistem UMKM',
-          nama_pemilik: 'Administrator UTERA',
-          jenis_usaha: 'Agregat Platform Finansial',
-          nomor_telepon: '1500-UTERA',
-          alamat_usaha: 'Pusat Komando UTERA Finansial',
-          tanggal_mulai_usaha: '2026-01-01',
-          deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
-          foto_url: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
         setLoading(false)
         return
       }
@@ -183,42 +129,11 @@ export default function DashboardPage() {
     loadData()
   }, [])
 
-  useEffect(() => {
-    if (!isAdmin) return
-    if (selectedProfileId === 'all') {
-      setTransactions(allRawTransactions)
-      setProfile({
-        id: 'admin-platform',
-        user_id: 'admin',
-        nama_usaha: 'Seluruh Ekosistem UMKM',
-        nama_pemilik: 'Administrator UTERA',
-        jenis_usaha: 'Agregat Platform Finansial',
-        nomor_telepon: '1500-UTERA',
-        alamat_usaha: 'Pusat Komando UTERA Finansial',
-        tanggal_mulai_usaha: '2026-01-01',
-        deskripsi_usaha: 'Monitoring terpadu arus kas seluruh mitra UMKM binaan',
-        foto_url: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-    } else if (selectedProfileId === 'demo-kopi') {
-      setTransactions(DEMO_TRANSACTIONS)
-      setProfile(DEMO_PROFILES[0])
-    } else {
-      const found = allProfiles.find((p) => p.id === selectedProfileId)
-      if (found) {
-        setProfile(found)
-        const filtered = allRawTransactions.filter((t) => t.profil_id === found.id || t.user_id === found.user_id)
-        setTransactions(filtered.length > 0 ? filtered : DEMO_TRANSACTIONS)
-      }
-    }
-  }, [selectedProfileId, isAdmin, allProfiles, allRawTransactions])
-
   // 1. Calculate Kas Summary
   const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
 
   // 2. Calculate Dynamic PRD Score Formula (Pillar 2: Consistency + Cashflow Health)
-  const skorResult = useMemo(() => calculateSkorPRD(transactions, isGuest), [transactions, isGuest])
+  const skorResult = useMemo(() => calculateSkorPRD(transactions), [transactions])
   const scorePRD = skorResult.total
 
   // 3. Guardrail 30% calculation
@@ -357,80 +272,6 @@ export default function DashboardPage() {
     }))
   }, [transactions])
 
-  // Admin UMKM Directory list
-  const umkmList = useMemo(() => {
-    const list: Array<{
-      id: string
-      namaUsaha: string
-      namaPemilik: string
-      sektor: string
-      telepon: string
-      totalTx: number
-      pemasukan: number
-      pengeluaran: number
-      saldoKas: number
-      skor: number
-      statusKur: string
-      hasNib: boolean
-    }> = []
-
-    if (allProfiles.length > 0) {
-      allProfiles.forEach((p) => {
-        const txs = allRawTransactions.filter((t) => t.profil_id === p.id || t.user_id === p.user_id)
-        let inc = 0
-        let exp = 0
-        txs.forEach((t) => {
-          if (t.tipe === 'pemasukan') inc += Number(t.nominal)
-          else exp += Number(t.nominal)
-        })
-        const saldo = inc - exp
-        const margin = inc > 0 ? saldo / inc : 0
-        const skor = txs.length > 0 ? Math.min(96, Math.max(40, Math.round(50 + margin * 45))) : 50
-
-        list.push({
-          id: p.id,
-          namaUsaha: p.nama_usaha,
-          namaPemilik: p.nama_pemilik || 'Pemilik Usaha',
-          sektor: p.jenis_usaha || 'Kuliner & F&B',
-          telepon: p.nomor_telepon || '0812-xxxx-xxxx',
-          totalTx: txs.length,
-          pemasukan: inc,
-          pengeluaran: exp,
-          saldoKas: saldo,
-          skor,
-          statusKur: skor >= 70 ? 'Siap KUR Mikro (s.d. Rp 50 Jt)' : 'Rekomendasi KUR Super Mikro',
-          hasNib: true,
-        })
-      })
-    }
-
-    const defaultSeed = [
-      { id: 'seed-dewo', namaUsaha: 'Kopi Galer', namaPemilik: 'Dewo', sektor: 'Kuliner & F&B', telepon: '0812-3456-7890', totalTx: 18, pemasukan: 32500000, pengeluaran: 14200000, saldoKas: 18300000, skor: 84, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
-      { id: 'seed-berkah', namaUsaha: 'Warung Berkah Jaya', namaPemilik: 'Ibu Siti Aminah', sektor: 'Perdagangan & Retail', telepon: '0857-9876-5432', totalTx: 42, pemasukan: 48600000, pengeluaran: 27100000, saldoKas: 21500000, skor: 88, statusKur: 'Siap KUR Mikro (s.d. Rp 100 Jt)', hasNib: true },
-      { id: 'seed-nusantara', namaUsaha: 'Kedai Kopi Nusantara', namaPemilik: 'Budi Santoso', sektor: 'Kuliner & F&B', telepon: '0813-8821-4401', totalTx: 24, pemasukan: 28400000, pengeluaran: 12800000, saldoKas: 15600000, skor: 82, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
-      { id: 'seed-konveksi', namaUsaha: 'Konveksi Berkah Makmur', namaPemilik: 'Haji Ahmad', sektor: 'Konveksi & Fashion', telepon: '0821-4455-6677', totalTx: 15, pemasukan: 55000000, pengeluaran: 38000000, saldoKas: 17000000, skor: 74, statusKur: 'Siap KUR Mikro (s.d. Rp 50 Jt)', hasNib: true },
-      { id: 'seed-bengkel', namaUsaha: 'Bengkel Motor Sejahtera', namaPemilik: 'Eko Wahyudi', sektor: 'Jasa & Layanan', telepon: '0878-1122-3344', totalTx: 9, pemasukan: 16500000, pengeluaran: 10200000, saldoKas: 6300000, skor: 62, statusKur: 'Rekomendasi KUR Super Mikro', hasNib: false },
-    ]
-
-    defaultSeed.forEach((seed) => {
-      if (!list.some((item) => item.namaUsaha.toLowerCase() === seed.namaUsaha.toLowerCase())) {
-        list.push(seed)
-      }
-    })
-
-    return list
-  }, [allProfiles, allRawTransactions])
-
-  const filteredUmkm = useMemo(() => {
-    return umkmList.filter((item) => {
-      const matchSearch =
-        item.namaUsaha.toLowerCase().includes(adminSearch.toLowerCase()) ||
-        item.namaPemilik.toLowerCase().includes(adminSearch.toLowerCase())
-      const matchSector = adminSector === 'ALL' || item.sektor === adminSector
-      return matchSearch && matchSector
-    })
-  }, [umkmList, adminSearch, adminSector])
-
   // Handle Save New Transaction
   const handleSaveTx = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -442,28 +283,6 @@ export default function DashboardPage() {
     }
 
     setSubmitting(true)
-    const newTx: TransaksiKas = {
-      id: `tx-${Date.now()}`,
-      user_id: profile?.user_id || 'demo-user',
-      profil_id: profile?.id || null,
-      tanggal: txDate,
-      keterangan: txDesc.trim(),
-      nominal,
-      tipe: txType,
-      kategori: txCategory,
-      metode_pembayaran: 'Tunai',
-      created_at: new Date().toISOString(),
-    }
-
-    if (isGuest) {
-      setTransactions((prev) => [newTx, ...prev])
-      setModalOpen(false)
-      setTxDesc('')
-      setTxAmount('')
-      setSubmitting(false)
-      return
-    }
-
     try {
       const { data, error } = await supabase
         .from('transaksi_kas')
@@ -506,41 +325,13 @@ export default function DashboardPage() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
             <h1 className="dash-heading">Dashboard Finansial</h1>
-            {isAdmin && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#EEF7F2', color: '#12402F', border: '1px solid #D1E7DC', padding: '3px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
-                <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>shield</span>
-                Mode Administrator
-              </span>
-            )}
           </div>
           <p className="dash-subheading">
-            {isAdmin
-              ? `Memantau kesehatan kas dan rasio kelayakan kredit: ${profile?.nama_usaha || 'Ekosistem UMKM'}`
-              : 'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan batas aman cicilan.'}
+            {'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan batas aman cicilan.'}
           </p>
         </div>
 
         <div className="dash-header-actions">
-          {isAdmin && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-muted)' }}>Pilih Usaha:</span>
-              <select
-                className="select-period"
-                value={selectedProfileId}
-                onChange={(e) => setSelectedProfileId(e.target.value)}
-                style={{ fontWeight: 700, color: 'var(--primary)' }}
-                aria-label="Pilih Usaha Mitra untuk Ditinjau"
-              >
-                <option value="all">🌐 Seluruh Ekosistem UMKM</option>
-                {allProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    🏪 {p.nama_usaha} ({p.nama_pemilik || 'Pemilik'})
-                  </option>
-                ))}
-                <option value="demo-kopi">☕ Dewo - Kopi Galer</option>
-              </select>
-            </div>
-          )}
 
           <div className="date-range-badge">
             <span className="material-symbols-rounded date-icon">calendar_today</span>
@@ -562,12 +353,12 @@ export default function DashboardPage() {
 
       {/* UMKM Financial Insight & Notification Banner */}
       {/* Saat data masih dimuat, jangan tampilkan pesan "belum mencatat transaksi" */}
-      {!isAdmin && loading && (
+      {loading && (
         <div role="status" style={{ padding: '14px 18px', borderRadius: '12px', background: 'var(--primary-soft)', border: '1px solid var(--primary-border)', color: 'var(--primary-dark, #12402F)', fontSize: '0.875rem', marginBottom: '20px' }}>
           Memuat data usaha Anda…
         </div>
       )}
-      {!isAdmin && !loading && (
+      {!loading && (
         transactions.length === 0 ? (
           <div style={{
             display: 'flex',
@@ -986,7 +777,7 @@ export default function DashboardPage() {
                 className="select-filter-tx"
                 id="filter-tx-type"
                 value={filterTxType}
-                onChange={(e) => setFilterTxType(e.target.value as any)}
+                onChange={(e) => setFilterTxType(e.target.value as typeof filterTxType)}
               >
                 <option value="all">Semua Tipe</option>
                 <option value="income">Pemasukan (Kas Masuk)</option>
@@ -1110,152 +901,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ========================================================================
-           ADMIN PANEL: DAFTAR AKUN & DIREKTORI MITRA UMKM
-           ======================================================================== */}
-      {isAdmin && (
-        <div className="dash-panel" style={{ marginTop: '24px', padding: '24px' }}>
-          <div className="panel-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="material-symbols-rounded" style={{ color: 'var(--primary)' }}>groups</span>
-                <h2 className="panel-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
-                  Direktori Akun &amp; Mitra UMKM Terdaftar ({umkmList.length} Usaha)
-                </h2>
-              </div>
-              <p className="panel-subtitle" style={{ margin: '4px 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                Daftar seluruh akun UMKM, kepatuhan kas harian, skor kesiapan bank, dan kelengkapan NIB.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input
-                type="text"
-                placeholder="Cari nama usaha atau pemilik..."
-                value={adminSearch}
-                onChange={(e) => setAdminSearch(e.target.value)}
-                style={{
-                  padding: '7px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: '0.825rem',
-                  outline: 'none',
-                }}
-              />
-              <select
-                value={adminSector}
-                onChange={(e) => setAdminSector(e.target.value)}
-                style={{
-                  padding: '7px 10px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: '0.825rem',
-                  background: '#fff',
-                  outline: 'none',
-                }}
-              >
-                <option value="ALL">Semua Sektor</option>
-                <option value="Kuliner & F&B">Kuliner &amp; F&amp;B</option>
-                <option value="Perdagangan & Retail">Perdagangan &amp; Retail</option>
-                <option value="Konveksi & Fashion">Konveksi &amp; Fashion</option>
-                <option value="Jasa & Layanan">Jasa &amp; Layanan</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="table-responsive" style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ background: '#F8FAF9', textAlign: 'left', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Nama Usaha &amp; Pemilik</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Sektor</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Saldo Kas</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Skor Kelayakan</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Status KUR</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)' }}>Legalitas NIB</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'right' }}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUmkm.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F3' }}>
-                    <td style={{ padding: '14px 16px' }}>
-                      <strong style={{ color: 'var(--text-main)', display: 'block' }}>{u.namaUsaha}</strong>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Pemilik: {u.namaPemilik} • {u.telepon}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#F1F5F3', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {u.sektor}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <strong style={{ color: u.saldoKas >= 0 ? '#1F6B4F' : '#DC2626' }}>
-                        {formatRupiah(u.saldoKas)}
-                      </strong>
-                      <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{u.totalTx} Transaksi</div>
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '3px 8px',
-                          borderRadius: '9999px',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          background: u.skor >= 70 ? '#EEF7F2' : '#FEF3C7',
-                          color: u.skor >= 70 ? '#1F6B4F' : '#D97706',
-                          border: `1px solid ${u.skor >= 70 ? '#D1E7DC' : '#FCD34D'}`,
-                        }}
-                      >
-                        ★ {u.skor} Poin
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 16px', fontSize: '0.8rem', fontWeight: 600, color: u.skor >= 70 ? '#12402F' : '#92400E' }}>
-                      {u.statusKur}
-                    </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      {u.hasNib ? (
-                        <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#1E40AF', fontSize: '0.75rem', fontWeight: 700, border: '1px solid #BFDBFE' }}>
-                          ✓ NIB Terbit
-                        </span>
-                      ) : (
-                        <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '6px', background: '#F3F4F6', color: '#9CA3AF', fontSize: '0.75rem', fontWeight: 600 }}>
-                          Belum Ada
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedProfileId(u.id)
-                          window.scrollTo({ top: 0, behavior: 'smooth' })
-                        }}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--primary)',
-                          background: selectedProfileId === u.id ? 'var(--primary)' : '#fff',
-                          color: selectedProfileId === u.id ? '#fff' : 'var(--primary)',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {selectedProfileId === u.id ? 'Sedang Ditinjau' : 'Lihat Kas Usaha'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================================
            MODAL: CATAT TRANSAKSI KAS BARU

@@ -35,7 +35,6 @@ export default function AppShell({
         totalTx={totalTx}
         skor={skor}
         userEmail={userEmail}
-        userName={userName}
         isAdmin={isAdmin}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}

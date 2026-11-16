@@ -3,9 +3,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
-import { calculateKasSummary, formatRupiah } from '@/lib/kas'
+import { formatRupiah } from '@/lib/kas'
 import { calculateInstallment, evaluateGuardrail, KUR_TIERS, type KurTier } from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
@@ -60,7 +59,6 @@ const PROGRAMS: ProgramOption[] = [
 export default function GuardrailPage() {
   const supabase = createClient()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
-  const [isGuest, setIsGuest] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [profilId, setProfilId] = useState<string | null>(null)
@@ -76,9 +74,8 @@ export default function GuardrailPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setTransactions(DEMO_TRANSACTIONS)
         return
       }
 
@@ -109,12 +106,10 @@ export default function GuardrailPage() {
     return PROGRAMS.find((p) => p.id === selectedProgramId) || PROGRAMS[0]
   }, [selectedProgramId])
 
-  // Kas Summary & Base Laba Bersih
-  const kasSummary = useMemo(() => calculateKasSummary(transactions), [transactions])
   // PRD: rata-rata laba bersih bulanan dari 6 bulan terakhir (bukan total seluruh waktu, tanpa angka bawaan)
   const baseMonthlyProfit = useMemo(
-    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions, isGuest))),
-    [transactions, isGuest]
+    () => Math.max(0, rataLabaBulanan(calculateSkorPRD(transactions))),
+    [transactions]
   )
 
   // Guardrail 30% Ceiling
@@ -165,14 +160,6 @@ export default function GuardrailPage() {
     setSaving(true)
     setSaveSuccess(null)
 
-    if (isGuest) {
-      setTimeout(() => {
-        setSaving(false)
-        setSaveSuccess('Simulasi tersimpan di memori (Mode Tamu).')
-      }, 500)
-      return
-    }
-
     try {
       const { error } = await supabase.from('simulasi_kur').insert({
         program: currentProgram.name,
@@ -222,7 +209,7 @@ export default function GuardrailPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {transactions.length === 0 && !isGuest && (
+      {transactions.length === 0 && (
         <div style={{
           background: '#EFF6FF',
           border: '1px solid #BFDBFE',
@@ -467,7 +454,7 @@ export default function GuardrailPage() {
                 type="button"
                 className="btn btn-primary"
                 onClick={handleSaveSimulation}
-                disabled={saving || (!isGuest && !guard.isSafe)}
+                disabled={saving || !guard.isSafe}
               >
                 <span className="material-symbols-rounded">bookmark</span>
                 <span>{saving ? 'Menyimpan...' : 'Simpan Simulasi ke Database'}</span>

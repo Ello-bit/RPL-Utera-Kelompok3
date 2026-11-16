@@ -55,19 +55,6 @@ export const KUR_TIERS: Record<string, KurTier> = {
   },
 }
 
-export function clampToTier(tier: KurTier, plafon: number, tenor: number) {
-  return {
-    plafon: Math.min(tier.maxPlafon, Math.max(tier.minPlafon, plafon)),
-    tenor: Math.min(tier.maxTenor, Math.max(tier.minTenor, tenor)),
-  }
-}
-
-export const BANKS: Record<string, string> = {
-  bri: 'Bank BRI',
-  mandiri: 'Bank Mandiri',
-  bni: 'Bank BNI',
-}
-
 export interface InstallmentResult {
   total: number
   pokok: number

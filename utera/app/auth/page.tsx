@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, Suspense } from 'react'
+import { useState, useTransition, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -26,11 +26,13 @@ function AuthContent() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (searchParams.get('mode') === 'login') {
-      setMode('login')
-    }
-  }, [searchParams])
+  // Bila alamat berubah menjadi ?mode=login (mis. tautan "Masuk"), pindah ke tab masuk
+  const modeParam = searchParams.get('mode')
+  const [prevModeParam, setPrevModeParam] = useState(modeParam)
+  if (modeParam !== prevModeParam) {
+    setPrevModeParam(modeParam)
+    if (modeParam === 'login') setMode('login')
+  }
 
   const supabase = createClient()
 

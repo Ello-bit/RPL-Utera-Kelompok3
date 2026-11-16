@@ -3,7 +3,6 @@ import { isAdminUser } from '@/lib/auth'
 import { calculateSkorPRD } from '@/lib/skor'
 import { PROFIL_COOKIE, pickActiveProfile } from '@/lib/profil-aktif'
 import { createClient } from '@/lib/supabase/server'
-import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import AppShell from './app-shell'
 import './app-layout.css'
@@ -25,7 +24,7 @@ export default async function AppShellLayout({
   let fotoUrl: string | null = null
   let totalTx = 0
   let skor = 0
-  let userEmail = user?.email || 'Tamu (Demo Mode)'
+  const userEmail = user?.email || ''
   let userName = (user?.user_metadata?.full_name as string) || ''
 
   let isAdmin = false
@@ -63,12 +62,6 @@ export default async function AppShellLayout({
         skor = calculateSkorPRD(typedTx).total
       }
     }
-  } else {
-    // Guest Demo fallback
-    businessName = DEMO_PROFILES[0].nama_usaha
-    userName = DEMO_PROFILES[0].nama_pemilik || 'Budi Santoso'
-    totalTx = DEMO_TRANSACTIONS.length
-    skor = calculateSkorPRD(DEMO_TRANSACTIONS, true).total
   }
 
   return (

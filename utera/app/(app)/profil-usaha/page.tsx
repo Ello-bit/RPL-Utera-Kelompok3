@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/client'
 import { unggahFotoUsaha, hapusFotoUsaha, validasiFoto } from '@/lib/foto-usaha'
 import { getActiveProfilId, setActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import { calculateSkorPRD } from '@/lib/skor'
-import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import {
   VerificationRequest,
@@ -44,7 +43,6 @@ export default function ProfilUsahaPage() {
   const [legalDocs, setLegalDocs] = useState<LegalitasDokumen[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [isGuest, setIsGuest] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
@@ -55,7 +53,9 @@ export default function ProfilUsahaPage() {
   const [uploadingFoto, setUploadingFoto] = useState(false)
 
   // Verification states
-  const [verifRecord, setVerifRecord] = useState<VerificationRequest | null>(null)
+  // Disimpan bersama id profilnya, supaya saat pindah usaha status lama tidak ikut tampil
+  const [verifState, setVerifState] = useState<{ profilId: string; rec: VerificationRequest | null } | null>(null)
+  const verifRecord = verifState && verifState.profilId === activeProfile.id ? verifState.rec : null
   const [isVerifModalOpen, setIsVerifModalOpen] = useState(false)
   const [verifType, setVerifType] = useState('Verifikasi Kredibilitas Lengkap (Siap KUR)')
   const [verifNotes, setVerifNotes] = useState('')
@@ -79,18 +79,8 @@ export default function ProfilUsahaPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setProfiles(DEMO_PROFILES)
-        setUserTotalTx(DEMO_TRANSACTIONS.length)
-        setUserSkorPRD(82)
-        if (DEMO_PROFILES.length > 0) {
-          setActiveProfile(DEMO_PROFILES[0])
-          setHasNib(true)
-          setNomorNib('1234567890123')
-          setHasNpwp(true)
-          setNomorNpwp('98.765.432.1-012.000')
-        }
         setLoading(false)
         return
       }
@@ -171,18 +161,16 @@ export default function ProfilUsahaPage() {
 
   // Status verifikasi usaha aktif diambil dari database (tabel verifikasi_usaha)
   useEffect(() => {
-    if (isGuest || !activeProfile.id) {
-      setVerifRecord(null)
-      return
-    }
+    const profilId = activeProfile.id
+    if (!profilId) return
     let cancelled = false
-    fetchVerificationByProfil(supabase, activeProfile.id).then((rec) => {
-      if (!cancelled) setVerifRecord(rec)
+    fetchVerificationByProfil(supabase, profilId).then((rec) => {
+      if (!cancelled) setVerifState({ profilId, rec })
     })
     return () => {
       cancelled = true
     }
-  }, [activeProfile.id, isGuest])
+  }, [activeProfile.id])
 
   const handleSubmitVerification = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,11 +178,6 @@ export default function ProfilUsahaPage() {
       showToast('error', 'Nama usaha wajib diisi terlebih dahulu sebelum mengajukan verifikasi.')
       return
     }
-    if (isGuest) {
-      showToast('error', 'Mode tamu: masuk atau daftar akun untuk mengajukan verifikasi.')
-      return
-    }
-
     setSubmittingVerif(true)
     setVerifError(null)
     try {
@@ -218,7 +201,7 @@ export default function ProfilUsahaPage() {
         showToast('error', 'Gagal mengirim pengajuan verifikasi: ' + error)
         return
       }
-      setVerifRecord(newRec)
+      setVerifState({ profilId: activeProfile.id ?? '', rec: newRec })
       setIsVerifModalOpen(false)
       setVerifNotes('')
       showToast('success', 'Pengajuan verifikasi terkirim. Status: Menunggu tinjauan admin.')
@@ -319,11 +302,6 @@ export default function ProfilUsahaPage() {
       return
     }
 
-    if (isGuest) {
-      showToast('success', 'Mode Tamu: Perubahan profil tersimpan sementara di browser.')
-      return
-    }
-
     setSaving(true)
     try {
       const payload: TablesInsert<'profil_usaha'> = {
@@ -419,13 +397,6 @@ export default function ProfilUsahaPage() {
   const handleDeleteProfile = async () => {
     if (!activeProfile.id) return
 
-    if (isGuest) {
-      setProfiles(profiles.filter((p) => p.id !== activeProfile.id))
-      setIsDeleteModalOpen(false)
-      showToast('success', 'Profil berhasil dihapus dari memori.')
-      return
-    }
-
     try {
       const { error } = await supabase
         .from('profil_usaha')
@@ -506,7 +477,7 @@ export default function ProfilUsahaPage() {
             type="button"
             className="profile-avatar"
             onClick={() => fotoInputRef.current?.click()}
-            disabled={uploadingFoto || isGuest}
+            disabled={uploadingFoto}
             aria-label={activeProfile.foto_url ? 'Ganti foto profil usaha' : 'Tambah foto profil usaha'}
             title="JPG, PNG, atau WebP, maksimal 2 MB"
           >

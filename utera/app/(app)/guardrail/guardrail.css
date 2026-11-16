@@ -97,16 +97,6 @@
   font-size: 15px !important;
 }
 
-body.dashboard-body {
-  font-family: var(--font-family);
-  background-color: var(--bg-app);
-  color: var(--text-main);
-  min-height: 100vh;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* ==========================================================================
    APP SHELL LAYOUT (Sidebar + Main Viewport)
    ========================================================================== */
@@ -331,10 +321,6 @@ body.dashboard-body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.icon-coffee {
-  font-size: 18px !important;
 }
 
 .business-details {
@@ -634,20 +620,6 @@ body.dashboard-body {
   background: var(--gold-soft);
   color: var(--gold);
   border: 1px solid var(--gold-border);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--r-pill);
-}
-
-.badge-status-danger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  background: var(--terracotta-soft);
-  color: var(--terracotta);
-  border: 1px solid var(--terracotta-border);
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 3px 10px;
@@ -1268,13 +1240,6 @@ body.dashboard-body {
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
 }
 
-.track-fill-warning {
-  height: 100%;
-  border-radius: var(--r-pill);
-  background: linear-gradient(90deg, #F59E0B, #C98A1B);
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .track-fill-danger {
   height: 100%;
   border-radius: var(--r-pill);
@@ -1638,12 +1603,6 @@ body.dashboard-body {
   align-items: flex-start;
 }
 
-.planner-side-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 @media (max-width: 900px) {
   .planner-grid-content {
     grid-template-columns: 1fr;
@@ -1696,38 +1655,6 @@ body.dashboard-body {
 
 .bg-primary {
   background: var(--primary);
-}
-
-/* Eligibility Box */
-.eligibility-box {
-  background: #FFFFFF;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.eligibility-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8125rem;
-  color: var(--text-main);
-}
-
-.eligibility-checklist {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.75rem;
-}
-
-.eligibility-checklist li.pass {
-  color: var(--emerald);
-  font-weight: 600;
 }
 
 /* ==========================================================================

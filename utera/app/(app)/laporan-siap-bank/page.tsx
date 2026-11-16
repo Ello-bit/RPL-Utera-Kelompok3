@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
-import { DEMO_PROFILES, DEMO_TRANSACTIONS } from '@/lib/demo-seed'
 import { Tables } from '@/lib/database.types'
 import { calculateKasSummary, getMonthlyBreakdown, formatRupiah } from '@/lib/kas'
 import { calculateSkorPRD } from '@/lib/skor'
@@ -19,48 +18,16 @@ export default function LaporanSiapBankPage() {
   const [profile, setProfile] = useState<ProfilUsaha | null>(null)
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
   const [legalDocs, setLegalDocs] = useState<LegalitasDokumen[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isGuest, setIsGuest] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'preview'>('preview')
 
   useEffect(() => {
     async function loadData() {
-      setLoading(true)
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setProfile(DEMO_PROFILES[0])
-        setTransactions(DEMO_TRANSACTIONS)
-        setLegalDocs([
-          {
-            id: 'doc-nib',
-            user_id: 'guest',
-            profil_id: null,
-            kategori: 'NIB',
-            nama_dokumen: 'Nomor Induk Berusaha (NIB)',
-            nomor_dokumen: '1234567890123',
-            tanggal_terbit: '2025-02-15',
-            masa_berlaku: null,
-            file_url: null,
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 'doc-npwp',
-            user_id: 'guest',
-            profil_id: null,
-            kategori: 'NPWP',
-            nama_dokumen: 'NPWP Pemilik Usaha',
-            nomor_dokumen: '98.765.432.1-012.000',
-            tanggal_terbit: '2024-05-10',
-            masa_berlaku: null,
-            file_url: null,
-            created_at: new Date().toISOString(),
-          },
-        ])
-        setLoading(false)
         return
       }
 
@@ -118,14 +85,13 @@ export default function LaporanSiapBankPage() {
 
       if (docs) setLegalDocs(docs as LegalitasDokumen[])
 
-      setLoading(false)
     }
 
     loadData()
   }, [])
 
   const kasSummary = calculateKasSummary(transactions)
-  const skor = calculateSkorPRD(transactions, isGuest)
+  const skor = calculateSkorPRD(transactions)
   const legalitas = evaluateLegalitas(legalDocs)
   const monthly = getMonthlyBreakdown(transactions, 6)
 

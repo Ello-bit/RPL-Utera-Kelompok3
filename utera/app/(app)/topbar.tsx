@@ -130,7 +130,9 @@ export default function TopBar({
   )
   const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null)
 
-  // Sync notif dataset whenever role or email changes
+  // Notifikasi disimpan di localStorage, yang baru bisa dibaca setelah halaman tampil di browser.
+  // Jadi pembacaan memang harus di dalam effect.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const defaultData = isUserAdmin ? DEFAULT_ADMIN_NOTIFS : DEFAULT_USER_NOTIFS
     const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
@@ -145,16 +147,17 @@ export default function TopBar({
           return
         }
       }
-    } catch (e) {
-      // ignore parse error
+    } catch {
+      // abaikan data rusak
     }
 
     setNotifList(defaultData)
     setSelectedNotif(defaultData[0] || null)
     try {
       localStorage.setItem(storageKey, JSON.stringify(defaultData))
-    } catch (e) {}
+    } catch {}
   }, [isUserAdmin, userEmail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Real-time listener for notification updates
   useEffect(() => {
@@ -169,7 +172,7 @@ export default function TopBar({
             if (parsed.length > 0) setSelectedNotif(parsed[0])
           }
         }
-      } catch (e) {}
+      } catch {}
     }
     window.addEventListener('utera_notifs_updated', handleUpdate)
     return () => window.removeEventListener('utera_notifs_updated', handleUpdate)
@@ -188,7 +191,7 @@ export default function TopBar({
     const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
     try {
       localStorage.setItem(storageKey, JSON.stringify(newList))
-    } catch (e) {}
+    } catch {}
   }
 
   const handleMarkAllRead = () => {

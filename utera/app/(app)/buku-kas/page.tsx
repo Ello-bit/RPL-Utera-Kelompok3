@@ -6,7 +6,6 @@ import { parseNominal, todayLocal, csvCell } from '@/lib/input'
 import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { DEMO_TRANSACTIONS, DEMO_PROFILES } from '@/lib/demo-seed'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import {
   calculateKasSummary,
@@ -24,9 +23,7 @@ export default function BukuKasPage() {
   const supabase = createClient()
   const router = useRouter()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
-  const [profiles, setProfiles] = useState<ProfilUsaha[]>([])
   const [activeProfile, setActiveProfile] = useState<ProfilUsaha | null>(null)
-  const [isGuest, setIsGuest] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // Filters & Tabs
@@ -55,11 +52,8 @@ export default function BukuKasPage() {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setTransactions(DEMO_TRANSACTIONS)
-        setProfiles(DEMO_PROFILES)
-        if (DEMO_PROFILES.length > 0) setActiveProfile(DEMO_PROFILES[0])
         setLoading(false)
         return
       }
@@ -74,7 +68,6 @@ export default function BukuKasPage() {
       if (profData && profData.length > 0) {
         const typedProfs = profData as ProfilUsaha[]
         const picked = pickActiveProfile(typedProfs, getActiveProfilId())!
-        setProfiles(typedProfs)
         setActiveProfile(picked)
         activeId = picked.id
       }
@@ -139,30 +132,6 @@ export default function BukuKasPage() {
   const barMax = Math.max(...monthlyData.map((m) => Math.max(m.pemasukan, m.pengeluaran)), 1)
   const [pinnedBar, setPinnedBar] = useState<string | null>(null)
 
-  // (legacy) titik SVG
-  const maxProfit = Math.max(...monthlyData.map((m) => Math.max(0, m.labaBersih)), 100_000)
-  const svgWidth = 720
-  const svgHeight = 180
-  const paddingX = 40
-  const usableWidth = svgWidth - paddingX * 2
-
-  const points = monthlyData.map((m, idx) => {
-    const x = paddingX + (idx / Math.max(1, monthlyData.length - 1)) * usableWidth
-    const ratio = Math.max(0, m.labaBersih) / maxProfit
-    const y = svgHeight - 20 - ratio * (svgHeight - 50)
-    return { x, y, m }
-  })
-
-  let svgLinePath = ''
-  let svgAreaPath = ''
-  if (points.length > 0) {
-    svgLinePath = `M ${points[0].x} ${points[0].y}`
-    points.slice(1).forEach((p) => {
-      svgLinePath += ` L ${p.x} ${p.y}`
-    })
-    svgAreaPath = `${svgLinePath} L ${points[points.length - 1].x} ${svgHeight} L ${points[0].x} ${svgHeight} Z`
-  }
-
   // PRD: setiap perubahan transaksi memicu hitung ulang skor, lalu skor disimpan.
   const recomputeSkor = async () => {
     if (!activeProfile) return
@@ -187,44 +156,6 @@ export default function BukuKasPage() {
     // Transaksi belum terjadi tidak boleh dicatat (merusak skor & laporan)
     if (formTanggal > todayLocal()) {
       alert('Tanggal transaksi tidak boleh melewati hari ini.')
-      return
-    }
-
-    if (isGuest) {
-      if (editingId) {
-        setTransactions(
-          transactions.map((t) =>
-            t.id === editingId
-              ? {
-                  ...t,
-                  tipe: formType,
-                  nominal: nominalNum,
-                  kategori: formKategori,
-                  tanggal: formTanggal,
-                  keterangan: formKeterangan,
-                  metode_pembayaran: formMetode,
-                }
-              : t
-          )
-        )
-        showToast('Transaksi berhasil diperbarui (mode coba)')
-      } else {
-        const newTx: TransaksiKas = {
-          id: 'tx_guest_' + Date.now(),
-          user_id: 'guest',
-          profil_id: activeProfile?.id || null,
-          tipe: formType,
-          nominal: nominalNum,
-          kategori: formKategori,
-          tanggal: formTanggal,
-          keterangan: formKeterangan,
-          metode_pembayaran: formMetode,
-          created_at: new Date().toISOString(),
-        }
-        setTransactions([newTx, ...transactions])
-        showToast('Transaksi baru berhasil dicatat (mode coba)')
-      }
-      resetForm()
       return
     }
 
@@ -307,12 +238,6 @@ export default function BukuKasPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini? Data akan dihapus permanen.')) return
-
-    if (isGuest) {
-      setTransactions(transactions.filter((t) => t.id !== id))
-      showToast('Transaksi berhasil dihapus.')
-      return
-    }
 
     try {
       const { error } = await supabase.from('transaksi_kas').delete().eq('id', id)

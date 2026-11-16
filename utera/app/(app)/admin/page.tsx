@@ -22,10 +22,8 @@ import {
   VerificationStatus,
 } from '@/lib/verification'
 
-type ProfilUsaha = Tables<'profil_usaha'>
 type TransaksiKas = Tables<'transaksi_kas'>
 type SimulasiKur = Tables<'simulasi_kur'>
-type LegalitasDokumen = Tables<'legalitas_dokumen'>
 
 interface UmkmRecord {
   id: string

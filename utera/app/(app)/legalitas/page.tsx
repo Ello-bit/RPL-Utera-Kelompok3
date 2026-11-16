@@ -14,8 +14,6 @@ type LegalitasDokumen = Tables<'legalitas_dokumen'>
 export default function LegalitasPage() {
   const supabase = createClient()
   const [docs, setDocs] = useState<LegalitasDokumen[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isGuest, setIsGuest] = useState(false)
   const [profilId, setProfilId] = useState<string | null>(null)
   const [editingDoc, setEditingDoc] = useState<Partial<LegalitasDokumen> | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -24,40 +22,12 @@ export default function LegalitasPage() {
 
   useEffect(() => {
     async function loadData() {
-      setLoading(true)
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
+      // Halaman ini hanya untuk pengguna login (dijaga middleware)
       if (!user) {
-        setIsGuest(true)
-        setDocs([
-          {
-            id: 'doc-demo-nib',
-            user_id: 'guest',
-            profil_id: null,
-            kategori: 'NIB',
-            nama_dokumen: 'Nomor Induk Berusaha (NIB)',
-            nomor_dokumen: '1234567890123',
-            tanggal_terbit: '2025-02-15',
-            masa_berlaku: null,
-            file_url: 'https://oss.go.id',
-            created_at: new Date().toISOString(),
-          },
-          {
-            id: 'doc-demo-npwp',
-            user_id: 'guest',
-            profil_id: null,
-            kategori: 'NPWP',
-            nama_dokumen: 'NPWP Pemilik Usaha',
-            nomor_dokumen: '98.765.432.1-012.000',
-            tanggal_terbit: '2024-05-10',
-            masa_berlaku: null,
-            file_url: null,
-            created_at: new Date().toISOString(),
-          },
-        ])
-        setLoading(false)
         return
       }
 
@@ -78,7 +48,6 @@ export default function LegalitasPage() {
       } else if (data) {
         setDocs(data as LegalitasDokumen[])
       }
-      setLoading(false)
     }
 
     loadData()
@@ -108,24 +77,6 @@ export default function LegalitasPage() {
     e.preventDefault()
     if (!editingDoc?.nomor_dokumen?.trim()) {
       alert('Nomor dokumen wajib diisi.')
-      return
-    }
-
-    if (isGuest) {
-      const updated: LegalitasDokumen = {
-        id: editingDoc.id || 'doc_' + Date.now(),
-        user_id: 'guest',
-        profil_id: null,
-        kategori: editingDoc.kategori || 'NIB',
-        nama_dokumen: editingDoc.nama_dokumen || 'Dokumen',
-        nomor_dokumen: editingDoc.nomor_dokumen,
-        tanggal_terbit: editingDoc.tanggal_terbit || null,
-        masa_berlaku: editingDoc.masa_berlaku || null,
-        file_url: editingDoc.file_url || null,
-        created_at: new Date().toISOString(),
-      }
-      setDocs([updated, ...docs.filter((d) => d.kategori !== updated.kategori)])
-      setIsModalOpen(false)
       return
     }
 
