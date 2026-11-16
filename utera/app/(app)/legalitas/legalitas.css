@@ -549,3 +549,184 @@ label {
   }
 }
 
+
+/* ---------- Panduan mengurus NIB ---------- */
+.nib-guide {
+  background: #FFFFFF;
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.nib-guide-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.nib-guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.nib-guide-summary:hover {
+  background: var(--primary-soft);
+}
+
+.nib-guide-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nib-guide-icon .material-symbols-rounded {
+  display: block;
+  font-size: 22px;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.nib-guide-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nib-guide-heading strong {
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.nib-guide-heading span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.nib-guide-chevron {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.nib-guide-chevron .material-symbols-rounded {
+  display: block;
+  font-size: 22px;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.nib-guide[open] .nib-guide-chevron {
+  transform: rotate(180deg);
+}
+
+.nib-guide-body {
+  padding: 4px 20px 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.nib-guide-prep {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--primary-soft);
+  border-radius: 10px;
+}
+
+.nib-guide-prep h3 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin: 0 0 6px;
+}
+
+.nib-guide-prep ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.nib-guide-steps {
+  list-style: none;
+  counter-reset: langkah;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nib-guide-steps li {
+  counter-increment: langkah;
+  position: relative;
+  padding-left: 40px;
+}
+
+.nib-guide-steps li::before {
+  content: counter(langkah);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nib-guide-steps strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.nib-guide-steps p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-body);
+}
+
+.nib-guide-actions {
+  margin-top: 18px;
+}
+
+.nib-guide-actions .btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nib-guide-note {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 3px solid var(--gold);
+  background: var(--gold-soft);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-body);
+}

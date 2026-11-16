@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import PanduanNib from './panduan-nib'
 import { createClient } from '@/lib/supabase/client'
 import { Tables, TablesInsert } from '@/lib/database.types'
 import { DEFAULT_LEGALITAS_DOCS, evaluateLegalitas, statusMasaBerlaku } from '@/lib/legalitas'
@@ -103,6 +104,7 @@ export default function LegalitasPage() {
           )
         )
         setMessage({ type: 'success', text: 'Dokumen legalitas berhasil diperbarui!' })
+        window.dispatchEvent(new Event('utera_verifikasi_updated')) // segarkan notifikasi masa berlaku
       } else {
         // INSERT
         const payload: TablesInsert<'legalitas_dokumen'> = {
@@ -124,6 +126,7 @@ export default function LegalitasPage() {
         if (error) throw error
         setDocs([data as LegalitasDokumen, ...docs])
         setMessage({ type: 'success', text: 'Dokumen legalitas baru berhasil ditambahkan!' })
+        window.dispatchEvent(new Event('utera_verifikasi_updated')) // segarkan notifikasi masa berlaku
       }
       setIsModalOpen(false)
     } catch (err: unknown) {
@@ -255,6 +258,9 @@ export default function LegalitasPage() {
           <span>Ajukan Verifikasi ke Admin</span>
         </Link>
       </div>
+
+      {/* Panduan mengurus NIB: terbuka otomatis selama NIB belum terdaftar */}
+      <PanduanNib defaultOpen={!docs.some((d) => (d.kategori || '').toUpperCase() === 'NIB' && (d.nomor_dokumen || d.file_url))} />
 
       {/* Document Checklist Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>

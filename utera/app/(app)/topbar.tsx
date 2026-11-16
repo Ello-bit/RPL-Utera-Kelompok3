@@ -6,6 +6,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useLogout } from './use-logout'
 import { createClient } from '@/lib/supabase/client'
 import { fetchAllVerifications } from '@/lib/verification'
+import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
+import { notifDokumenKedaluwarsa, PREFIX_NOTIF_LEGALITAS } from '@/lib/notifikasi-legalitas'
+import type { LegalitasDokumen } from '@/lib/legalitas'
 import {
   notifAntreanAdmin,
   notifHasilVerifikasi,
@@ -207,8 +210,11 @@ export default function TopBar({
   }, [isUserAdmin, userEmail, userCreatedAt])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Notifikasi verifikasi usaha dari database (tabel verifikasi_usaha):
-  // pemilik mendapat hasil tinjauan admin, admin mendapat jumlah pengajuan yang menunggu.
+  // Notifikasi dari database:
+  // - verifikasi usaha (tabel verifikasi_usaha): pemilik mendapat hasil tinjauan admin,
+  //   admin mendapat jumlah pengajuan yang menunggu
+  // - legalitas (tabel legalitas_dokumen): pemilik mendapat pengingat dokumen yang segera habis
+  //   atau sudah kedaluwarsa
   // Dimuat ulang saat pindah halaman, saat jendela aktif lagi, setiap 60 detik,
   // dan segera setelah admin meninjau / pemilik mengajukan (event utera_verifikasi_updated).
   const pathname = usePathname()
@@ -220,9 +226,27 @@ export default function TopBar({
     async function muatNotifVerifikasi() {
       const { data, error } = await fetchAllVerifications(supabase)
       if (batal || error) return
-      const dinamis: NotifikasiVerifikasi[] = isUserAdmin
+      let dinamis: NotifikasiVerifikasi[] = isUserAdmin
         ? [notifAntreanAdmin(data)].filter((n): n is NotifikasiVerifikasi => n !== null)
         : notifHasilVerifikasi(data)
+
+      if (!isUserAdmin) {
+        // Dokumen legalitas milik usaha yang sedang aktif
+        const { data: profs } = await supabase
+          .from('profil_usaha')
+          .select('id')
+          .order('created_at', { ascending: false })
+        const aktif = pickActiveProfile(profs ?? [], getActiveProfilId())
+        if (batal) return
+        if (aktif) {
+          const { data: docs, error: errDocs } = await supabase
+            .from('legalitas_dokumen')
+            .select('*')
+            .eq('profil_id', aktif.id)
+          if (batal) return
+          if (!errDocs) dinamis = [...dinamis, ...notifDokumenKedaluwarsa((docs ?? []) as LegalitasDokumen[])]
+        }
+      }
       const sekarang = Date.now()
       setNotifList((prev) => {
         const lama = new Map(prev.map((n) => [n.id, n]))
@@ -233,8 +257,10 @@ export default function TopBar({
             time: waktuSejak(d.timeIso, sekarang),
             read: lama.get(d.id)?.read ?? false,
           }))
-        // Notifikasi verifikasi lama yang sudah tidak berlaku diganti yang terbaru
-        const gabung = [...baru, ...prev.filter((n) => !n.id.startsWith(PREFIX_NOTIF_VERIFIKASI))]
+        // Notifikasi dari database yang lama (sudah tidak berlaku) diganti yang terbaru
+        const dariDatabase = (id: string) =>
+          id.startsWith(PREFIX_NOTIF_VERIFIKASI) || id.startsWith(PREFIX_NOTIF_LEGALITAS)
+        const gabung = [...baru, ...prev.filter((n) => !dariDatabase(n.id))]
         try {
           localStorage.setItem(storageKey, JSON.stringify(gabung))
         } catch {}
