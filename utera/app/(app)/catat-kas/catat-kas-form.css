@@ -282,3 +282,173 @@
   border-radius: 9999px;
   box-shadow: var(--shadow-modal);
 }
+
+/* ---------- Hapus transaksi ---------- */
+
+.catat-kas-form .btn-hapus-transaksi {
+  width: 100%;
+  justify-content: center;
+  gap: 6px;
+  background: #FFFFFF;
+  color: var(--terracotta);
+  border: 1px solid var(--terracotta-border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0 12px;
+  font-weight: 700;
+  font-size: 12px;
+  height: 38px;
+}
+
+.catat-kas-form .btn-hapus-transaksi:hover {
+  background: var(--terracotta-soft);
+  border-color: var(--terracotta);
+}
+
+.konfirmasi-hapus {
+  width: 100%;
+  max-width: 380px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: var(--shadow-modal);
+  padding: 22px;
+  text-align: center;
+}
+
+.konfirmasi-hapus-ikon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  border-radius: 9999px;
+  background: var(--terracotta-soft);
+  color: var(--terracotta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.konfirmasi-hapus-ikon .material-symbols-rounded {
+  display: block;
+  font-size: 26px;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.konfirmasi-hapus h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.konfirmasi-hapus p {
+  margin: 0 0 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.konfirmasi-hapus-ringkas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+
+.konfirmasi-hapus-ringkas div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.konfirmasi-hapus-ringkas strong {
+  font-size: 0.875rem;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.konfirmasi-hapus-ringkas span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.konfirmasi-hapus-ringkas b {
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.konfirmasi-hapus-ringkas b.masuk {
+  color: var(--primary);
+}
+
+.konfirmasi-hapus-ringkas b.keluar {
+  color: var(--terracotta);
+}
+
+.konfirmasi-hapus-aksi {
+  display: flex;
+  gap: 10px;
+}
+
+.konfirmasi-hapus-aksi button {
+  flex: 1;
+  height: 42px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.konfirmasi-batal {
+  background: #FFFFFF;
+  color: var(--text-body);
+  border: 1px solid var(--border-subtle);
+}
+
+.konfirmasi-ya {
+  background: var(--terracotta);
+  color: #FFFFFF;
+  border: none;
+}
+
+.konfirmasi-ya:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.konfirmasi-hapus-aksi button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Tombol aksi di dalam toast, mis. "Salah catat? Hapus" */
+.toast-aksi {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 9999px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toast-aksi:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.konfirmasi-hapus-ringkas b.netral {
+  color: var(--text-main);
+}

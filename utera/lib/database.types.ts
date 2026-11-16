@@ -177,6 +177,69 @@ export interface Database {
         }
         Relationships: []
       }
+      pengajuan_koperasi: {
+        Row: {
+          id: string
+          user_id: string
+          profil_id: string | null
+          nama_koperasi: string
+          tujuan: string
+          plafon: number
+          tenor_bulan: number
+          jasa_tahunan: number
+          metode: string
+          cicilan_awal: number
+          cicilan_akhir: number
+          total_jasa: number
+          rasio_kas: number
+          status_guardrail: string
+          status: string
+          catatan: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          profil_id?: string | null
+          nama_koperasi: string
+          tujuan: string
+          plafon: number
+          tenor_bulan: number
+          jasa_tahunan: number
+          metode: string
+          cicilan_awal: number
+          cicilan_akhir: number
+          total_jasa: number
+          rasio_kas: number
+          status_guardrail: string
+          status?: string
+          catatan?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          profil_id?: string | null
+          nama_koperasi?: string
+          tujuan?: string
+          plafon?: number
+          tenor_bulan?: number
+          jasa_tahunan?: number
+          metode?: string
+          cicilan_awal?: number
+          cicilan_akhir?: number
+          total_jasa?: number
+          rasio_kas?: number
+          status_guardrail?: string
+          status?: string
+          catatan?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       skor_kelayakan: {
         Row: {
           id: string

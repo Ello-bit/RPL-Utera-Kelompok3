@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS } from '../lib/kur'
+import { calculateInstallment, calculateFlatInstallment, bandingkanPembiayaan, pilihanPalingHemat, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS } from '../lib/kur'
 
 describe('F8 status cek kelayakan KUR (PRD)', () => {
   it('KUR-ST1 6 bulan + NIB + skor 40 = Memenuhi syarat', () => {
@@ -67,5 +67,75 @@ describe('Jenis KUR sesuai tabel PRD', () => {
     expect([k['kur-super'].minTenor, k['kur-super'].maxTenor]).toEqual([12, 36])
     expect([k['kur-mikro'].minTenor, k['kur-mikro'].maxTenor]).toEqual([36, 60])
     expect(k['kur-kecil'].maxTenor).toBe(60)
+  })
+})
+
+describe('Perbandingan pilihan pembiayaan', () => {
+  const cari = (baris: ReturnType<typeof bandingkanPembiayaan>, id: string) => baris.find((b) => b.id === id)!
+
+  it('CP-01 hanya program yang melayani plafon dan tenor itu yang tersedia', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 11_807_800 })
+    expect(b.map((x) => [x.id, x.tersedia])).toEqual([
+      ['kur-super', false],
+      ['kur-mikro', true],
+      ['kur-kecil', false],
+      ['koperasi', true],
+      ['komersial', true],
+    ])
+    expect(cari(b, 'kur-super').alasan).toContain('Batas program')
+  })
+
+  it('CP-02 cicilan sama dengan simulator: KUR Mikro anuitas dan koperasi flat', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 11_807_800 })
+    expect(cari(b, 'kur-mikro').cicilan).toBe(912_658)
+    expect(cari(b, 'koperasi').cicilan).toBe(1_058_333)
+    expect(cari(b, 'komersial').cicilan).toBe(calculateInstallment(30_000_000, 0.13, 36).total)
+  })
+
+  it('CP-03 total bunga: flat koperasi lebih mahal daripada KUR Mikro', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 11_807_800 })
+    expect(cari(b, 'kur-mikro').totalBunga).toBe(912_658 * 36 - 30_000_000)
+    expect(cari(b, 'koperasi').totalBunga).toBe(1_058_333 * 36 - 30_000_000)
+    expect(cari(b, 'koperasi').totalBunga).toBeGreaterThan(cari(b, 'kur-mikro').totalBunga)
+  })
+
+  it('CP-04 status mengikuti batas 30% laba', () => {
+    const lega = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 4_000_000 })
+    expect(cari(lega, 'kur-mikro').status).toBe('Kondisi Aman') // 22,8%
+    expect(cari(lega, 'koperasi').status).toBe('Batas Waspada') // 26,5%
+    const sempit = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 3_000_000 })
+    expect(cari(sempit, 'kur-mikro').aman).toBe(false) // 30,4%
+    expect(cari(sempit, 'kur-mikro').status).toBe('Melebihi Batas Kas')
+  })
+
+  it('CP-05 laba nol: tidak ada yang aman dan tidak ada rekomendasi', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 0 })
+    expect(b.filter((x) => x.tersedia).every((x) => !x.aman && x.rasio === 100)).toBe(true)
+    expect(pilihanPalingHemat(b)).toBeNull()
+  })
+
+  it('CP-06 rekomendasi: total bunga terendah di antara yang aman', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 36, labaBulanan: 20_000_000 })
+    expect(pilihanPalingHemat(b)?.id).toBe('kur-mikro')
+  })
+
+  it('CP-07 tenor di luar batas program membuatnya tidak tersedia', () => {
+    const b = bandingkanPembiayaan({ plafon: 30_000_000, tenor: 24, labaBulanan: 11_807_800 })
+    expect(cari(b, 'kur-mikro').tersedia).toBe(false) // KUR Mikro minimal 36 bulan
+    expect(cari(b, 'kur-mikro').alasan).toContain('tenor 36 sampai 60 bulan')
+    expect(cari(b, 'koperasi').tersedia).toBe(true)
+  })
+
+  it('CP-08 plafon kecil: KUR Super Mikro tersedia, KUR Mikro tidak', () => {
+    const b = bandingkanPembiayaan({ plafon: 5_000_000, tenor: 12, labaBulanan: 11_807_800 })
+    expect(cari(b, 'kur-super').tersedia).toBe(true)
+    expect(cari(b, 'kur-mikro').tersedia).toBe(false)
+    expect(cari(b, 'kur-super').rateDisplay).toBe('6.0%')
+  })
+
+  it('CP-09 bunga flat: nol bila plafon atau tenor tidak valid', () => {
+    expect(calculateFlatInstallment(0, 0.09, 12).total).toBe(0)
+    expect(calculateFlatInstallment(10_000_000, 0.09, 0).total).toBe(0)
+    expect(calculateFlatInstallment(25_000_000, 0.09, 12).total).toBe(2_270_833)
   })
 })

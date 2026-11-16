@@ -1,11 +1,15 @@
 'use client'
 
 import { Fragment, useCallback, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from './sidebar'
 import TopBar from './topbar'
 import CatatKasModal from './catat-kas/catat-kas-modal'
 import { gulirKeCatatKas } from './catat-kas/catat-kas-form'
+import KonfirmasiHapus from './catat-kas/konfirmasi-hapus'
+import { createClient } from '@/lib/supabase/client'
+import { hapusTransaksi } from '@/lib/hapus-transaksi'
+import type { Tables } from '@/lib/database.types'
 
 interface AppShellProps {
   businessName: string
@@ -33,25 +37,52 @@ export default function AppShell({
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   // Tombol "Catat Kas" di kanan atas: di Buku Kas Warung langsung gulir ke formulirnya,
   // di halaman lain buka pop-up dengan formulir yang sama.
   const [catatKasOpen, setCatatKasOpen] = useState(false)
   // Dinaikkan setelah menyimpan dari pop-up, supaya isi halaman dimuat ulang dengan data terbaru
   const [versiData, setVersiData] = useState(0)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ teks: string; aksi?: () => void } | null>(null)
+  // Transaksi dari pop-up yang diminta dihapus (menunggu konfirmasi)
+  const [hapusKas, setHapusKas] = useState<Tables<'transaksi_kas'> | null>(null)
+  const [menghapus, setMenghapus] = useState(false)
 
   const bukaCatatKas = () => {
     if (pathname === '/buku-kas' && gulirKeCatatKas()) return
     setCatatKasOpen(true)
   }
   const tutupCatatKas = useCallback(() => setCatatKasOpen(false), [])
-  const setelahSimpanKas = useCallback(() => {
-    setCatatKasOpen(false)
-    setVersiData((v) => v + 1)
-    setToast('Transaksi kas berhasil disimpan.')
-    window.setTimeout(() => setToast(null), 3000)
+  const tampilkanToast = useCallback((teks: string, aksi?: () => void) => {
+    setToast({ teks, aksi })
+    // Toast yang punya tombol aksi tampil lebih lama supaya sempat ditekan
+    window.setTimeout(() => setToast(null), aksi ? 8000 : 3000)
   }, [])
+
+  const setelahSimpanKas = useCallback(
+    (tx: Tables<'transaksi_kas'>) => {
+      setCatatKasOpen(false)
+      setVersiData((v) => v + 1)
+      tampilkanToast('Transaksi kas berhasil disimpan.', () => setHapusKas(tx))
+    },
+    [tampilkanToast]
+  )
+
+  const konfirmasiHapusKas = async () => {
+    if (!hapusKas) return
+    setMenghapus(true)
+    const err = await hapusTransaksi(createClient(), hapusKas)
+    setMenghapus(false)
+    if (err) {
+      tampilkanToast('Gagal menghapus: ' + err)
+      return
+    }
+    setHapusKas(null)
+    setVersiData((v) => v + 1)
+    router.refresh() // perbarui jumlah transaksi dan skor di menu samping
+    tampilkanToast('Transaksi berhasil dihapus.')
+  }
 
   return (
     <div className="app-layout">
@@ -81,8 +112,21 @@ export default function AppShell({
       {toast && (
         <div className="catat-kas-toast" role="status">
           <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>check_circle</span>
-          {toast}
+          {toast.teks}
+          {toast.aksi && (
+            <button type="button" className="toast-aksi" onClick={toast.aksi}>
+              Salah catat? Hapus
+            </button>
+          )}
         </div>
+      )}
+      {hapusKas && (
+        <KonfirmasiHapus
+          tx={hapusKas}
+          menghapus={menghapus}
+          onBatal={() => setHapusKas(null)}
+          onHapus={konfirmasiHapusKas}
+        />
       )}
     </div>
   )

@@ -385,16 +385,19 @@
 }
 
 .table-btn-action {
-  background: none;
+  background: #FFFFFF;
   border: 1px solid var(--slate-200);
   border-radius: var(--radius-sm);
-  width: 28px;
-  height: 28px;
-  display: inline-grid;
-  place-items: center;
-  color: var(--slate-500);
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  color: var(--slate-600);
   cursor: pointer;
-  margin: 0 2px;
+  margin: 0 3px;
   transition: all 0.15s ease;
 }
 
@@ -402,6 +405,12 @@
   background-color: var(--emerald-light);
   color: var(--emerald);
   border-color: var(--emerald);
+}
+
+.table-btn-action.btn-del {
+  color: var(--terracotta);
+  background-color: var(--terracotta-light);
+  border-color: #FECACA;
 }
 
 .table-btn-action.btn-del:hover {
@@ -508,3 +517,47 @@
 .kas-bar-label { font-size: 12px; font-weight: 600; color: var(--slate-500, #64748B); }
 .kas-bar-net { font-size: 11px; font-weight: 700; color: #17543E; }
 .kas-bar-net.neg { color: var(--terracotta); }
+
+/* Tanggal dan nominal tidak dipecah ke dua baris */
+.saas-table tbody td:first-child,
+.saas-table tbody td.num-cell {
+  white-space: nowrap;
+}
+
+.saas-table tbody tr.is-editing td {
+  background-color: var(--emerald-light);
+}
+
+/* Layar sedang: rapatkan jarak kolom agar nominal tidak tertutup kolom Aksi */
+@media (max-width: 1200px) {
+  .saas-table thead th,
+  .saas-table tbody td,
+  .saas-table tfoot td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .saas-table tbody td:first-child,
+  .saas-table thead th:first-child {
+    padding-left: 12px;
+  }
+
+  .saas-table .table-btn-action {
+    width: 30px;
+    height: 30px;
+    margin: 0 2px;
+  }
+}
+
+/* Ikon aksi (edit dan hapus) berukuran sama dan di tengah tombolnya */
+.table-btn-action .material-symbols-rounded {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+/* Tombol edit dan hapus selalu berdampingan, tidak turun ke baris baru */
+.saas-table tbody td:last-child {
+  white-space: nowrap;
+}

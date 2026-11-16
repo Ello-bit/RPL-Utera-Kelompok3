@@ -3,10 +3,11 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import CatatKasForm from './catat-kas-form'
+import type { Tables } from '@/lib/database.types'
 
 interface CatatKasModalProps {
   onClose: () => void
-  onSaved: () => void
+  onSaved: (tx: Tables<'transaksi_kas'>) => void
 }
 
 /** Pop-up formulir catat kas, dibuka dari tombol "Catat Kas" di kanan atas (di luar Buku Kas Warung). */

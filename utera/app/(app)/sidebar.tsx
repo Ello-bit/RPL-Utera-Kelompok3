@@ -92,6 +92,11 @@ export default function Sidebar({
           icon: 'account_balance',
         },
         {
+          name: 'Pinjaman Koperasi',
+          href: '/koperasi',
+          icon: 'handshake',
+        },
+        {
           name: 'Legalitas & NIB',
           href: '/legalitas',
           icon: 'description',

@@ -6,7 +6,16 @@ import PlafonInput from '../plafon-input'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
-import { calculateInstallment, evaluateGuardrail, KUR_TIERS, type KurTier } from '@/lib/kur'
+import {
+  calculateInstallment,
+  calculateFlatInstallment,
+  evaluateGuardrail,
+  bandingkanPembiayaan,
+  pilihanPalingHemat,
+  KOPERASI,
+  KUR_TIERS,
+  type KurTier,
+} from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import './guardrail.css'
@@ -48,12 +57,12 @@ const PROGRAMS: ProgramOption[] = [
     name: 'Pinjaman Koperasi Usaha',
     subtitle: 'Bunga jasa 9% p.a. flat • Tanpa agunan bank',
     icon: 'handshake',
-    rate: 0.09,
-    rateDisplay: '9.0%',
-    minPlafon: 1_000_000,
-    maxPlafon: 50_000_000,
-    minTenor: 6,
-    maxTenor: 60,
+    rate: KOPERASI.rate,
+    rateDisplay: KOPERASI.rateDisplay,
+    minPlafon: KOPERASI.minPlafon,
+    maxPlafon: KOPERASI.maxPlafon,
+    minTenor: KOPERASI.minTenor,
+    maxTenor: KOPERASI.maxTenor,
   },
 ]
 
@@ -116,6 +125,13 @@ export default function GuardrailPage() {
     [transactions]
   )
 
+  // Perbandingan semua pilihan pembiayaan pada plafon dan tenor yang sama dengan simulator
+  const perbandingan = useMemo(
+    () => bandingkanPembiayaan({ plafon, tenor: tenorMonths, labaBulanan: baseMonthlyProfit }),
+    [plafon, tenorMonths, baseMonthlyProfit]
+  )
+  const palingHemat = useMemo(() => pilihanPalingHemat(perbandingan), [perbandingan])
+
   // Guardrail 30% Ceiling
   const guardrailLimit = Math.round(baseMonthlyProfit * 0.30)
 
@@ -124,10 +140,7 @@ export default function GuardrailPage() {
   const isFlat = currentProgram.id === 'koperasi'
   const calc = useMemo(() => {
     if (!isFlat) return calculateInstallment(plafon, currentProgram.rate, tenorMonths)
-    if (plafon <= 0 || tenorMonths <= 0) return { total: 0, pokok: 0, bunga: 0, totalKumulatif: 0 }
-    const pokok = Math.round(plafon / tenorMonths)
-    const bunga = Math.round((plafon * currentProgram.rate) / 12)
-    return { total: pokok + bunga, pokok, bunga, totalKumulatif: (pokok + bunga) * tenorMonths }
+    return calculateFlatInstallment(plafon, currentProgram.rate, tenorMonths)
   }, [plafon, currentProgram.rate, tenorMonths, isFlat])
 
   // Guardrail evaluation
@@ -576,7 +589,9 @@ export default function GuardrailPage() {
           <div className="panel-header">
             <div>
               <h2 className="panel-title">Perbandingan Pilihan Pinjaman</h2>
-              <p className="panel-subtitle">Bandingkan beban cicilan riil dari berbagai fasilitas kredit terhadap kemampuan bayar usaha</p>
+              <p className="panel-subtitle">
+                Dibandingkan pada plafon {formatRupiah(plafon)} dan tenor {tenorMonths} bulan, sesuai pengaturan kalkulator di atas
+              </p>
             </div>
           </div>
 
@@ -585,81 +600,71 @@ export default function GuardrailPage() {
               <thead>
                 <tr>
                   <th>Lembaga / Program</th>
-                  <th>Plafon Uji</th>
+                  <th>Plafon</th>
                   <th>Suku Bunga</th>
                   <th>Tenor</th>
                   <th className="text-right">Cicilan / Bln</th>
+                  <th className="text-right">Total Bunga</th>
                   <th className="text-center">Status Cicilan</th>
                 </tr>
               </thead>
               <tbody id="comparison-tbody">
-                <tr>
-                  <td>
-                    <div className="institution-meta">
-                      <span className="material-symbols-rounded inst-icon">account_balance</span>
-                      <div>
-                        <strong>KUR Super Mikro Bank</strong>
-                        <small>Fasilitas Modal Perdana</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="tabular-nums">Rp 10.000.000</td>
-                  <td><span className="badge-rate">3% p.a.</span></td>
-                  <td>12 Bulan</td>
-                  <td className="text-right tabular-nums font-semibold">Rp 858.000</td>
-                  <td className="text-center"><span className="badge-status-safe">4.6% (Sangat Aman)</span></td>
-                </tr>
-
-                <tr className="highlight-row">
-                  <td>
-                    <div className="institution-meta">
-                      <span className="material-symbols-rounded inst-icon text-primary">account_balance</span>
-                      <div>
-                        <strong>KUR Mikro Bank BRI / Mandiri</strong>
-                        <small>Paling Direkomendasikan</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="tabular-nums font-semibold">Rp 50.000.000</td>
-                  <td><span className="badge-rate gold">6% p.a.</span></td>
-                  <td>24 Bulan</td>
-                  <td className="text-right tabular-nums font-bold text-primary">Rp 2.216.000</td>
-                  <td className="text-center"><span className="badge-status-safe">12.0% (Aman)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <div className="institution-meta">
-                      <span className="material-symbols-rounded inst-icon">handshake</span>
-                      <div>
-                        <strong>Pinjaman Koperasi UMKM</strong>
-                        <small>Syarat Cepat &amp; Fleksibel</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="tabular-nums">Rp 25.000.000</td>
-                  <td><span className="badge-rate">9% p.a.</span></td>
-                  <td>12 Bulan</td>
-                  <td className="text-right tabular-nums font-semibold">Rp 2.270.000</td>
-                  <td className="text-center"><span className="badge-status-safe">12.3% (Aman)</span></td>
-                </tr>
-
-                <tr>
-                  <td>
-                    <div className="institution-meta">
-                      <span className="material-symbols-rounded inst-icon">domain</span>
-                      <div>
-                        <strong>Kredit Usaha Komersial (Non-KUR)</strong>
-                        <small>Bunga Pasar Standar</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="tabular-nums">Rp 50.000.000</td>
-                  <td><span className="badge-rate danger">13% p.a.</span></td>
-                  <td>24 Bulan</td>
-                  <td className="text-right tabular-nums font-semibold text-terracotta">Rp 2.518.000</td>
-                  <td className="text-center"><span className="badge-status-warning">13.6% (Beban Tinggi)</span></td>
-                </tr>
+                {perbandingan.map((b) => {
+                  const hemat = palingHemat?.id === b.id
+                  const ikon = b.id === 'koperasi' ? 'handshake' : b.id === 'komersial' ? 'domain' : 'account_balance'
+                  const belumAdaKas = baseMonthlyProfit <= 0
+                  const labelStatus =
+                    b.status === 'Kondisi Aman' ? 'Aman' : b.status === 'Batas Waspada' ? 'Waspada' : 'Melebihi batas'
+                  const kelasStatus =
+                    b.status === 'Kondisi Aman'
+                      ? 'badge-status-safe'
+                      : b.status === 'Batas Waspada'
+                        ? 'badge-status-warning'
+                        : 'badge-status-danger'
+                  const kelasBunga = b.id === 'komersial' ? 'danger' : b.id === 'koperasi' ? '' : 'gold'
+                  return (
+                    <tr key={b.id} className={hemat ? 'highlight-row' : b.tersedia ? undefined : 'row-tidak-tersedia'}>
+                      <td>
+                        <div className="institution-meta">
+                          <span className={'material-symbols-rounded inst-icon ' + (hemat ? 'text-primary' : '')}>{ikon}</span>
+                          <div>
+                            <strong>{b.nama}</strong>
+                            <small>
+                              {b.tersedia ? b.keterangan : b.alasan}
+                              {hemat && <span className="badge-hemat">Paling hemat</span>}
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      {b.tersedia ? (
+                        <>
+                          <td className="tabular-nums">{formatRupiah(plafon)}</td>
+                          <td>
+                            <span className={'badge-rate ' + kelasBunga}>
+                              {Math.round(b.rate * 100)}% p.a.{b.metode === 'flat' ? ' flat' : ''}
+                            </span>
+                          </td>
+                          <td>{tenorMonths} Bulan</td>
+                          <td className="text-right tabular-nums font-semibold">{formatRupiah(b.cicilan)}</td>
+                          <td className="text-right tabular-nums">{formatRupiah(b.totalBunga)}</td>
+                          <td className="text-center">
+                            {belumAdaKas ? (
+                              <span className="badge-status-muted">Belum ada data kas</span>
+                            ) : (
+                              <span className={kelasStatus}>
+                                {b.rasio.toFixed(1)}% ({labelStatus})
+                              </span>
+                            )}
+                          </td>
+                        </>
+                      ) : (
+                        <td colSpan={6} className="cell-tidak-tersedia">
+                          Tidak tersedia untuk plafon dan tenor ini
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -667,7 +672,26 @@ export default function GuardrailPage() {
           <div className="comparison-footer-tip">
             <span className="material-symbols-rounded tip-icon">lightbulb</span>
             <p>
-              <strong>Tips Finansial UTERA:</strong> Program <strong>KUR Mikro 6%</strong> memberikan rasio bunga subsidi terendah dengan cicilan yang hanya memakan 12% laba warung Anda, menjadikannya pilihan pembiayaan paling aman sebelum mempertimbangkan opsi komersial.
+              {baseMonthlyProfit <= 0 ? (
+                <>
+                  <strong>Tips Finansial UTERA:</strong> Catat uang masuk dan uang keluar di Buku Kas dulu, supaya status
+                  cicilan bisa dihitung dari laba usaha Anda.
+                </>
+              ) : palingHemat ? (
+                <>
+                  <strong>Tips Finansial UTERA:</strong> Untuk {formatRupiah(plafon)} selama {tenorMonths} bulan, pilihan
+                  paling hemat yang masih aman adalah <strong>{palingHemat.nama}</strong>: cicilan{' '}
+                  {formatRupiah(palingHemat.cicilan)} per bulan ({palingHemat.rasio.toFixed(1)}% dari laba), total bunga{' '}
+                  {formatRupiah(palingHemat.totalBunga)}.
+                  {perbandingan.some((b) => b.id === 'koperasi' && b.tersedia) &&
+                    ' Bunga flat koperasi tampak ringan, tetapi dihitung dari pokok awal setiap bulan, sehingga total bunganya bisa lebih besar daripada KUR.'}
+                </>
+              ) : (
+                <>
+                  <strong>Tips Finansial UTERA:</strong> Belum ada pilihan yang tersedia dan masih aman untuk plafon dan
+                  tenor ini. Coba perkecil plafon atau perpanjang tenor di kalkulator.
+                </>
+              )}
             </p>
           </div>
         </div>

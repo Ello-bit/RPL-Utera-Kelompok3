@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import { todayLocal, csvCell } from '@/lib/input'
-import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
@@ -14,6 +13,8 @@ import {
   getMonthlyBreakdown,
 } from '@/lib/kas'
 import CatatKasForm, { gulirKeCatatKas, ID_KARTU_CATAT_KAS } from '../catat-kas/catat-kas-form'
+import KonfirmasiHapus from '../catat-kas/konfirmasi-hapus'
+import { hapusTransaksi } from '@/lib/hapus-transaksi'
 import './buku-kas.css'
 
 type TransaksiKas = Tables<'transaksi_kas'>
@@ -35,6 +36,10 @@ export default function BukuKasPage() {
   // Entry Form State
   const [editingId, setEditingId] = useState<string | null>(null)
   const [toastText, setToastText] = useState<string | null>(null)
+  const [toastAksi, setToastAksi] = useState<{ label: string; onClick: () => void } | null>(null)
+  // Transaksi yang sedang diminta dihapus (menunggu konfirmasi)
+  const [hapusTarget, setHapusTarget] = useState<TransaksiKas | null>(null)
+  const [menghapus, setMenghapus] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -80,9 +85,14 @@ export default function BukuKasPage() {
     loadData()
   }, [])
 
-  const showToast = (text: string) => {
+  const showToast = (text: string, aksi?: { label: string; onClick: () => void }) => {
     setToastText(text)
-    setTimeout(() => setToastText(null), 3000)
+    setToastAksi(aksi ?? null)
+    // Toast yang punya tombol aksi tampil lebih lama supaya sempat ditekan
+    setTimeout(() => {
+      setToastText(null)
+      setToastAksi(null)
+    }, aksi ? 8000 : 3000)
   }
 
   // Filtered transactions
@@ -123,14 +133,6 @@ export default function BukuKasPage() {
   const barMax = Math.max(...monthlyData.map((m) => Math.max(m.pemasukan, m.pengeluaran)), 1)
   const [pinnedBar, setPinnedBar] = useState<string | null>(null)
 
-  // PRD: setiap perubahan transaksi memicu hitung ulang skor, lalu skor disimpan.
-  const recomputeSkor = async () => {
-    if (!activeProfile) return
-    const err = await syncSkorSnapshot(supabase, activeProfile.id)
-    if (err) console.error('Gagal menyimpan skor kelayakan:', err)
-    router.refresh()
-  }
-
   const handleEdit = (tx: TransaksiKas) => {
     setEditingId(tx.id)
     gulirKeCatatKas()
@@ -140,22 +142,28 @@ export default function BukuKasPage() {
   const setelahSimpan = (tx: TransaksiKas, mode: 'baru' | 'ubah') => {
     setTransactions((prev) => (mode === 'ubah' ? prev.map((t) => (t.id === tx.id ? tx : t)) : [tx, ...prev]))
     setEditingId(null)
-    showToast(mode === 'ubah' ? 'Transaksi berhasil diperbarui!' : 'Transaksi kas baru berhasil disimpan!')
+    if (mode === 'ubah') {
+      showToast('Transaksi berhasil diperbarui!')
+    } else {
+      showToast('Transaksi kas baru berhasil disimpan!', { label: 'Salah catat? Hapus', onClick: () => setHapusTarget(tx) })
+    }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini? Data akan dihapus permanen.')) return
-
-    try {
-      const { error } = await supabase.from('transaksi_kas').delete().eq('id', id)
-      if (error) throw error
-      setTransactions(transactions.filter((t) => t.id !== id))
-      showToast('Transaksi berhasil dihapus.')
-      await recomputeSkor()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal menghapus transaksi.'
-      alert(msg)
+  // Hapus transaksi setelah pengguna menekan "Ya, Hapus" di kotak konfirmasi
+  const konfirmasiHapus = async () => {
+    if (!hapusTarget) return
+    setMenghapus(true)
+    const err = await hapusTransaksi(supabase, hapusTarget)
+    setMenghapus(false)
+    if (err) {
+      showToast('Gagal menghapus: ' + err)
+      return
     }
+    setTransactions((prev) => prev.filter((t) => t.id !== hapusTarget.id))
+    if (editingId === hapusTarget.id) setEditingId(null)
+    setHapusTarget(null)
+    showToast('Transaksi berhasil dihapus.')
+    router.refresh()
   }
 
   const resetForm = () => setEditingId(null)
@@ -185,7 +193,21 @@ export default function BukuKasPage() {
             check_circle
           </span>
           <span>{toastText}</span>
+          {toastAksi && (
+            <button type="button" className="toast-aksi" onClick={toastAksi.onClick}>
+              {toastAksi.label}
+            </button>
+          )}
         </div>
+      )}
+
+      {hapusTarget && (
+        <KonfirmasiHapus
+          tx={hapusTarget}
+          menghapus={menghapus}
+          onBatal={() => setHapusTarget(null)}
+          onHapus={konfirmasiHapus}
+        />
       )}
 
       {/* TOP TITLE ROW */}
@@ -400,10 +422,10 @@ export default function BukuKasPage() {
                 <thead>
                   <tr>
                     <th className="th-date">Tanggal</th>
-                    <th className="th-desc">Keterangan Transaksi</th>
+                    <th className="th-desc">Keterangan</th>
                     <th className="th-cat">Kategori</th>
-                    <th className="th-num" style={{ textAlign: 'right' }}>Uang Masuk</th>
-                    <th className="th-num" style={{ textAlign: 'right' }}>Uang Keluar</th>
+                    <th className="th-num" style={{ textAlign: 'right' }}>Masuk (Rp)</th>
+                    <th className="th-num" style={{ textAlign: 'right' }}>Keluar (Rp)</th>
                     <th className="th-act" style={{ textAlign: 'center' }}>Aksi</th>
                   </tr>
                 </thead>
@@ -431,28 +453,30 @@ export default function BukuKasPage() {
                         <td>
                           <span className="badge-cat-pill">{tx.kategori}</span>
                         </td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--emerald)' }}>
-                          {tx.tipe === 'pemasukan' ? formatRupiah(Number(tx.nominal)) : '-'}
+                        <td className="num-cell" style={{ textAlign: 'right', fontWeight: 700, color: 'var(--emerald)' }}>
+                          {tx.tipe === 'pemasukan' ? Number(tx.nominal).toLocaleString('id-ID') : '-'}
                         </td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--terracotta)' }}>
-                          {tx.tipe === 'pengeluaran' ? formatRupiah(Number(tx.nominal)) : '-'}
+                        <td className="num-cell" style={{ textAlign: 'right', fontWeight: 700, color: 'var(--terracotta)' }}>
+                          {tx.tipe === 'pengeluaran' ? Number(tx.nominal).toLocaleString('id-ID') : '-'}
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <button
                             type="button"
                             className="table-btn-action btn-edit"
                             title="Edit Transaksi"
+                            aria-label="Edit transaksi"
                             onClick={() => handleEdit(tx)}
                           >
-                            <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>edit</span>
+                            <span className="material-symbols-rounded">edit</span>
                           </button>
                           <button
                             type="button"
                             className="table-btn-action btn-del"
                             title="Hapus Transaksi"
-                            onClick={() => handleDelete(tx.id)}
+                            aria-label="Hapus transaksi"
+                            onClick={() => setHapusTarget(tx)}
                           >
-                            <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>delete</span>
+                            <span className="material-symbols-rounded">delete</span>
                           </button>
                         </td>
                       </tr>
@@ -544,6 +568,10 @@ export default function BukuKasPage() {
               profilId={activeProfile?.id ?? null}
               onSaved={setelahSimpan}
               onCancelEdit={resetForm}
+              onDelete={() => {
+                const tx = transactions.find((t) => t.id === editingId)
+                if (tx) setHapusTarget(tx)
+              }}
             />
           </section>
         </div>

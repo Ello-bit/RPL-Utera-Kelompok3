@@ -38,6 +38,8 @@ interface CatatKasFormProps {
   idPrefix?: string
   onSaved?: (tx: TransaksiKas, mode: 'baru' | 'ubah') => void
   onCancelEdit?: () => void
+  /** Bila diisi, formulir edit menampilkan tombol "Hapus Transaksi" */
+  onDelete?: () => void
 }
 
 /**
@@ -51,6 +53,7 @@ export default function CatatKasForm({
   idPrefix = 'kas',
   onSaved,
   onCancelEdit,
+  onDelete,
 }: CatatKasFormProps) {
   const supabase = createClient()
   const router = useRouter()
@@ -282,6 +285,14 @@ export default function CatatKasForm({
           {editing && onCancelEdit && (
             <button type="button" className="btn btn-secondary-clean" onClick={onCancelEdit}>
               Batal Edit
+            </button>
+          )}
+          {editing && onDelete && (
+            <button type="button" className="btn btn-hapus-transaksi" onClick={onDelete}>
+              <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>
+                delete
+              </span>
+              Hapus Transaksi Ini
             </button>
           )}
         </div>

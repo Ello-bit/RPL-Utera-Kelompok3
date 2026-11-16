@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
   //     dikembalikan ke halaman yang tadi ingin dibuka (parameter redirect).
   const PROTECTED = [
     '/dashboard', '/buku-kas', '/skor-kelayakan', '/guardrail', '/simulasi-kur',
-    '/profil-usaha', '/legalitas', '/laporan-siap-bank',
+    '/profil-usaha', '/legalitas', '/laporan-siap-bank', '/koperasi',
   ]
   if (!user && PROTECTED.some((p) => path === p || path.startsWith(p + '/'))) {
     const url = request.nextUrl.clone()
@@ -106,7 +106,7 @@ export async function middleware(request: NextRequest) {
     }
     // Halaman milik pemilik usaha. Admin bisa membaca semua profil, sehingga halaman ini
     // akan menampilkan laporan/dokumen usaha orang lain secara acak. Arahkan ke direktori.
-    if (path === '/laporan-siap-bank' || path === '/legalitas') {
+    if (path === '/laporan-siap-bank' || path === '/legalitas' || path === '/koperasi') {
       url.pathname = '/admin'
       url.search = '?tab=direktori'
       return NextResponse.redirect(url)

@@ -1420,7 +1420,7 @@
 
 .data-table {
   width: 100%;
-  min-width: 920px;
+  min-width: 1040px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.8125rem;
@@ -1447,7 +1447,7 @@
 
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-  min-width: 260px;
+  min-width: 240px;
 }
 
 .data-table th:nth-child(2),
@@ -1472,7 +1472,12 @@
 
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-  min-width: 180px;
+  min-width: 130px;
+}
+
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+  min-width: 170px;
 }
 
 .data-table tbody tr:last-child td {
@@ -1715,4 +1720,62 @@
   .dash-heading {
     font-size: 1.25rem;
   }
+}
+
+/* Tabel perbandingan: status bahaya, belum ada data, penanda hemat, dan baris tidak tersedia */
+.badge-status-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: var(--terracotta-soft);
+  color: var(--terracotta);
+  border: 1px solid var(--terracotta-border);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+}
+
+.badge-status-muted {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  background: var(--bg-app);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+}
+
+.badge-hemat {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.data-table tbody tr.row-tidak-tersedia td {
+  color: var(--text-muted);
+}
+
+.data-table tbody tr.row-tidak-tersedia .institution-meta strong {
+  opacity: 0.6;
+}
+
+.data-table tbody tr.row-tidak-tersedia .institution-meta small {
+  white-space: normal;
+  max-width: 280px;
+  display: block;
+}
+
+.cell-tidak-tersedia {
+  font-size: 0.8rem;
+  font-style: italic;
 }
