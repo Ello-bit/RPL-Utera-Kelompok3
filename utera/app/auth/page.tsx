@@ -129,8 +129,8 @@ function AuthContent() {
 
           <div className="auth-brand-row">
             <Link href="/" className="auth-brand" aria-label="Kembali ke Beranda UTERA">
-              <div className="auth-wave-icon" aria-hidden="true">
-                <span></span><span></span><span></span><span></span><span></span>
+              <div className="auth-logo-badge" aria-hidden="true">
+                <img src="/logo.png" alt="" className="brand-logo-img" />
               </div>
               <span className="auth-brand-name">UTERA FINANSIAL</span>
             </Link>
@@ -226,6 +226,14 @@ function AuthContent() {
                 : 'Masuk ke dasbor pembukuan dan pantau kelayakan kredit usaha Anda.'}
             </p>
           </div>
+
+          {searchParams.get('redirect') && (
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+              {redirectTarget.startsWith('/simulasi-kur')
+                ? 'Masuk atau daftar gratis dulu untuk mencoba simulasi KUR dengan data usaha Anda.'
+                : 'Masuk atau daftar gratis dulu untuk membuka halaman ini.'}
+            </div>
+          )}
 
           {errorMessage && (
             <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>

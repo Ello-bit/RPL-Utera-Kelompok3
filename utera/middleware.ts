@@ -53,6 +53,21 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 0b. Halaman aplikasi wajib login. Sebelumnya tamu masuk "mode demo" dengan akun contoh,
+  //     sehingga terlihat seperti sudah punya akun. Sekarang tamu diminta masuk dulu, lalu
+  //     dikembalikan ke halaman yang tadi ingin dibuka (parameter redirect).
+  const PROTECTED = [
+    '/dashboard', '/buku-kas', '/skor-kelayakan', '/guardrail', '/simulasi-kur',
+    '/profil-usaha', '/legalitas', '/laporan-siap-bank',
+  ]
+  if (!user && PROTECTED.some((p) => path === p || path.startsWith(p + '/'))) {
+    const url = request.nextUrl.clone()
+    const target = path + request.nextUrl.search
+    url.pathname = '/auth'
+    url.search = `?mode=login&redirect=${encodeURIComponent(target)}`
+    return NextResponse.redirect(url)
+  }
+
   // 1. If already authenticated and trying to access /auth, redirect to their respective home
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()

@@ -6,6 +6,15 @@ html, body { max-width: 100%; }
 body { overflow-x: clip; }
 img, svg, video, canvas { max-width: 100%; }
 
+/* Logo UTERA di dalam kotak hijau brand (landing, sidebar, halaman masuk) */
+.brand-logo-img { width: 78%; height: 78%; object-fit: contain; display: block; }
+body .brand-badge,
+body .brand-symbol { overflow: hidden; padding: 0; }
+.auth-logo-badge {
+  width: 38px; height: 38px; border-radius: 10px; background: #1F6B4F;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
 /* ---------- Tablet (<= 1100px) ---------- */
 @media (max-width: 1100px) {
   body .dashboard-grid,

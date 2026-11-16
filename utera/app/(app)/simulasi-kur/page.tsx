@@ -78,6 +78,13 @@ export default function SimulasiKurPage() {
     loadData()
   }, [])
 
+  // Tombol "Uji Syarat ..." di landing membuka halaman ini dengan ?jenis=kur-super|kur-mikro|kur-kecil
+  useEffect(() => {
+    const jenis = new URLSearchParams(window.location.search).get('jenis')
+    if (jenis && KUR_TIERS_CONFIG[jenis]) handleTierChange(jenis)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const currentTier = KUR_TIERS_CONFIG[selectedTierId] || KUR_TIERS_CONFIG['kur-mikro']
 
   // Kas summary & effective monthly profit

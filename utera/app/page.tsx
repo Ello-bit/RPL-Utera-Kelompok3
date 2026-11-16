@@ -170,7 +170,7 @@ export default function LandingPage() {
         <div className="container header-inner">
           {/* Brand Logo */}
           <Link href="#beranda" className="brand-link" id="brand-home" aria-label="Beranda UTERA">
-            <div className="brand-badge">U</div>
+            <div className="brand-badge"><img src="/logo.png" alt="" className="brand-logo-img" /></div>
             <div className="brand-info">
               <span className="brand-title">UTERA</span>
               <span className="brand-subtitle">Aplikasi Finansial UMKM</span>
@@ -950,7 +950,7 @@ export default function LandingPage() {
                     </li>
                   </ul>
                 </div>
-                <Link href="/simulasi-kur" className="btn btn-secondary" style={{ width: '100%' }}>
+                <Link href="/simulasi-kur?jenis=kur-super" className="btn btn-secondary" style={{ width: '100%' }}>
                   Uji Syarat Super Mikro
                 </Link>
               </div>
@@ -984,7 +984,7 @@ export default function LandingPage() {
                     </li>
                   </ul>
                 </div>
-                <Link href="/simulasi-kur" className="btn btn-primary" style={{ width: '100%' }}>
+                <Link href="/simulasi-kur?jenis=kur-mikro" className="btn btn-primary" style={{ width: '100%' }}>
                   Uji Kelayakan KUR Mikro
                 </Link>
               </div>
@@ -1017,7 +1017,7 @@ export default function LandingPage() {
                     </li>
                   </ul>
                 </div>
-                <Link href="/simulasi-kur" className="btn btn-secondary" style={{ width: '100%' }}>
+                <Link href="/simulasi-kur?jenis=kur-kecil" className="btn btn-secondary" style={{ width: '100%' }}>
                   Uji Syarat KUR Kecil
                 </Link>
               </div>
@@ -1176,7 +1176,7 @@ export default function LandingPage() {
             {/* Brand Statement */}
             <div className="footer-brand">
               <Link href="#beranda" className="brand-link" aria-label="Beranda UTERA">
-                <div className="brand-badge">U</div>
+                <div className="brand-badge"><img src="/logo.png" alt="" className="brand-logo-img" /></div>
                 <div className="brand-info">
                   <span className="brand-title">UTERA</span>
                   <span className="brand-subtitle">Aplikasi Finansial UMKM</span>

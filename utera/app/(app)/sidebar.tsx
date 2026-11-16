@@ -211,7 +211,7 @@ export default function Sidebar({
                   admin_panel_settings
                 </span>
               ) : (
-                'U'
+                <img src="/logo.png" alt="" className="brand-logo-img" />
               )}
             </div>
             <div className="brand-text">
