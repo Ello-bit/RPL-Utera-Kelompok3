@@ -2,18 +2,18 @@
 
 import { useRouter } from 'next/navigation'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
-import { parseNominal, todayLocal, csvCell } from '@/lib/input'
+import { todayLocal, csvCell } from '@/lib/input'
 import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Tables, TablesInsert } from '@/lib/database.types'
+import { Tables } from '@/lib/database.types'
 import {
   calculateKasSummary,
   formatRupiah,
   KAS_CATEGORIES,
-  PAYMENT_METHODS,
   getMonthlyBreakdown,
 } from '@/lib/kas'
+import CatatKasForm, { gulirKeCatatKas, ID_KARTU_CATAT_KAS } from '../catat-kas/catat-kas-form'
 import './buku-kas.css'
 
 type TransaksiKas = Tables<'transaksi_kas'>
@@ -34,15 +34,6 @@ export default function BukuKasPage() {
 
   // Entry Form State
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [formType, setFormType] = useState<'pemasukan' | 'pengeluaran'>('pemasukan')
-  const [formNominal, setFormNominal] = useState<string>('')
-  const [formKategori, setFormKategori] = useState<string>('Penjualan')
-  const [formTanggal, setFormTanggal] = useState<string>(
-    todayLocal()
-  )
-  const [formKeterangan, setFormKeterangan] = useState<string>('')
-  const [formMetode, setFormMetode] = useState<string>('Tunai')
-  const [submitting, setSubmitting] = useState(false)
   const [toastText, setToastText] = useState<string | null>(null)
 
   useEffect(() => {
@@ -140,100 +131,16 @@ export default function BukuKasPage() {
     router.refresh()
   }
 
-  // Handle Form Submit (INSERT or UPDATE)
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const parsed = parseNominal(formNominal)
-    if (parsed.error !== null) {
-      alert(parsed.error)
-      return
-    }
-    const nominalNum = parsed.value
-    if (!formTanggal) {
-      alert('Tanggal wajib diisi.')
-      return
-    }
-    // Transaksi belum terjadi tidak boleh dicatat (merusak skor & laporan)
-    if (formTanggal > todayLocal()) {
-      alert('Tanggal transaksi tidak boleh melewati hari ini.')
-      return
-    }
-
-    setSubmitting(true)
-    try {
-      if (editingId) {
-        // UPDATE in Supabase
-        const { error } = await supabase
-          .from('transaksi_kas')
-          .update({
-            tipe: formType,
-            nominal: nominalNum,
-            kategori: formKategori,
-            tanggal: formTanggal,
-            keterangan: formKeterangan,
-            metode_pembayaran: formMetode,
-          })
-          .eq('id', editingId)
-
-        if (error) throw error
-
-        setTransactions(
-          transactions.map((t) =>
-            t.id === editingId
-              ? {
-                  ...t,
-                  tipe: formType,
-                  nominal: nominalNum,
-                  kategori: formKategori,
-                  tanggal: formTanggal,
-                  keterangan: formKeterangan,
-                  metode_pembayaran: formMetode,
-                }
-              : t
-          )
-        )
-        showToast('Transaksi berhasil diperbarui!')
-      } else {
-        // INSERT into Supabase
-        const payload: TablesInsert<'transaksi_kas'> = {
-          tipe: formType,
-          nominal: nominalNum,
-          kategori: formKategori,
-          tanggal: formTanggal,
-          keterangan: formKeterangan,
-          metode_pembayaran: formMetode,
-          profil_id: activeProfile?.id || null,
-        }
-
-        const { data, error } = await supabase
-          .from('transaksi_kas')
-          .insert(payload)
-          .select()
-          .single()
-
-        if (error) throw error
-        setTransactions([data as TransaksiKas, ...transactions])
-        showToast('Transaksi kas baru berhasil disimpan!')
-      }
-      await recomputeSkor()
-      resetForm()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal menyimpan transaksi.'
-      alert(msg)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   const handleEdit = (tx: TransaksiKas) => {
     setEditingId(tx.id)
-    setFormType(tx.tipe as 'pemasukan' | 'pengeluaran')
-    setFormNominal(String(tx.nominal))
-    setFormKategori(tx.kategori)
-    setFormTanggal(tx.tanggal || todayLocal())
-    setFormKeterangan(tx.keterangan || '')
-    setFormMetode(tx.metode_pembayaran || 'Tunai')
-    window.scrollTo({ top: 300, behavior: 'smooth' })
+    gulirKeCatatKas()
+  }
+
+  // Formulir catat kas (komponen bersama) selesai menyimpan: perbarui daftar di halaman ini
+  const setelahSimpan = (tx: TransaksiKas, mode: 'baru' | 'ubah') => {
+    setTransactions((prev) => (mode === 'ubah' ? prev.map((t) => (t.id === tx.id ? tx : t)) : [tx, ...prev]))
+    setEditingId(null)
+    showToast(mode === 'ubah' ? 'Transaksi berhasil diperbarui!' : 'Transaksi kas baru berhasil disimpan!')
   }
 
   const handleDelete = async (id: string) => {
@@ -251,15 +158,7 @@ export default function BukuKasPage() {
     }
   }
 
-  const resetForm = () => {
-    setEditingId(null)
-    setFormNominal('')
-    setFormKeterangan('')
-    setFormTanggal(todayLocal())
-    setFormType('pemasukan')
-    setFormKategori(KAS_CATEGORIES.pemasukan[0])
-    setFormMetode('Tunai')
-  }
+  const resetForm = () => setEditingId(null)
 
   const exportCSV = () => {
     const headers = ['ID', 'Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal', 'Metode Pembayaran']
@@ -443,7 +342,7 @@ export default function BukuKasPage() {
                   className="btn-emerald-sm"
                   onClick={() => {
                     resetForm()
-                    window.scrollTo({ top: 300, behavior: 'smooth' })
+                    gulirKeCatatKas()
                   }}
                 >
                   <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
@@ -638,160 +537,14 @@ export default function BukuKasPage() {
           </div>
 
           {/* Action Card: Catat Transaksi Kas */}
-          <section className="saas-card card-action-entry">
-            <div className="entry-card-header">
-              <h2 className="entry-title-text">
-                {editingId ? 'Edit Transaksi Kas' : 'Catat Transaksi Kas'}
-              </h2>
-              <span className="entry-badge-live">
-                {editingId ? 'Sedang diubah' : 'Tersimpan otomatis'}
-              </span>
-            </div>
-
-            <form onSubmit={handleSubmit} className="entry-saas-form">
-              {/* Type Segmented Toggle */}
-              <div className="form-group-clean">
-                <label className="form-label-clean">Jenis Transaksi</label>
-                <div className="type-segmented-toggle">
-                  <label
-                    className={`type-pill-label type-pill-in ${formType === 'pemasukan' ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setFormType('pemasukan')
-                      setFormKategori(KAS_CATEGORIES.pemasukan[0])
-                    }}
-                  >
-                    <span>+ Uang Masuk</span>
-                  </label>
-                  <label
-                    className={`type-pill-label type-pill-out ${formType === 'pengeluaran' ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setFormType('pengeluaran')
-                      setFormKategori(KAS_CATEGORIES.pengeluaran[0])
-                    }}
-                  >
-                    <span>- Uang Keluar</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Nominal */}
-              <div className="form-group-clean">
-                <label className="form-label-clean" htmlFor="nominal-input">
-                  Jumlah (Rp)
-                </label>
-                <div className="numeric-input-card">
-                  <span className="currency-prefix">Rp</span>
-                  <input
-                    type="number"
-                    id="nominal-input"
-                    className="numeric-amount-input"
-                    placeholder="0"
-                    min={1}
-                    required
-                    value={formNominal}
-                    onChange={(e) => setFormNominal(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Tanggal */}
-              <div className="form-group-clean">
-                <label className="form-label-clean" htmlFor="date-input">
-                  Tanggal
-                </label>
-                <div className="numeric-input-card">
-                  <input
-                    type="date"
-                    id="date-input"
-                    className="date-input-clean"
-                    required
-                    max={todayLocal()}
-                    value={formTanggal}
-                    onChange={(e) => setFormTanggal(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Kategori */}
-              <div className="form-group-clean">
-                <label className="form-label-clean" htmlFor="category-select">
-                  Kategori
-                </label>
-                <select
-                  id="category-select"
-                  className="select-clean"
-                  value={formKategori}
-                  onChange={(e) => setFormKategori(e.target.value)}
-                >
-                  {KAS_CATEGORIES[formType].map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Metode Pembayaran */}
-              <div className="form-group-clean">
-                <label className="form-label-clean" htmlFor="method-select">
-                  Metode Pembayaran
-                </label>
-                <select
-                  id="method-select"
-                  className="select-clean"
-                  value={formMetode}
-                  onChange={(e) => setFormMetode(e.target.value)}
-                >
-                  {PAYMENT_METHODS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Keterangan */}
-              <div className="form-group-clean">
-                <label className="form-label-clean" htmlFor="note-input">
-                  Catatan
-                </label>
-                <input
-                  type="text"
-                  id="note-input"
-                  className="text-input-clean"
-                  placeholder="Contoh: Belanja Biji Kopi Robusta"
-                  value={formKeterangan}
-                  onChange={(e) => setFormKeterangan(e.target.value)}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="entry-cta-wrap" style={{ marginTop: '8px' }}>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn btn-emerald-primary"
-                  style={{ width: '100%', cursor: submitting ? 'not-allowed' : 'pointer' }}
-                >
-                  <span className="material-symbols-rounded">
-                    {submitting ? 'hourglass_top' : editingId ? 'check_circle' : 'add'}
-                  </span>
-                  <span>
-                    {submitting ? 'MENYIMPAN...' : editingId ? 'PERBARUI TRANSAKSI' : 'SIMPAN TRANSAKSI KAS'}
-                  </span>
-                </button>
-                {editingId && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary-clean"
-                    style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={resetForm}
-                  >
-                    Batal Edit
-                  </button>
-                )}
-              </div>
-            </form>
+          <section className="saas-card card-action-entry" id={ID_KARTU_CATAT_KAS}>
+            <CatatKasForm
+              key={editingId ?? 'baru'}
+              editing={transactions.find((t) => t.id === editingId) ?? null}
+              profilId={activeProfile?.id ?? null}
+              onSaved={setelahSimpan}
+              onCancelEdit={resetForm}
+            />
           </section>
         </div>
       </div>

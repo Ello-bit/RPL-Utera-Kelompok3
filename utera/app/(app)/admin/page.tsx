@@ -239,6 +239,8 @@ export default function AdminPage() {
       showToastMsg((decision === 'verified' ? 'Gagal mengesahkan: ' : 'Gagal menolak: ') + error)
       return
     }
+    // Perbarui notifikasi antrean verifikasi di lonceng admin
+    window.dispatchEvent(new Event('utera_verifikasi_updated'))
 
     setItemStatus(item.id, {
       isVerified: decision === 'verified',

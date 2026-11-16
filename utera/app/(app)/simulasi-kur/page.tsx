@@ -33,6 +33,9 @@ const KUR_TIERS_CONFIG: Record<string, TierConfig> = Object.fromEntries(
 export default function SimulasiKurPage() {
   const supabase = createClient()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
+  // Selama data belum selesai dimuat, daftar transaksi memang masih kosong.
+  // Tanpa penanda ini, pesan "Belum Ada Catatan Kas" sempat muncul lalu hilang.
+  const [dataSiap, setDataSiap] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [profilId, setProfilId] = useState<string | null>(null)
@@ -95,7 +98,7 @@ export default function SimulasiKurPage() {
       }
     }
 
-    loadData()
+    loadData().finally(() => setDataSiap(true))
   }, [])
 
   const currentTier = KUR_TIERS_CONFIG[selectedTierId] || KUR_TIERS_CONFIG['kur-mikro']
@@ -193,7 +196,7 @@ export default function SimulasiKurPage() {
   }
 
   return (
-    <div className="dashboard-scroll-wrap">
+    <div className="dashboard-scroll-wrap" aria-busy={!dataSiap}>
       {/* Header Row */}
       <div className="dash-header-row">
         <div>
@@ -212,10 +215,10 @@ export default function SimulasiKurPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {transactions.length === 0 && (
+      {dataSiap && transactions.length === 0 && (
         <div style={{
-          background: '#EFF6FF',
-          border: '1px solid #BFDBFE',
+          background: 'var(--primary-soft)',
+          border: '1px solid var(--primary-border)',
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '24px',
@@ -226,15 +229,15 @@ export default function SimulasiKurPage() {
           gap: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="material-symbols-rounded" style={{ color: '#2563EB', fontSize: '28px' }}>
+            <span className="material-symbols-rounded" style={{ color: 'var(--primary)', fontSize: '28px' }}>
               info
             </span>
             <div>
-              <strong style={{ color: '#1E40AF', display: 'block', fontSize: '0.95rem' }}>
-                Mode Simulasi Estimasi — Perhitungan Angsuran Mandiri
+              <strong style={{ color: 'var(--primary-dark)', display: 'block', fontSize: '0.95rem' }}>
+                Belum ada catatan kas
               </strong>
-              <span style={{ color: '#1E3A8A', fontSize: '0.85rem' }}>
-                Akun Anda belum memiliki transaksi kas operasional (Laba: Rp 0). Anda tetap dapat menggunakan kalkulator di bawah untuk menghitung simulasi angsuran KUR perbankan.
+              <span style={{ color: 'var(--text-body)', fontSize: '0.85rem' }}>
+                Anda tetap bisa mencoba menghitung cicilan KUR di bawah. Agar kelayakan KUR usaha Anda bisa dinilai, catat dulu uang masuk dan uang keluar di Buku Kas.
               </span>
             </div>
           </div>

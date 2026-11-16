@@ -2,15 +2,26 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLogout } from './use-logout'
+import { createClient } from '@/lib/supabase/client'
+import { fetchAllVerifications } from '@/lib/verification'
+import {
+  notifAntreanAdmin,
+  notifHasilVerifikasi,
+  PREFIX_NOTIF_VERIFIKASI,
+  type NotifikasiVerifikasi,
+} from '@/lib/notifikasi-verifikasi'
 
 interface TopBarProps {
   businessName: string
   userName: string
   userEmail: string
+  userCreatedAt?: string | null
   isAdmin?: boolean
   onToggleMobileMenu?: () => void
+  /** Tombol "Catat Kas": pop-up formulir, atau gulir ke formulir di Buku Kas Warung */
+  onCatatKas?: () => void
 }
 
 interface NotificationItem {
@@ -21,6 +32,8 @@ interface NotificationItem {
   fullMessage: string
   recommendation: string
   time: string
+  /** Waktu kejadian (ISO) untuk notifikasi dari database; label waktu dihitung ulang dari sini */
+  timeIso?: string
   icon: string
   iconBg: string
   iconColor: string
@@ -28,6 +41,23 @@ interface NotificationItem {
   actionLabel: string
   read: boolean
   urgent?: boolean
+}
+
+// Notifikasi sambutan dan panduan dikirim saat akun dibuat. Waktunya dihitung dari tanggal
+// pembuatan akun, bukan ditulis tetap "Baru saja". Untuk akun yang sudah lebih dari 7 hari,
+// notifikasi ini dianggap sudah dibaca supaya tidak terlihat seperti pesan baru.
+const BATAS_AKUN_BARU_HARI = 7
+
+function waktuSejak(iso: string | null, sekarang: number): string {
+  if (!iso) return ''
+  const menit = Math.floor((sekarang - new Date(iso).getTime()) / 60_000)
+  if (menit < 1) return 'Baru saja'
+  if (menit < 60) return `${menit} menit lalu`
+  const jam = Math.floor(menit / 60)
+  if (jam < 24) return `${jam} jam lalu`
+  const hari = Math.floor(jam / 24)
+  if (hari < 7) return `${hari} hari lalu`
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 const DEFAULT_ADMIN_NOTIFS: NotificationItem[] = [
@@ -38,7 +68,7 @@ const DEFAULT_ADMIN_NOTIFS: NotificationItem[] = [
     category: 'Selamat Datang',
     fullMessage: 'Selamat datang di Pusat Pengawasan & Audit UTERA! Sebagai Super Administrator, Anda memiliki wewenang penuh untuk memantau integritas kas mitra UMKM, mengesahkan status kredibilitas binaan, dan mengawasi kepatuhan batas beban cicilan pinjaman 30%.',
     recommendation: 'Buka Direktori UMKM untuk meninjau data usaha yang terdaftar dan memeriksa status verifikasi mitra binaan.',
-    time: 'Baru saja',
+    time: '', // diisi dari tanggal akun dibuat (lihat waktuSejak)
     icon: 'admin_panel_settings',
     iconBg: '#EEF7F2',
     iconColor: '#1F6B4F',
@@ -54,7 +84,7 @@ const DEFAULT_ADMIN_NOTIFS: NotificationItem[] = [
     category: 'Keamanan Sistem',
     fullMessage: 'Pemeriksaan otomatis mengonfirmasi bahwa seluruh 5 tabel data pengguna terisolasi dengan aman menggunakan kebijakan Row Level Security (RLS) di cloud Supabase tanpa kebocoran data antar-warung.',
     recommendation: 'Platform siap digunakan untuk audit pengawasan ekosistem UMKM secara berkala.',
-    time: 'Baru saja',
+    time: '', // diisi dari tanggal akun dibuat (lihat waktuSejak)
     icon: 'security',
     iconBg: '#EFF6FF',
     iconColor: '#2563EB',
@@ -72,7 +102,7 @@ const DEFAULT_USER_NOTIFS: NotificationItem[] = [
     category: 'Selamat Datang',
     fullMessage: 'Halo! Selamat datang di UTERA (UMKM Sejahtera). Akun Anda telah berhasil dibuat. UTERA membantu warung dan usaha mikro mencatat arus kas harian secara transparan sesuai standar SAK EMKM dan menyiapkan kelayakan kredit perbankan secara otomatis.',
     recommendation: 'Langkah pertama: Buka menu Profil Usaha untuk melengkapi nama usaha dan data pemilik, kemudian catat transaksi pertama Anda di Buku Kas Warung.',
-    time: 'Baru saja',
+    time: '', // diisi dari tanggal akun dibuat (lihat waktuSejak)
     icon: 'waving_hand',
     iconBg: '#EEF7F2',
     iconColor: '#1F6B4F',
@@ -88,7 +118,7 @@ const DEFAULT_USER_NOTIFS: NotificationItem[] = [
     category: 'Panduan Pemula',
     fullMessage: 'Bank mitra UTERA menilai kelayakan kredit usaha Anda melalui 4 pilar utama: K1 Konsistensi Pencatatan Kas (30%), K2 Pertumbuhan Omzet (25%), K3 Margin Operasional (25%), dan K4 Kestabilan Kas (20%).',
     recommendation: 'Cukup catat pemasukan dan pengeluaran setiap hari secara konsisten untuk membangun skor kelayakan kredit yang tinggi.',
-    time: 'Baru saja',
+    time: '', // diisi dari tanggal akun dibuat (lihat waktuSejak)
     icon: 'school',
     iconBg: '#EFF6FF',
     iconColor: '#2563EB',
@@ -102,8 +132,10 @@ export default function TopBar({
   businessName,
   userName,
   userEmail,
+  userCreatedAt = null,
   isAdmin = false,
   onToggleMobileMenu,
+  onCatatKas,
 }: TopBarProps) {
   const router = useRouter()
 
@@ -134,7 +166,22 @@ export default function TopBar({
   // Jadi pembacaan memang harus di dalam effect.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const defaultData = isUserAdmin ? DEFAULT_ADMIN_NOTIFS : DEFAULT_USER_NOTIFS
+    const sekarang = Date.now()
+    const waktu = waktuSejak(userCreatedAt, sekarang)
+    const akunLama =
+      !!userCreatedAt && sekarang - new Date(userCreatedAt).getTime() > BATAS_AKUN_BARU_HARI * 86_400_000
+    const bawaan = isUserAdmin ? DEFAULT_ADMIN_NOTIFS : DEFAULT_USER_NOTIFS
+    const idBawaan = new Set(bawaan.map((n) => n.id))
+    // Notifikasi bawaan: waktu mengikuti tanggal akun dibuat; akun lama otomatis sudah dibaca
+    const sesuaikan = (list: NotificationItem[]) =>
+      list.map((n) =>
+        idBawaan.has(n.id)
+          ? { ...n, time: waktu, read: n.read || akunLama }
+          : n.timeIso
+            ? { ...n, time: waktuSejak(n.timeIso, sekarang) }
+            : n
+      )
+    const defaultData = sesuaikan(bawaan)
     const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
 
     try {
@@ -142,8 +189,9 @@ export default function TopBar({
       if (stored) {
         const parsed = JSON.parse(stored)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setNotifList(parsed)
-          setSelectedNotif(parsed[0] || null)
+          const list = sesuaikan(parsed as NotificationItem[])
+          setNotifList(list)
+          setSelectedNotif(list[0] || null)
           return
         }
       }
@@ -156,8 +204,55 @@ export default function TopBar({
     try {
       localStorage.setItem(storageKey, JSON.stringify(defaultData))
     } catch {}
-  }, [isUserAdmin, userEmail])
+  }, [isUserAdmin, userEmail, userCreatedAt])
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Notifikasi verifikasi usaha dari database (tabel verifikasi_usaha):
+  // pemilik mendapat hasil tinjauan admin, admin mendapat jumlah pengajuan yang menunggu.
+  // Dimuat ulang saat pindah halaman, saat jendela aktif lagi, setiap 60 detik,
+  // dan segera setelah admin meninjau / pemilik mengajukan (event utera_verifikasi_updated).
+  const pathname = usePathname()
+  useEffect(() => {
+    let batal = false
+    const supabase = createClient()
+    const storageKey = `utera_notifs_clean_${userEmail.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+
+    async function muatNotifVerifikasi() {
+      const { data, error } = await fetchAllVerifications(supabase)
+      if (batal || error) return
+      const dinamis: NotifikasiVerifikasi[] = isUserAdmin
+        ? [notifAntreanAdmin(data)].filter((n): n is NotifikasiVerifikasi => n !== null)
+        : notifHasilVerifikasi(data)
+      const sekarang = Date.now()
+      setNotifList((prev) => {
+        const lama = new Map(prev.map((n) => [n.id, n]))
+        const baru: NotificationItem[] = dinamis
+          .sort((a, b) => b.timeIso.localeCompare(a.timeIso))
+          .map((d) => ({
+            ...d,
+            time: waktuSejak(d.timeIso, sekarang),
+            read: lama.get(d.id)?.read ?? false,
+          }))
+        // Notifikasi verifikasi lama yang sudah tidak berlaku diganti yang terbaru
+        const gabung = [...baru, ...prev.filter((n) => !n.id.startsWith(PREFIX_NOTIF_VERIFIKASI))]
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(gabung))
+        } catch {}
+        return gabung
+      })
+    }
+
+    muatNotifVerifikasi()
+    const timer = window.setInterval(muatNotifVerifikasi, 60_000)
+    window.addEventListener('focus', muatNotifVerifikasi)
+    window.addEventListener('utera_verifikasi_updated', muatNotifVerifikasi)
+    return () => {
+      batal = true
+      window.clearInterval(timer)
+      window.removeEventListener('focus', muatNotifVerifikasi)
+      window.removeEventListener('utera_verifikasi_updated', muatNotifVerifikasi)
+    }
+  }, [isUserAdmin, userEmail, pathname])
 
   // Real-time listener for notification updates
   useEffect(() => {
@@ -377,6 +472,11 @@ export default function TopBar({
               <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>verified</span>
               <span>Verifikasi UMKM</span>
             </Link>
+          ) : onCatatKas ? (
+            <button type="button" className="btn btn-primary btn-sm" id="btn-open-tx-modal" onClick={onCatatKas}>
+              <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>add</span>
+              <span>Catat Kas</span>
+            </button>
           ) : (
             <Link href="/buku-kas" className="btn btn-primary btn-sm" id="btn-open-tx-modal">
               <span className="material-symbols-rounded btn-icon" style={{ fontSize: '18px' }}>add</span>

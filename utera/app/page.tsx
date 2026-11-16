@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import RupiahInput from '@/components/rupiah-input'
 import './landing.css'
 
 function formatRupiah(number: number): string {
@@ -829,14 +830,11 @@ export default function LandingPage() {
                               className="saas-input"
                               required
                             />
-                            <input
-                              type="number"
+                            <RupiahInput
                               value={txAmount}
-                              onChange={(e) => setTxAmount(e.target.value)}
+                              onValueChange={setTxAmount}
                               placeholder="Rp Nominal"
                               className="saas-input"
-                              min="1000"
-                              step="1000"
                               required
                             />
                           </div>

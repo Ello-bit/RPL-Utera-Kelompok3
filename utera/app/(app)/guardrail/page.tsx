@@ -60,6 +60,9 @@ const PROGRAMS: ProgramOption[] = [
 export default function GuardrailPage() {
   const supabase = createClient()
   const [transactions, setTransactions] = useState<TransaksiKas[]>([])
+  // Selama data belum selesai dimuat, daftar transaksi memang masih kosong.
+  // Tanpa penanda ini, pesan "Belum Ada Catatan Kas" sempat muncul lalu hilang.
+  const [dataSiap, setDataSiap] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [profilId, setProfilId] = useState<string | null>(null)
@@ -100,7 +103,7 @@ export default function GuardrailPage() {
       }
     }
 
-    loadData()
+    loadData().finally(() => setDataSiap(true))
   }, [])
 
   const currentProgram = useMemo(() => {
@@ -185,7 +188,7 @@ export default function GuardrailPage() {
   }
 
   return (
-    <div className="dashboard-scroll-wrap">
+    <div className="dashboard-scroll-wrap" aria-busy={!dataSiap}>
       {/* Header Row */}
       <div className="dash-header-row">
         <div>
@@ -204,10 +207,10 @@ export default function GuardrailPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {transactions.length === 0 && (
+      {dataSiap && transactions.length === 0 && (
         <div style={{
-          background: '#EFF6FF',
-          border: '1px solid #BFDBFE',
+          background: 'var(--primary-soft)',
+          border: '1px solid var(--primary-border)',
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '24px',
@@ -218,15 +221,15 @@ export default function GuardrailPage() {
           gap: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="material-symbols-rounded" style={{ color: '#2563EB', fontSize: '28px' }}>
+            <span className="material-symbols-rounded" style={{ color: 'var(--primary)', fontSize: '28px' }}>
               info
             </span>
             <div>
-              <strong style={{ color: '#1E40AF', display: 'block', fontSize: '0.95rem' }}>
-                Mode Simulasi Awal — Belum Ada Catatan Kas Operasional
+              <strong style={{ color: 'var(--primary-dark)', display: 'block', fontSize: '0.95rem' }}>
+                Belum ada catatan kas
               </strong>
-              <span style={{ color: '#1E3A8A', fontSize: '0.85rem' }}>
-                Laba bersih kas Anda saat ini masih Rp 0. Anda tetap dapat menggeser kalkulator simulasi di bawah untuk melihat estimasi angsuran, namun batas aman cicilan 30% akan aktif penuh setelah Anda mencatat transaksi di Buku Kas Warung.
+              <span style={{ color: 'var(--text-body)', fontSize: '0.85rem' }}>
+                Anda tetap bisa mencoba menghitung cicilan di bawah. Batas aman cicilan baru bisa dihitung setelah Anda mencatat uang masuk dan uang keluar di Buku Kas.
               </span>
             </div>
           </div>
@@ -257,7 +260,7 @@ export default function GuardrailPage() {
             <span className="metric-value" id="val-net-profit">{formatRupiah(baseMonthlyProfit)}</span>
             <span
               className={`trend-pill ${transactions.length > 0 ? 'trend-up' : ''}`}
-              style={transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+              style={dataSiap && transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
             >
               <span className="material-symbols-rounded trend-icon">
                 {transactions.length > 0 ? 'trending_up' : 'info'}
@@ -280,7 +283,7 @@ export default function GuardrailPage() {
             <span className="metric-value text-primary" id="val-guardrail-limit">{formatRupiah(guardrailLimit)}</span>
             <span
               className={transactions.length > 0 ? 'badge-status-safe' : 'badge-status-warning'}
-              style={transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
+              style={dataSiap && transactions.length === 0 ? { background: '#F1F5F9', color: '#64748B' } : {}}
             >
               {transactions.length > 0 ? 'Batas Pagar Aman' : 'Belum Dihitung'}
             </span>
@@ -489,7 +492,7 @@ export default function GuardrailPage() {
                 {baseMonthlyProfit > 0 ? `${guard.ratio.toFixed(1)}%` : '0.0%'}
               </span>
               <span className="gauge-sub-label">
-                {baseMonthlyProfit > 0 ? 'Rasio Beban terhadap Laba Kas' : 'Rasio Beban (Belum Ada Catatan Kas)'}
+                {baseMonthlyProfit > 0 || !dataSiap ? 'Rasio Beban terhadap Laba Kas' : 'Rasio Beban (Belum Ada Catatan Kas)'}
               </span>
             </div>
 

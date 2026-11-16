@@ -72,6 +72,7 @@ export default async function AppShellLayout({
       skor={skor}
       userEmail={userEmail}
       userName={userName}
+      userCreatedAt={user?.created_at ?? null}
       isAdmin={isAdmin}
     >
       {children}

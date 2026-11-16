@@ -26,3 +26,52 @@ export function todayLocal(d: Date = new Date()): string {
 export function csvCell(v: unknown): string {
   return `"${String(v ?? '').replace(/"/g, '""')}"`
 }
+
+/** Tampilan angka dengan titik ribuan: "1500000" -> "1.500.000". Masukan hanya digit. */
+export function formatRibuan(digits: string): string {
+  return digits ? Number(digits).toLocaleString('id-ID') : ''
+}
+
+/**
+ * Olah ketikan di kolom rupiah bertitik ribuan.
+ * - `teks`: isi kolom setelah diketik (bisa berisi titik), `caret`: posisi kursor
+ * - `digitLama`: angka sebelum diketik (tanpa titik)
+ * - `jenis`: InputEvent.inputType, untuk menangani hapus tepat di atas titik
+ * Hasil: angka tanpa titik dan berapa digit yang ada di kiri kursor (untuk menaruh kursor lagi).
+ */
+export function olahKetikanRupiah(
+  teks: string,
+  caret: number,
+  digitLama: string,
+  jenis?: string,
+  maksDigit = 13
+): { digits: string; digitDiKiriKursor: number } {
+  let digits = teks.replace(/\D/g, '')
+  let kiri = teks.slice(0, caret).replace(/\D/g, '').length
+
+  // Menghapus tepat di atas titik: titik muncul lagi, jadi hapus digit di sebelahnya
+  if (digits === digitLama && teks.length < formatRibuan(digitLama).length) {
+    if (jenis === 'deleteContentBackward' && kiri > 0) {
+      digits = digits.slice(0, kiri - 1) + digits.slice(kiri)
+      kiri -= 1
+    } else if (jenis === 'deleteContentForward') {
+      digits = digits.slice(0, kiri) + digits.slice(kiri + 1)
+    }
+  }
+
+  // Buang nol di depan ("007" -> "7") dan batasi panjang
+  const tanpaNol = digits.replace(/^0+(?=\d)/, '')
+  kiri = Math.max(0, kiri - (digits.length - tanpaNol.length))
+  digits = tanpaNol.slice(0, maksDigit)
+  return { digits, digitDiKiriKursor: Math.min(kiri, digits.length) }
+}
+
+/** Posisi kursor di teks bertitik setelah `n` digit pertama. */
+export function posisiKursorRupiah(teksBertitik: string, n: number): number {
+  let hitung = 0
+  for (let i = 0; i < teksBertitik.length; i++) {
+    if (hitung === n) return i
+    if (/\d/.test(teksBertitik[i])) hitung++
+  }
+  return teksBertitik.length
+}

@@ -25,6 +25,8 @@ export interface VerificationRequest {
   /** Waktu pengajuan lengkap (ISO), dipakai untuk mengurutkan antrean admin. */
   submittedAtIso: string
   reviewedAt?: string
+  /** Waktu peninjauan lengkap (ISO), dipakai untuk waktu notifikasi hasil verifikasi. */
+  reviewedAtIso?: string
   reviewedBy?: string
   /** Catatan dari admin saat mengesahkan atau menolak (opsional). */
   adminNote?: string
@@ -54,6 +56,7 @@ export function rowToRequest(row: VerifikasiRow): VerificationRequest {
     submittedAt: row.diajukan_pada ? row.diajukan_pada.slice(0, 10) : '',
     submittedAtIso: row.diajukan_pada || '',
     reviewedAt: row.ditinjau_pada ? row.ditinjau_pada.slice(0, 10) : undefined,
+    reviewedAtIso: row.ditinjau_pada || undefined,
     reviewedBy: row.ditinjau_oleh || undefined,
     adminNote: row.catatan_admin || row.alasan_penolakan || undefined,
     certificateNumber: row.nomor_sertifikat || undefined,

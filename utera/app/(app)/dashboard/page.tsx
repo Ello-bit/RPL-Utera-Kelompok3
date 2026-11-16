@@ -7,6 +7,7 @@ import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { todayLocal } from '@/lib/input'
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import RupiahInput from '@/components/rupiah-input'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import {
@@ -965,15 +966,12 @@ export default function DashboardPage() {
                 <label className="form-label" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
                   Nominal Transaksi (Rp)
                 </label>
-                <input
-                  type="number"
+                <RupiahInput
                   className="form-input"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1rem', fontWeight: 700 }}
-                  placeholder="contoh: 250000"
-                  min="1000"
-                  step="1000"
+                  placeholder="contoh: 250.000"
                   value={txAmount}
-                  onChange={(e) => setTxAmount(e.target.value)}
+                  onValueChange={setTxAmount}
                   required
                 />
               </div>
