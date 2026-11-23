@@ -12,6 +12,7 @@ import {
   evaluateGuardrail,
   bandingkanPembiayaan,
   pilihanPalingHemat,
+  tandaPlafon,
   KOPERASI,
   KUR_TIERS,
   type KurTier,
@@ -414,10 +415,9 @@ export default function GuardrailPage() {
                 className="custom-slider"
               />
               <div className="slider-ticks">
-                <span>{formatRupiah(currentProgram.minPlafon)}</span>
-                <span>Rp 25 Jt</span>
-                <span>Rp 50 Jt (Rekomendasi)</span>
-                <span>{formatRupiah(currentProgram.maxPlafon)}</span>
+                {tandaPlafon(currentProgram.minPlafon, currentProgram.maxPlafon).map((n) => (
+                  <span key={n}>{formatRupiah(n)}</span>
+                ))}
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateInstallment, calculateFlatInstallment, bandingkanPembiayaan, pilihanPalingHemat, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS } from '../lib/kur'
+import { calculateInstallment, calculateFlatInstallment, bandingkanPembiayaan, pilihanPalingHemat, tandaPlafon, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS } from '../lib/kur'
 
 describe('F8 status cek kelayakan KUR (PRD)', () => {
   it('KUR-ST1 6 bulan + NIB + skor 40 = Memenuhi syarat', () => {
@@ -137,5 +137,29 @@ describe('Perbandingan pilihan pembiayaan', () => {
     expect(calculateFlatInstallment(0, 0.09, 12).total).toBe(0)
     expect(calculateFlatInstallment(10_000_000, 0.09, 0).total).toBe(0)
     expect(calculateFlatInstallment(25_000_000, 0.09, 12).total).toBe(2_270_833)
+  })
+})
+
+describe('Penanda slider plafon', () => {
+  it('TP-01 tiga angka: batas bawah, tengah, batas atas, tanpa angka ganda', () => {
+    expect(tandaPlafon(10_000_000, 50_000_000)).toEqual([10_000_000, 30_000_000, 50_000_000])
+    expect(tandaPlafon(1_000_000, 10_000_000)).toEqual([1_000_000, 6_000_000, 10_000_000])
+  })
+
+  it('TP-02 untuk semua jenis KUR tidak ada angka yang sama', () => {
+    for (const t of Object.values(KUR_TIERS)) {
+      const tanda = tandaPlafon(t.minPlafon, t.maxPlafon)
+      expect(new Set(tanda).size).toBe(tanda.length)
+      expect(tanda[0]).toBe(t.minPlafon)
+      expect(tanda[tanda.length - 1]).toBe(t.maxPlafon)
+    }
+  })
+
+  it('TP-03 rentang sempit: titik tengah dibuang bila menempel ke ujung', () => {
+    expect(tandaPlafon(10_000_000, 11_000_000)).toEqual([10_000_000, 11_000_000])
+  })
+
+  it('TP-04 batas tidak valid menghasilkan satu angka', () => {
+    expect(tandaPlafon(5_000_000, 5_000_000)).toEqual([5_000_000])
   })
 })

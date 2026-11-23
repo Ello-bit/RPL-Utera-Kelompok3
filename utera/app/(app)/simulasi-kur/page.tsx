@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
-import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, KUR_TIERS, type KurTier } from '@/lib/kur'
+import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, tandaPlafon, KUR_TIERS, type KurTier } from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
 import './simulasi-kur.css'
@@ -454,9 +454,9 @@ export default function SimulasiKurPage() {
                 className="custom-slider"
               />
               <div className="slider-ticks">
-                <span>{formatRupiah(currentTier.minPlafon)}</span>
-                <span>{formatRupiah(currentTier.defaultPlafon)}</span>
-                <span>{formatRupiah(currentTier.maxPlafon)}</span>
+                {tandaPlafon(currentTier.minPlafon, currentTier.maxPlafon).map((n) => (
+                  <span key={n}>{formatRupiah(n)}</span>
+                ))}
               </div>
             </div>
 

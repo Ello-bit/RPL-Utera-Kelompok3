@@ -313,3 +313,14 @@ export function pilihanPalingHemat(baris: BarisPerbandingan[]): BarisPerbandinga
   if (layak.length === 0) return null
   return layak.reduce((a, b) => (b.totalBunga < a.totalBunga ? b : a))
 }
+
+/**
+ * Tiga angka penanda di bawah slider plafon: batas bawah, titik tengah, dan batas atas.
+ * Titik tengah dibulatkan ke Rp 1 juta terdekat dan dihitung dari batas program, jadi tidak pernah
+ * sama dengan batas bawah atau batas atas, dan selalu mengikuti program yang dipilih.
+ */
+export function tandaPlafon(min: number, max: number): number[] {
+  if (!(max > min)) return [min]
+  const tengah = Math.round((min + max) / 2 / 1_000_000) * 1_000_000
+  return tengah > min && tengah < max ? [min, tengah, max] : [min, max]
+}
