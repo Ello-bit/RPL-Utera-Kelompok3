@@ -765,14 +765,14 @@ export default function LandingPage() {
                         </div>
 
                         <div style={{ marginTop: '32px', borderTop: '1px solid var(--neutral-200)', paddingTop: '20px' }}>
-                          <button
-                            type="button"
+                          {/* Belum login: middleware mengarahkan ke login lalu kembali ke /koperasi */}
+                          <Link
+                            href="/koperasi"
                             className="btn btn-secondary"
-                            style={{ width: '100%' }}
-                            onClick={() => alert('Laporan simulasi telah siap. Dalam versi lengkap, Anda dapat mengunduh formulir pengajuan anggota koperasi terverifikasi.')}
+                            style={{ width: '100%', textDecoration: 'none', justifyContent: 'center' }}
                           >
                             Unduh Rekomendasi Simulasi PDF
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -887,14 +887,14 @@ export default function LandingPage() {
                         </div>
 
                         <div style={{ borderTop: '1px solid var(--neutral-200)', paddingTop: '20px' }}>
-                          <button
-                            type="button"
+                          {/* Belum login: middleware mengarahkan ke login lalu kembali ke /laporan-siap-bank */}
+                          <Link
+                            href="/laporan-siap-bank"
                             className="btn btn-primary"
-                            style={{ width: '100%' }}
-                            onClick={() => alert('Laporan Kas Periode Berjalan telah siap dicetak sesuai standar SAK EMKM.')}
+                            style={{ width: '100%', textDecoration: 'none', justifyContent: 'center' }}
                           >
                             Ekspor Laporan Keuangan (PDF)
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
