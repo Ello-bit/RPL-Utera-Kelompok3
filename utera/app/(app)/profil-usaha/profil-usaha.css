@@ -422,12 +422,6 @@ button.profile-avatar:focus-visible { outline: 3px solid var(--primary-border, #
 .form-label .required {
   color: var(--terracotta, #B5532F);
 }
-.form-label .label-hint {
-  font-weight: 400;
-  color: var(--text-muted, #6B7E74);
-  font-size: 11.5px;
-  margin-left: 2px;
-}
 
 .form-control {
   width: 100%;

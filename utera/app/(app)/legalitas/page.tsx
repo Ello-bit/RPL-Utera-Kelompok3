@@ -146,7 +146,7 @@ export default function LegalitasPage() {
             Legalitas & NIB
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Kelola dokumen legalitas resmi UMKM (NIB OSS, NPWP, SKU) sebagai prasyarat utama verifikasi bank.
+            Catat dokumen legalitas usaha (NIB, NPWP, SKU, KTP) untuk syarat bank.
           </p>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function LegalitasPage() {
               : `Kelengkapan Legalitas: ${summary.completed} dari ${summary.total} Dokumen Terverifikasi`}
           </h2>
           <p style={{ color: summary.pct >= 75 ? '#17543E' : '#B45309', fontSize: '0.85rem' }}>
-            NIB (Nomor Induk Berusaha) berbasis risiko OSS-RBA merupakan syarat mutlak pengajuan KUR di bank Himbara (BRI, BNI, Mandiri).
+            NIB adalah syarat utama pengajuan KUR di bank.
           </p>
         </div>
 
@@ -246,7 +246,7 @@ export default function LegalitasPage() {
             verified_user
           </span>
           <span style={{ fontSize: '0.875rem', color: '#1E40AF', lineHeight: 1.4 }}>
-            <strong>Validasi Legalitas Resmi:</strong> Ajukan permohonan audit NIB dan legalitas dokumen Anda ke <strong>Admin Pengawas UTERA</strong> agar tercatat resmi sebagai Mitra Kredibel.
+            <strong>Verifikasi legalitas:</strong> Ajukan ke <strong>admin UTERA</strong> agar usaha Anda tercatat sebagai mitra kredibel.
           </span>
         </div>
         <Link
@@ -334,7 +334,7 @@ export default function LegalitasPage() {
                   </div>
                 ) : (
                   <div style={{ padding: '12px', background: '#FFFBEB', borderRadius: '8px', marginBottom: '16px', fontSize: '0.8rem', color: '#B45309' }}>
-                    Belum ada nomor atau lampiran dokumen yang tersimpan.
+                    Belum ada data.
                   </div>
                 )}
               </div>

@@ -108,7 +108,7 @@ export default function LaporanSiapBankPage() {
             Laporan Siap Bank
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Kompilasi formal profil usaha, arus kas riil, skor kelayakan KUR, dan status legalitas untuk analis bank.
+            Ringkasan profil, kas, skor, dan legalitas usaha untuk bank.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>

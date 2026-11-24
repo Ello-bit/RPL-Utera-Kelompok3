@@ -6,25 +6,25 @@ export const DEFAULT_LEGALITAS_DOCS = [
   {
     jenis: 'NIB',
     judul: 'Nomor Induk Berusaha (NIB)',
-    deskripsi: 'Dokumen legalitas utama dari OSS. Wajib untuk semua pengajuan KUR.',
+    deskripsi: 'Izin dasar usaha dari OSS.',
     required: true,
   },
   {
     jenis: 'NPWP',
     judul: 'NPWP Pemilik / Usaha',
-    deskripsi: 'Diperlukan untuk pinjaman di atas Rp 50 juta.',
+    deskripsi: 'Perlu untuk pinjaman di atas Rp 50 juta.',
     required: true,
   },
   {
     jenis: 'SKU',
     judul: 'Surat Keterangan Usaha (SKU)',
-    deskripsi: 'Diterbitkan oleh Kelurahan / Kepala Desa setempat.',
+    deskripsi: 'Surat dari kelurahan atau desa.',
     required: false,
   },
   {
     jenis: 'KTP',
     judul: 'KTP & KK Pemilik Usaha',
-    deskripsi: 'Identitas kependudukan resmi pemohon pembiayaan.',
+    deskripsi: 'Identitas pemilik usaha.',
     required: true,
   },
 ]

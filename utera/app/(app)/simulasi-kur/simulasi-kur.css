@@ -1481,3 +1481,22 @@
     font-size: 1.25rem;
   }
 }
+
+/* Kartu jenis KUR: nama, bunga, dan satu baris keterangan; bunga tidak patah baris */
+.kur-tier-header {
+  gap: 8px;
+}
+
+.kur-tier-header strong {
+  flex: 1;
+  min-width: 0;
+}
+
+.kur-tier-header .badge-rate {
+  white-space: nowrap;
+}
+
+.kur-program-card small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateKasSummary, getMonthlyBreakdown, getCategoryDistribution, formatRupiah } from '../lib/kas'
+import { calculateKasSummary, getMonthlyBreakdown, getCategoryDistribution, formatRupiah, rentangJuta } from '../lib/kas'
 import { tx } from './helpers'
 
 describe('F5 dashboard: pemasukan, pengeluaran, laba bersih', () => {
@@ -36,5 +36,16 @@ describe('F5 dashboard: pemasukan, pengeluaran, laba bersih', () => {
   })
   it('KAS-06 format rupiah', () => {
     expect(formatRupiah(1500000)).toBe('Rp 1.500.000')
+  })
+})
+
+describe('Rentang rupiah ringkas untuk kartu', () => {
+  it('KAS-RJ1 rentang juta tanpa nol di belakang', () => {
+    expect(rentangJuta(10_000_000, 50_000_000)).toBe('Rp 10–50 Jt')
+    expect(rentangJuta(1_000_000, 10_000_000)).toBe('Rp 1–10 Jt')
+    expect(rentangJuta(50_000_000, 500_000_000)).toBe('Rp 50–500 Jt')
+  })
+  it('KAS-RJ2 pecahan juta memakai koma', () => {
+    expect(rentangJuta(1_500_000, 10_000_000)).toBe('Rp 1,5–10 Jt')
   })
 })

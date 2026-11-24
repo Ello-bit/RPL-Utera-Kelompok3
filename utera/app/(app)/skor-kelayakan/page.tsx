@@ -98,7 +98,7 @@ export default function SkorKelayakanPage() {
         <div>
           <h1 className="dash-heading">Skor Kelayakan Usaha</h1>
           <p className="dash-subheading">
-            Penilaian kesiapan usaha untuk pengajuan KUR berdasarkan riwayat keuangan 6 bulan terakhir.
+            Kesiapan usaha untuk KUR, dihitung dari kas 6 bulan terakhir.
           </p>
         </div>
         <div className="dash-header-actions">
@@ -116,8 +116,7 @@ export default function SkorKelayakanPage() {
       )}
       {!loading && skorData.dataKurang && skorData.category !== 'Belum Ada Data' && (
         <p role="status" className="dash-subheading" style={{ color: '#8A5E0F' }}>
-          Data belum cukup: baru {skorData.k1.detail}. Skor dihitung dari bulan yang ada dan
-          akan lebih akurat setelah 6 bulan tercatat.
+          Data belum cukup: baru {skorData.k1.detail}. Skor makin akurat setelah 6 bulan tercatat.
         </p>
       )}
 
@@ -161,10 +160,10 @@ export default function SkorKelayakanPage() {
               </div>
               <p className="skor-verdict" id="skor-verdict">
                 {isBaik
-                  ? 'Keuangan usaha Anda menunjukkan pola yang konsisten dan sehat. Usaha ini siap untuk pengajuan KUR Mikro hingga Rp 50 Juta.'
+                  ? 'Keuangan usaha konsisten dan sehat. Siap mengajukan KUR Mikro hingga Rp 50 Juta.'
                   : isCukup
-                  ? 'Keuangan usaha Anda memenuhi standar kelayakan dasar, namun disarankan meningkatkan efisiensi kas dan konsistensi catatan.'
-                  : 'Catatan keuangan perlu perbaikan kedisiplinan pembukuan kas warung sebelum mengajukan pinjaman bank.'}
+                  ? 'Memenuhi standar dasar. Tingkatkan efisiensi kas dan konsistensi catatan.'
+                  : 'Rapikan pencatatan kas dulu sebelum mengajukan pinjaman.'}
               </p>
               <div className="skor-meta">
                 <span className="skor-meta-item">
@@ -175,10 +174,6 @@ export default function SkorKelayakanPage() {
                   <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>receipt_long</span>
                   Basis: {transactions.length} Transaksi Kas
                 </span>
-                <span className="skor-meta-item">
-                  <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>update</span>
-                  Diperbarui: Real-time
-                </span>
               </div>
             </div>
           </div>
@@ -188,10 +183,7 @@ export default function SkorKelayakanPage() {
             <div className="spectrum-header">
               <div className="spectrum-title">
                 <span className="material-symbols-rounded text-primary" style={{ fontSize: '18px' }}>tune</span>
-                <span>Spektrum Kelayakan &amp; Posisi Usaha Anda</span>
-              </div>
-              <div className="spectrum-current-badge">
-                Posisi Usaha: <strong className="text-primary">{totalScore} / 100</strong> ({skorData.badgeLabel})
+                <span>Posisi Skor Anda</span>
               </div>
             </div>
 
@@ -239,9 +231,8 @@ export default function SkorKelayakanPage() {
               <div className="vital-info">
                 <span className="vital-label">Peluang Lolos KUR</span>
                 <span className={`vital-val ${isBaik ? 'text-emerald' : 'text-terracotta'}`}>
-                  {isBaik ? 'Tinggi (94%)' : isCukup ? 'Sedang (65%)' : 'Rendah (35%)'}
+                  {isBaik ? 'Tinggi' : isCukup ? 'Sedang' : 'Rendah'}
                 </span>
-                <span className="vital-sub">Berdasarkan rasio SAK EMKM</span>
               </div>
             </div>
 
@@ -254,7 +245,6 @@ export default function SkorKelayakanPage() {
                 <span className="vital-val text-primary">
                   {totalScore >= 70 ? 'Rp 50 Juta (KUR Mikro)' : 'Rp 10 Juta (Super Mikro)'}
                 </span>
-                <span className="vital-sub">Tanpa agunan fisik tambahan</span>
               </div>
             </div>
 
@@ -267,7 +257,6 @@ export default function SkorKelayakanPage() {
                 <span className="vital-val text-emerald">
                   Maks {formatRupiah(Math.max(0, Math.round(rataLabaBulanan(skorData) * 0.30)))} / bln
                 </span>
-                <span className="vital-sub">Batas cicilan aman likuiditas</span>
               </div>
             </div>
           </div>
@@ -279,7 +268,7 @@ export default function SkorKelayakanPage() {
         <div className="panel-header" style={{ marginBottom: '20px' }}>
           <div>
             <h2 className="panel-title">Rincian 4 Komponen Skor</h2>
-            <p className="panel-subtitle">Cara skor dihitung dari catatan Buku Kas 6 bulan terakhir</p>
+            <p className="panel-subtitle">Dari catatan kas 6 bulan terakhir</p>
           </div>
           <button
             type="button"
@@ -306,7 +295,7 @@ export default function SkorKelayakanPage() {
               <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{skorData.k1.score} / 30 Poin</strong>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-body)', margin: 0 }}>
-              Kedisiplinan pencatatan transaksi minimal 6 bulan berturut-turut.
+              Bulan yang ada catatan, dari 6 bulan
             </p>
           </div>
 
@@ -317,7 +306,7 @@ export default function SkorKelayakanPage() {
               <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{skorData.k2.score} / 25 Poin</strong>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-body)', margin: 0 }}>
-              Perbandingan omzet periode 3 bulan terbaru vs 3 bulan sebelumnya.
+              Omzet 3 bulan terbaru vs 3 bulan sebelumnya
             </p>
           </div>
 
@@ -328,7 +317,7 @@ export default function SkorKelayakanPage() {
               <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{skorData.k3.score} / 25 Poin</strong>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-body)', margin: 0 }}>
-              Rasio efisiensi laba bersih terhadap omzet kotor (Target: ≥ 20%).
+              Laba dibanding omzet (target 20%)
             </p>
           </div>
 
@@ -339,7 +328,7 @@ export default function SkorKelayakanPage() {
               <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{skorData.k4.score} / 20 Poin</strong>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-body)', margin: 0 }}>
-              Jumlah bulan dengan arus kas operasional surplus tanpa defisit modal.
+              Bulan dengan laba positif
             </p>
           </div>
         </div>

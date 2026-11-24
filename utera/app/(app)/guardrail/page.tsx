@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import BannerKasKosong from '../banner-kas-kosong'
 import PlafonInput from '../plafon-input'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
-import { formatRupiah } from '@/lib/kas'
+import { formatRupiah, rentangJuta } from '@/lib/kas'
 import {
   calculateInstallment,
   calculateFlatInstallment,
@@ -39,7 +40,7 @@ interface ProgramOption {
 const fromTier = (t: KurTier, icon: string): ProgramOption => ({
   id: t.id,
   name: t.name,
-  subtitle: `Bunga ${t.rateDisplay} p.a. • Plafon ${formatRupiah(t.minPlafon)} s.d. ${formatRupiah(t.maxPlafon)} • Tenor ${t.minTenor}-${t.maxTenor} bulan`,
+  subtitle: `${Math.round(t.rate * 100)}% p.a. · ${rentangJuta(t.minPlafon, t.maxPlafon)}`,
   icon,
   rate: t.rate,
   rateDisplay: t.rateDisplay,
@@ -56,7 +57,7 @@ const PROGRAMS: ProgramOption[] = [
   {
     id: 'koperasi',
     name: 'Pinjaman Koperasi Usaha',
-    subtitle: 'Bunga jasa 9% p.a. flat • Tanpa agunan bank',
+    subtitle: `${Math.round(KOPERASI.rate * 100)}% p.a. flat · ${rentangJuta(KOPERASI.minPlafon, KOPERASI.maxPlafon)}`,
     icon: 'handshake',
     rate: KOPERASI.rate,
     rateDisplay: KOPERASI.rateDisplay,
@@ -208,7 +209,7 @@ export default function GuardrailPage() {
         <div>
           <h1 className="dash-heading">Batas Aman Cicilan &amp; Simulasi Pinjaman</h1>
           <p className="dash-subheading">
-            Kalkulasi batas aman beban angsuran cicilan kredit perbankan agar likuiditas kas operasional warung tetap terjaga.
+            Cek apakah cicilan masih aman untuk kas warung Anda.
           </p>
         </div>
 
@@ -221,42 +222,7 @@ export default function GuardrailPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {dataSiap && transactions.length === 0 && (
-        <div style={{
-          background: 'var(--primary-soft)',
-          border: '1px solid var(--primary-border)',
-          borderRadius: '12px',
-          padding: '16px 20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="material-symbols-rounded" style={{ color: 'var(--primary)', fontSize: '28px' }}>
-              info
-            </span>
-            <div>
-              <strong style={{ color: 'var(--primary-dark)', display: 'block', fontSize: '0.95rem' }}>
-                Belum ada catatan kas
-              </strong>
-              <span style={{ color: 'var(--text-body)', fontSize: '0.85rem' }}>
-                Anda tetap bisa mencoba menghitung cicilan di bawah. Batas aman cicilan baru bisa dihitung setelah Anda mencatat uang masuk dan uang keluar di Buku Kas.
-              </span>
-            </div>
-          </div>
-          <Link
-            href="/buku-kas"
-            className="btn btn-primary btn-sm"
-            style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}
-          >
-            <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
-            <span>Mulai Catat Kas</span>
-          </Link>
-        </div>
-      )}
+      {dataSiap && transactions.length === 0 && <BannerKasKosong keterangan="Kalkulator tetap bisa dicoba." />}
 
       {/* ====================================================================
            1. TOP METRICS: CAPACITY & CASHFLOW FOUNDATION
@@ -282,7 +248,6 @@ export default function GuardrailPage() {
               <span>{transactions.length > 0 ? 'Dari Buku Kas' : 'Belum Ada Transaksi'}</span>
             </span>
           </div>
-          <p className="metric-caption">Rata-rata dari catatan Buku Kas Warung aktif.</p>
         </div>
 
         {/* Metric 2: Batas Plafon Cicilan 30% (The Guardrail) */}
@@ -302,7 +267,6 @@ export default function GuardrailPage() {
               {transactions.length > 0 ? 'Batas Pagar Aman' : 'Belum Dihitung'}
             </span>
           </div>
-          <p className="metric-caption">Batas tertinggi angsuran bulanan yang diizinkan sistem.</p>
         </div>
 
         {/* Metric 3: Estimasi Angsuran Simulasi Saat Ini */}
@@ -345,7 +309,6 @@ export default function GuardrailPage() {
               {baseMonthlyProfit > 0 ? `${remainingPct}% tersisa` : '0% (Belum Ada Kas)'}
             </span>
           </div>
-          <p className="metric-caption">Kas bebas untuk kulakan stok harian &amp; dana darurat warung.</p>
         </div>
       </section>
 
@@ -358,7 +321,7 @@ export default function GuardrailPage() {
           <div className="panel-header">
             <div>
               <h2 className="panel-title">Kalkulator Simulasi Pembiayaan Usaha</h2>
-              <p className="panel-subtitle">Sesuaikan plafon pinjaman modal kerja, jangka waktu, dan jenis lembaga pembiayaan</p>
+              <p className="panel-subtitle">Atur jumlah, jangka waktu, dan jenis pinjaman</p>
             </div>
             <button type="button" className="btn btn-outline btn-sm" id="btn-reset-sim" onClick={handleReset}>
               Reset Nilai
@@ -553,9 +516,9 @@ export default function GuardrailPage() {
                 <p id="risk-desc" style={baseMonthlyProfit === 0 ? { color: '#0369A1' } : {}}>
                   {baseMonthlyProfit > 0
                     ? (guard.isSafe
-                      ? `Angsuran ${formatRupiah(calc.total)}/bulan hanya memakan ${guard.ratio.toFixed(1)}% laba bersih. Anda masih memiliki bantalan kas ${remainingPct}% untuk mengamankan operasional harian warung.`
-                      : `Angsuran ${formatRupiah(calc.total)}/bulan melampaui batas aman 30% laba bersih (${formatRupiah(guardrailLimit)}). Disarankan memperpanjang tenor atau menurunkan nominal pinjaman.`)
-                    : `Simulasi angsuran ${formatRupiah(calc.total)}/bulan (Plafon ${formatRupiah(plafon)}, Tenor ${tenorMonths} bulan). Mulai catat transaksi di Buku Kas Warung untuk menguji apakah cicilan ini berada di dalam batas aman 30% laba bersih usaha Anda.`
+                      ? `Angsuran ${formatRupiah(calc.total)}/bulan hanya ${guard.ratio.toFixed(1)}% dari laba. Masih ada sisa kas ${remainingPct}% untuk operasional.`
+                      : `Angsuran ${formatRupiah(calc.total)}/bulan melebihi batas aman 30% laba (${formatRupiah(guardrailLimit)}). Perpanjang tenor atau kecilkan pinjaman.`)
+                    : `Angsuran ${formatRupiah(calc.total)}/bulan untuk ${formatRupiah(plafon)} selama ${tenorMonths} bulan. Catat kas di Buku Kas untuk menguji apakah cicilan ini aman.`
                   }
                 </p>
               </div>
@@ -590,7 +553,7 @@ export default function GuardrailPage() {
             <div>
               <h2 className="panel-title">Perbandingan Pilihan Pinjaman</h2>
               <p className="panel-subtitle">
-                Dibandingkan pada plafon {formatRupiah(plafon)} dan tenor {tenorMonths} bulan, sesuai pengaturan kalkulator di atas
+                Pada plafon {formatRupiah(plafon)} dan tenor {tenorMonths} bulan, sesuai kalkulator
               </p>
             </div>
           </div>
@@ -674,22 +637,17 @@ export default function GuardrailPage() {
             <p>
               {baseMonthlyProfit <= 0 ? (
                 <>
-                  <strong>Tips Finansial UTERA:</strong> Catat uang masuk dan uang keluar di Buku Kas dulu, supaya status
-                  cicilan bisa dihitung dari laba usaha Anda.
+                  <strong>Tips Finansial UTERA:</strong> Catat kas di Buku Kas dulu agar status cicilan bisa dihitung.
                 </>
               ) : palingHemat ? (
                 <>
-                  <strong>Tips Finansial UTERA:</strong> Untuk {formatRupiah(plafon)} selama {tenorMonths} bulan, pilihan
-                  paling hemat yang masih aman adalah <strong>{palingHemat.nama}</strong>: cicilan{' '}
-                  {formatRupiah(palingHemat.cicilan)} per bulan ({palingHemat.rasio.toFixed(1)}% dari laba), total bunga{' '}
-                  {formatRupiah(palingHemat.totalBunga)}.
+                  <strong>Tips Finansial UTERA:</strong> Untuk {formatRupiah(plafon)} selama {tenorMonths} bulan, yang paling hemat dan masih aman: <strong>{palingHemat.nama}</strong>. Cicilan {formatRupiah(palingHemat.cicilan)} ({palingHemat.rasio.toFixed(1)}% laba), total bunga {formatRupiah(palingHemat.totalBunga)}.
                   {perbandingan.some((b) => b.id === 'koperasi' && b.tersedia) &&
-                    ' Bunga flat koperasi tampak ringan, tetapi dihitung dari pokok awal setiap bulan, sehingga total bunganya bisa lebih besar daripada KUR.'}
+                    ' Bunga flat tampak ringan, tetapi dihitung dari pokok awal, jadi total bunganya bisa lebih besar dari KUR.'}
                 </>
               ) : (
                 <>
-                  <strong>Tips Finansial UTERA:</strong> Belum ada pilihan yang tersedia dan masih aman untuk plafon dan
-                  tenor ini. Coba perkecil plafon atau perpanjang tenor di kalkulator.
+                  <strong>Tips Finansial UTERA:</strong> Belum ada pilihan yang aman untuk plafon dan tenor ini. Coba kecilkan plafon atau perpanjang tenor.
                 </>
               )}
             </p>

@@ -215,7 +215,7 @@ export default function BukuKasPage() {
         <div>
           <h1 className="page-main-heading">Buku Kas Warung</h1>
           <p className="page-main-subheading">
-            Catat arus kas harian, pantau grafik laba bulanan, dan kelola saldo riil warung Anda.
+            Catat kas harian dan pantau laba bulanan warung Anda.
           </p>
         </div>
 

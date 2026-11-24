@@ -448,7 +448,7 @@ export default function ProfilUsahaPage() {
         <div className="page-header-top">
           <div>
             <h1 className="page-title">Profil Usaha</h1>
-            <p className="page-subtitle">Kelola identitas dan legalitas usaha Anda sebagai dasar semua fitur UTERA</p>
+            <p className="page-subtitle">Identitas dan legalitas usaha Anda</p>
           </div>
         </div>
 
@@ -526,48 +526,6 @@ export default function ProfilUsahaPage() {
               </span>
             </span>
 
-            <span
-              className="meta-chip"
-              style={{
-                background:
-                  verifRecord?.status === 'verified'
-                    ? '#D4EAE0'
-                    : verifRecord?.status === 'pending'
-                    ? '#DBEAFE'
-                    : verifRecord?.status === 'rejected'
-                    ? '#FEE2E2'
-                    : '#F5F5F4',
-                color:
-                  verifRecord?.status === 'verified'
-                    ? '#17543E'
-                    : verifRecord?.status === 'pending'
-                    ? '#1D4ED8'
-                    : verifRecord?.status === 'rejected'
-                    ? '#B91C1C'
-                    : '#57534E',
-                borderColor: 'currentColor',
-                fontWeight: 700,
-              }}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>
-                {verifRecord?.status === 'verified'
-                  ? 'verified'
-                  : verifRecord?.status === 'pending'
-                  ? 'hourglass_empty'
-                  : verifRecord?.status === 'rejected'
-                  ? 'error'
-                  : 'shield'}
-              </span>
-              <span>
-                {verifRecord?.status === 'verified'
-                  ? 'Terverifikasi Kredibel'
-                  : verifRecord?.status === 'pending'
-                  ? 'Verifikasi Diproses'
-                  : verifRecord?.status === 'rejected'
-                  ? 'Perlu Revisi'
-                  : 'Belum Terverifikasi'}
-              </span>
-            </span>
           </div>
         </div>
 
@@ -664,56 +622,23 @@ export default function ProfilUsahaPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-heading, #0F2419)' }}>
                 {verifRecord?.status === 'verified'
-                  ? 'Mitra UMKM Terverifikasi Resmi UTERA'
+                  ? 'Usaha Terverifikasi'
                   : verifRecord?.status === 'pending'
-                  ? 'Pengajuan Verifikasi Sedang Ditinjau Admin'
+                  ? 'Verifikasi Sedang Diproses'
                   : verifRecord?.status === 'rejected'
-                  ? 'Permohonan Memerlukan Perbaikan Berkas'
-                  : 'Status Kredibilitas: Belum Diverifikasi'}
+                  ? 'Verifikasi Perlu Revisi'
+                  : 'Belum Diverifikasi'}
               </h3>
-              <span
-                style={{
-                  fontSize: '0.725rem',
-                  fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  background:
-                    verifRecord?.status === 'verified'
-                      ? '#D4EAE0'
-                      : verifRecord?.status === 'pending'
-                      ? '#DBEAFE'
-                      : verifRecord?.status === 'rejected'
-                      ? '#FEE2E2'
-                      : '#E7E5E4',
-                  color:
-                    verifRecord?.status === 'verified'
-                      ? '#17543E'
-                      : verifRecord?.status === 'pending'
-                      ? '#1D4ED8'
-                      : verifRecord?.status === 'rejected'
-                      ? '#B91C1C'
-                      : '#57534E',
-                  border: '1px solid currentColor',
-                }}
-              >
-                {verifRecord?.status === 'verified'
-                  ? 'Lolos Audit Kredibel'
-                  : verifRecord?.status === 'pending'
-                  ? 'Sedang Diproses'
-                  : verifRecord?.status === 'rejected'
-                  ? 'Perlu Revisi'
-                  : 'Belum Diajukan'}
-              </span>
             </div>
 
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#4B5563', lineHeight: 1.5 }}>
               {verifRecord?.status === 'verified'
-                ? `Usaha Anda telah lolos validasi Otoritas Pengawas UTERA dengan No. Sertifikat ${verifRecord.certificateNumber || 'UTERA-VERIF-RESMI'}. Profil dan pembukuan kas Anda diprioritaskan saat pengajuan KUR di bank mitra.${verifRecord.adminNote ? ` Catatan admin: "${verifRecord.adminNote}".` : ''}`
+                ? `No. Sertifikat ${verifRecord.certificateNumber || 'UTERA-VERIF-RESMI'}.${verifRecord.adminNote ? ` Catatan admin: "${verifRecord.adminNote}".` : ''}`
                 : verifRecord?.status === 'pending'
-                ? `Permohonan diajukan: ${verifRecord.submittedAt} (${verifRecord.applicationType}). Tim auditor pengawas sedang memverifikasi integritas pembukuan kas dan kelengkapan izin usaha Anda (Estimasi: 1x24 jam kerja).`
+                ? `Diajukan ${verifRecord.submittedAt}. Estimasi 1x24 jam kerja.`
                 : verifRecord?.status === 'rejected'
-                ? `Pengajuan ditolak. Catatan admin: "${verifRecord.adminNote || 'Lengkapi dokumen NIB dan catatan kas harian'}". Silakan perbaiki data lalu ajukan kembali.`
-                : 'Dapatkan tanda centang kredibel resmi dari Otoritas Pengawas UTERA agar usaha Anda diakui perbankan dan memenuhi syarat percepatan penyaluran KUR.'}
+                ? `Catatan admin: "${verifRecord.adminNote || 'Lengkapi dokumen NIB dan catatan kas harian'}". Perbaiki lalu ajukan lagi.`
+                : 'Dapatkan tanda verifikasi agar usaha lebih dipercaya bank.'}
             </p>
           </div>
         </div>
@@ -721,10 +646,6 @@ export default function ProfilUsahaPage() {
         <div>
           {verifRecord?.status === 'verified' ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#17543E', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>verified_user</span>
-                Sertifikat Kredibel Aktif
-              </span>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
@@ -777,9 +698,9 @@ export default function ProfilUsahaPage() {
           </div>
           <div className="kur-elig-desc">
             {kurStatus === 'eligible'
-              ? 'Usaha Anda telah berjalan lebih dari 6 bulan, memenuhi syarat pengajuan KUR Mikro / Super Mikro di bank.'
+              ? 'Usaha berjalan lebih dari 6 bulan, memenuhi syarat KUR Mikro / Super Mikro.'
               : kurStatus === 'not-eligible'
-              ? 'Bank mensyaratkan usaha minimal beroperasi 6 bulan berturut-turut untuk dapat mengajukan KUR.'
+              ? 'Bank mensyaratkan usaha berjalan minimal 6 bulan.'
               : 'Isi tanggal mulai usaha di bawah untuk memeriksa kesiapan durasi KUR Anda.'}
           </div>
         </div>
@@ -818,7 +739,6 @@ export default function ProfilUsahaPage() {
                 value={activeProfile.nama_usaha || ''}
                 onChange={(e) => setActiveProfile({ ...activeProfile, nama_usaha: e.target.value })}
               />
-              <span className="form-hint">Nama resmi usaha yang digunakan untuk dokumen bank</span>
             </div>
 
             {/* Nama Pemilik */}
@@ -835,7 +755,6 @@ export default function ProfilUsahaPage() {
                 value={activeProfile.nama_pemilik || ''}
                 onChange={(e) => setActiveProfile({ ...activeProfile, nama_pemilik: e.target.value })}
               />
-              <span className="form-hint">Nama lengkap sesuai KTP pemilik usaha</span>
             </div>
 
             {/* Jenis Usaha */}
@@ -855,14 +774,12 @@ export default function ProfilUsahaPage() {
                   </option>
                 ))}
               </select>
-              <span className="form-hint">Kategori utama kegiatan ekonomi usaha Anda</span>
             </div>
 
             {/* Tanggal Mulai Usaha */}
             <div className="form-group">
               <label className="form-label" htmlFor="tanggal_mulai_usaha">
                 Tanggal Mulai Usaha <span className="required">*</span>
-                <span className="label-hint">— kritis untuk KUR</span>
               </label>
               <input
                 type="date"
@@ -871,7 +788,7 @@ export default function ProfilUsahaPage() {
                 value={activeProfile.tanggal_mulai_usaha || ''}
                 onChange={(e) => setActiveProfile({ ...activeProfile, tanggal_mulai_usaha: e.target.value })}
               />
-              <span className="form-hint">Usaha harus berjalan min. 6 bulan untuk mengajukan KUR</span>
+              <span className="form-hint">Minimal 6 bulan untuk mengajukan KUR</span>
             </div>
 
             {/* Nomor Telepon */}
@@ -891,7 +808,6 @@ export default function ProfilUsahaPage() {
                   onChange={(e) => setActiveProfile({ ...activeProfile, nomor_telepon: e.target.value })}
                 />
               </div>
-              <span className="form-hint">Nomor yang dapat dihubungi oleh analis bank</span>
             </div>
 
             {/* Alamat Usaha */}
@@ -908,25 +824,22 @@ export default function ProfilUsahaPage() {
                 value={activeProfile.alamat_usaha || ''}
                 onChange={(e) => setActiveProfile({ ...activeProfile, alamat_usaha: e.target.value })}
               />
-              <span className="form-hint">Alamat lengkap lokasi operasional usaha</span>
             </div>
 
             {/* Deskripsi Usaha */}
             <div className="form-group span-2">
               <label className="form-label" htmlFor="deskripsi_usaha">
                 Deskripsi Usaha
-                <span className="label-hint">— untuk narasi proposal kredit</span>
               </label>
               <textarea
                 id="deskripsi_usaha"
                 className="form-control"
-                placeholder="Jelaskan spesialisasi produk, target pembeli, dan aktivitas operasional warung Anda..."
+                placeholder="Produk, pembeli, dan kegiatan usaha Anda..."
                 rows={3}
                 maxLength={600}
                 value={activeProfile.deskripsi_usaha || ''}
                 onChange={(e) => setActiveProfile({ ...activeProfile, deskripsi_usaha: e.target.value })}
               />
-              <span className="form-hint">Deskripsi singkat yang menggambarkan usaha Anda kepada pihak bank</span>
             </div>
           </div>
         </div>
@@ -960,7 +873,7 @@ export default function ProfilUsahaPage() {
                   </span>
                 </div>
                 <div className="legalitas-desc">
-                  Dokumen wajib untuk pengajuan KUR di semua bank. Daftar gratis di OSS (oss.go.id).
+                  Wajib untuk KUR. Daftar gratis di oss.go.id.
                 </div>
                 {hasNib && (
                   <div className="legalitas-input-wrap">
@@ -1004,7 +917,7 @@ export default function ProfilUsahaPage() {
                   </span>
                 </div>
                 <div className="legalitas-desc">
-                  Diperlukan untuk pengajuan pinjaman di atas Rp 50 juta. Daftar di DJP Online (ereg.pajak.go.id).
+                  Perlu untuk pinjaman di atas Rp 50 juta. Daftar di ereg.pajak.go.id.
                 </div>
                 {hasNpwp && (
                   <div className="legalitas-input-wrap">
@@ -1048,7 +961,7 @@ export default function ProfilUsahaPage() {
                   </span>
                 </div>
                 <div className="legalitas-desc">
-                  Surat Keterangan Usaha dari kelurahan setempat untuk meningkatkan kepercayaan bank.
+                  Surat dari kelurahan untuk menambah kepercayaan bank.
                 </div>
                 {hasSku && (
                   <div className="legalitas-input-wrap">
@@ -1139,7 +1052,7 @@ export default function ProfilUsahaPage() {
             </div>
             <h3 className="modal-title">Hapus Profil Usaha?</h3>
             <p className="modal-desc">
-              Profil usaha &quot;{activeProfile.nama_usaha}&quot; akan dihapus secara permanen dari database. Tindakan ini tidak dapat dibatalkan. Lanjutkan?
+              Profil usaha &quot;{activeProfile.nama_usaha}&quot; akan dihapus permanen dan tidak bisa dikembalikan. Lanjutkan?
             </p>
             <div className="modal-actions">
               <button
@@ -1282,7 +1195,7 @@ export default function ProfilUsahaPage() {
                       Rincian Pengajuan Verifikasi
                     </h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                      Status: Dalam Antrean Audit Otoritas UTERA
+                      Status: Menunggu ditinjau admin
                     </p>
                   </div>
                 </div>
@@ -1314,7 +1227,7 @@ export default function ProfilUsahaPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px', fontSize: '0.78rem', color: '#1E40AF', background: '#EFF6FF', padding: '10px 12px', borderRadius: '8px' }}>
                     <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>info</span>
-                    <span>Auditor sedang memvalidasi kesesuaian pembukuan kas warung Anda dengan standar SAK EMKM dan verifikasi NIB OSS. Hasil akan diberitahukan lewat notifikasi akun Anda.</span>
+                    <span>Admin sedang memeriksa pembukuan dan NIB Anda. Hasilnya dikirim lewat notifikasi.</span>
                   </div>
                 </div>
 
@@ -1349,10 +1262,10 @@ export default function ProfilUsahaPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-heading)' }}>
-                      Formulir Pengajuan Verifikasi Kredibilitas
+                      Ajukan Verifikasi
                     </h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                      Ajukan audit pembukuan kas &amp; legalitas usaha ke Otoritas Pengawas UTERA
+                      Pembukuan dan legalitas Anda diperiksa admin UTERA
                     </p>
                   </div>
                 </div>
@@ -1369,7 +1282,7 @@ export default function ProfilUsahaPage() {
                   }}
                 >
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#1F6B4F' }}>
-                    Ringkasan Berkas yang Akan Diaudit:
+                    Berkas yang diperiksa:
                   </strong>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <div>
@@ -1396,7 +1309,7 @@ export default function ProfilUsahaPage() {
                 {/* Jenis Pengajuan */}
                 <div className="form-group" style={{ marginBottom: '14px' }}>
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '6px' }}>
-                    Pilih Jenis Fasilitas Verifikasi <span className="required">*</span>
+                    Jenis verifikasi <span className="required">*</span>
                   </label>
                   <select
                     className="form-control"
@@ -1405,13 +1318,13 @@ export default function ProfilUsahaPage() {
                     style={{ fontSize: '0.85rem', padding: '10px 12px' }}
                   >
                     <option value="Verifikasi Kredibilitas Lengkap (Siap KUR)">
-                      Verifikasi Kredibilitas Lengkap (Siap KUR Mikro / Super Mikro)
+                      Verifikasi lengkap (siap KUR)
                     </option>
                     <option value="Validasi Dokumen NIB & Legalitas OSS">
-                      Validasi Dokumen NIB &amp; Legalitas OSS RBA
+                      Validasi NIB &amp; legalitas
                     </option>
                     <option value="Audit Konsistensi Buku Kas Warung">
-                      Audit Konsistensi Buku Kas Warung (SAK EMKM)
+                      Audit konsistensi Buku Kas
                     </option>
                   </select>
                 </div>
@@ -1419,19 +1332,16 @@ export default function ProfilUsahaPage() {
                 {/* Catatan / Pesan untuk Admin */}
                 <div className="form-group" style={{ marginBottom: '16px' }}>
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '6px' }}>
-                    Catatan / Permohonan Khusus untuk Admin Pengawas
+                    Catatan untuk admin
                   </label>
                   <textarea
                     className="form-control"
                     rows={3}
-                    placeholder="Contoh: Kami telah aktif mencatat mutasi kas warung harian dan melengkapi NIB. Mohon audit kredibilitas untuk pengajuan fasilitas KUR ke Bank mitra."
+                    placeholder="Contoh: Kas harian sudah rutin dicatat dan NIB sudah lengkap. Mohon diverifikasi untuk pengajuan KUR."
                     value={verifNotes}
                     onChange={(e) => setVerifNotes(e.target.value)}
                     style={{ fontSize: '0.85rem', padding: '10px 12px' }}
                   />
-                  <span className="form-hint" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Sertakan informasi tambahan yang relevan untuk mempercepat proses pemeriksaan admin.
-                  </span>
                 </div>
 
                 <div
@@ -1450,7 +1360,7 @@ export default function ProfilUsahaPage() {
                 >
                   <span className="material-symbols-rounded" style={{ fontSize: '18px' }}>shield</span>
                   <span>
-                    Data Anda aman dan diaudit secara rahasia oleh Otoritas Pengawas UTERA sesuai standar audit kredit perbankan.
+                    Data Anda aman dan hanya diperiksa oleh admin UTERA.
                   </span>
                 </div>
 

@@ -7,6 +7,7 @@ import { syncSkorSnapshot } from '@/lib/skor-sync'
 import { todayLocal } from '@/lib/input'
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import BannerKasKosong from '../banner-kas-kosong'
 import RupiahInput from '@/components/rupiah-input'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
@@ -328,7 +329,7 @@ export default function DashboardPage() {
             <h1 className="dash-heading">Dashboard Finansial</h1>
           </div>
           <p className="dash-subheading">
-            {'Pantau arus kas riil warung harian, indikator kelayakan KUR, dan batas aman cicilan.'}
+            {'Pantau kas harian, kelayakan KUR, dan batas aman cicilan.'}
           </p>
         </div>
 
@@ -361,47 +362,7 @@ export default function DashboardPage() {
       )}
       {!loading && (
         transactions.length === 0 ? (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#F0F9FF',
-            border: '1px solid #BAE6FD',
-            borderRadius: '12px',
-            padding: '12px 18px',
-            marginBottom: '20px',
-            fontSize: '0.85rem',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="material-symbols-rounded" style={{ color: '#0284C7', fontSize: '22px' }}>
-                info
-              </span>
-              <span style={{ color: '#0C4A6E', lineHeight: 1.5 }}>
-                <strong>Selamat Datang di UTERA!</strong> Anda belum mencatat transaksi kas. Mulai catat transaksi pertama Anda di <strong>Buku Kas Warung</strong> untuk mengaktifkan perhitungan Skor Kelayakan Bank &amp; batas aman cicilan 30%.
-              </span>
-            </div>
-            <Link
-              href="/buku-kas"
-              style={{
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                background: 'var(--primary)',
-                color: '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <span>+ Catat Kas Sekarang</span>
-              <span className="material-symbols-rounded" style={{ fontSize: '15px' }}>arrow_forward</span>
-            </Link>
-          </div>
+          <BannerKasKosong keterangan="Skor dan batas cicilan aktif setelah kas dicatat." />
         ) : (
           <div style={{
             display: 'flex',
@@ -451,7 +412,6 @@ export default function DashboardPage() {
               <span>{transactions.length > 0 ? `${kasSummary.marginPct}%` : '0%'}</span>
             </span>
           </div>
-          <p className="metric-caption">Saldo riil di kasir &amp; rekening kas warung saat ini.</p>
         </div>
 
         {/* Card 2: Pemasukan Bulan Ini */}
@@ -469,7 +429,6 @@ export default function DashboardPage() {
               <span>Aktif</span>
             </span>
           </div>
-          <p className="metric-caption">Total omzet dari transaksi kas yang dicatat.</p>
         </div>
 
         {/* Card 3: Pengeluaran Kas */}
@@ -487,7 +446,6 @@ export default function DashboardPage() {
               <span>Operasional</span>
             </span>
           </div>
-          <p className="metric-caption">Belanja bahan baku, sewa, listrik &amp; operasional.</p>
         </div>
 
         {/* Card 4: Skor Kelayakan Kredit PRD UTERA */}
@@ -520,8 +478,7 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <div className="metric-footer-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '6px' }}>
-            <p className="metric-caption" style={{ margin: 0 }}>Berdasarkan konsistensi pencatatan kas aktif &amp; tren profit.</p>
+          <div className="metric-footer-link" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 'auto', paddingTop: '6px' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '2px', whiteSpace: 'nowrap', marginLeft: '8px' }}>
               Buka <span className="material-symbols-rounded" style={{ fontSize: '14px' }}>arrow_forward</span>
             </span>
@@ -637,7 +594,7 @@ export default function DashboardPage() {
                 </span>
               ) : (
                 <span>
-                  <strong>Mulai Pembukuan:</strong> Catat transaksi kas harian pertama Anda untuk mengaktifkan grafik arus kas dan analisis kelayakan KUR.
+                  <strong>Mulai Pembukuan:</strong> Catat transaksi pertama Anda untuk mengaktifkan grafik dan analisis KUR.
                 </span>
               )}
             </div>
@@ -770,7 +727,7 @@ export default function DashboardPage() {
           <div className="panel-header">
             <div>
               <h2 className="panel-title">Buku Kas: Transaksi Terakhir</h2>
-              <p className="panel-subtitle">Catatan kasir dan pengeluaran harian yang terhubung langsung ke laporan keuangan</p>
+              <p className="panel-subtitle">Catatan kas harian yang terhubung ke laporan keuangan</p>
             </div>
 
             <div className="table-filter-group">
@@ -893,7 +850,7 @@ export default function DashboardPage() {
               <strong style={{ color: 'var(--primary-dark)', fontSize: '0.9rem' }}>Status Legalitas NIB OSS</strong>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-body)', margin: 0, lineHeight: 1.5 }}>
-              Lengkapi berkas NIB dan sertifikasi halal untuk membuka akses pengajuan KUR Mikro hingga Rp 50 Juta.
+              Lengkapi NIB dan sertifikasi halal untuk mengajukan KUR Mikro hingga Rp 50 Juta.
             </p>
             <Link href="/legalitas" style={{ display: 'inline-block', marginTop: '10px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
               Kelola Dokumen Legalitas →

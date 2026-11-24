@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import BannerKasKosong from '../banner-kas-kosong'
 import PlafonInput from '../plafon-input'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Tables } from '@/lib/database.types'
-import { formatRupiah } from '@/lib/kas'
+import { formatRupiah, rentangJuta } from '@/lib/kas'
 import { calculateInstallment, evaluateGuardrail, evaluateKelayakanKur, tandaPlafon, KUR_TIERS, type KurTier } from '@/lib/kur'
 import { calculateSkorPRD, rataLabaBulanan } from '@/lib/skor'
 import { getActiveProfilId, pickActiveProfile } from '@/lib/profil-aktif'
@@ -17,9 +18,9 @@ type TransaksiKas = Tables<'transaksi_kas'>
 type TierConfig = KurTier & { desc: string }
 
 const TIER_DESC: Record<string, string> = {
-  'kur-mikro': 'Skema paling populer bagi warung dan bengkel mandiri.',
-  'kur-super': 'Untuk usaha rintisan tanpa agunan fisik tambahan.',
-  'kur-kecil': 'Untuk skala ekspansi cabang baru & pengadaan aset produksi.',
+  'kur-mikro': 'Warung & bengkel',
+  'kur-super': 'Usaha rintisan',
+  'kur-kecil': 'Ekspansi usaha',
 }
 
 // Jenis KUR diambil dari lib/kur.ts (satu sumber sesuai PRD: bunga 6%, plafon dan tenor per jenis).
@@ -202,7 +203,7 @@ export default function SimulasiKurPage() {
         <div>
           <h1 className="dash-heading">Simulasi KUR 2026 &amp; Rencana Pembiayaan Usaha</h1>
           <p className="dash-subheading">
-            Kalkulasi simulasi Kredit Usaha Rakyat bersubsidi pemerintah (BRI, Mandiri, BNI), perencanaan alokasi dana produktif (KUR Planner), dan checklist kelayakan administratif.
+            Hitung cicilan KUR, cek kelayakan usaha, dan rencanakan penggunaan dananya.
           </p>
         </div>
 
@@ -215,42 +216,7 @@ export default function SimulasiKurPage() {
       </div>
 
       {/* Zero State Guidance Banner if no transactions */}
-      {dataSiap && transactions.length === 0 && (
-        <div style={{
-          background: 'var(--primary-soft)',
-          border: '1px solid var(--primary-border)',
-          borderRadius: '12px',
-          padding: '16px 20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="material-symbols-rounded" style={{ color: 'var(--primary)', fontSize: '28px' }}>
-              info
-            </span>
-            <div>
-              <strong style={{ color: 'var(--primary-dark)', display: 'block', fontSize: '0.95rem' }}>
-                Belum ada catatan kas
-              </strong>
-              <span style={{ color: 'var(--text-body)', fontSize: '0.85rem' }}>
-                Anda tetap bisa mencoba menghitung cicilan KUR di bawah. Agar kelayakan KUR usaha Anda bisa dinilai, catat dulu uang masuk dan uang keluar di Buku Kas.
-              </span>
-            </div>
-          </div>
-          <Link
-            href="/buku-kas"
-            className="btn btn-primary btn-sm"
-            style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}
-          >
-            <span className="material-symbols-rounded" style={{ fontSize: '16px' }}>add</span>
-            <span>Mulai Catat Kas</span>
-          </Link>
-        </div>
-      )}
+      {dataSiap && transactions.length === 0 && <BannerKasKosong keterangan="Kalkulator tetap bisa dicoba." />}
 
       {/* ====================================================================
            1. TOP METRICS: ELIGIBILITY & READINESS FOUNDATION
@@ -275,11 +241,6 @@ export default function SimulasiKurPage() {
               {estimatedScore >= 70 ? 'Kategori Baik' : estimatedScore > 0 ? 'Kategori Cukup' : 'Belum Ada Data'}
             </span>
           </div>
-          <p className="metric-caption">
-            {estimatedScore === 0
-              ? 'Mulai catat transaksi di Buku Kas untuk mengaktifkan skor.'
-              : 'Melampaui batas minimum syarat bank (min. 70 poin).'}
-          </p>
         </div>
 
         {/* Metric 2: Batas Beban Kas 30% */}
@@ -299,11 +260,6 @@ export default function SimulasiKurPage() {
               {baseMonthlyProfit > 0 ? `Dari Laba ${formatRupiah(baseMonthlyProfit)}` : 'Laba Belum Ada'}
             </span>
           </div>
-          <p className="metric-caption">
-            {baseMonthlyProfit === 0
-              ? 'Batas 30% akan dihitung otomatis saat kas tercatat.'
-              : 'Maksimal beban angsuran bulanan yang aman bagi operasional.'}
-          </p>
         </div>
 
         {/* Metric 3: Estimasi Angsuran KUR Terpilih */}
@@ -353,7 +309,7 @@ export default function SimulasiKurPage() {
           </div>
           <p className="metric-caption" id="val-desc-pengajuan">
             {kelayakan.siap
-              ? 'Riwayat kas 6 bulan dan NIB/SKU terpenuhi. Pastikan juga syarat usia dan SLIK OJK.'
+              ? 'Cek juga syarat usia dan SLIK OJK.'
               : kelayakan.kekurangan.join(' • ')}
           </p>
         </div>
@@ -368,7 +324,7 @@ export default function SimulasiKurPage() {
           <div className="panel-header">
             <div>
               <h2 className="panel-title">Kalkulator Simulasi Angsuran KUR 2026</h2>
-              <p className="panel-subtitle">Pilih jenis fasilitas KUR subsidi, nominal pengajuan modal kerja, dan jangka waktu</p>
+              <p className="panel-subtitle">Pilih jenis KUR, jumlah, dan jangka waktu</p>
             </div>
             <button type="button" className="btn btn-outline btn-sm" id="btn-reset-kur" onClick={handleReset}>
               Reset Nilai
@@ -386,10 +342,12 @@ export default function SimulasiKurPage() {
               >
                 <div className="kur-tier-header">
                   <span className="material-symbols-rounded text-primary">account_balance</span>
-                  <strong>{tier.name}</strong>
-                  <span className="badge-rate">{tier.rateDisplay}</span>
+                  <strong>{tier.name.replace(/\s*\(.*\)/, '')}</strong>
+                  <span className="badge-rate">{Math.round(tier.rate * 100)}% p.a.</span>
                 </div>
-                <small>{tier.desc} (Plafon s.d {formatRupiah(tier.maxPlafon)})</small>
+                <small>
+                  {tier.desc} · {rentangJuta(tier.minPlafon, tier.maxPlafon)}
+                </small>
               </button>
             ))}
           </div>

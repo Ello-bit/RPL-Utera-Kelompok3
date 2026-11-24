@@ -9,11 +9,11 @@ export type MetodeJasa = 'flat' | 'menurun'
 export const METODE_JASA: Record<MetodeJasa, { nama: string; penjelasan: string }> = {
   flat: {
     nama: 'Flat',
-    penjelasan: 'Jasa dihitung dari pinjaman awal setiap bulan, jadi cicilan sama rata sampai lunas.',
+    penjelasan: 'Jasa dari pinjaman awal; cicilan sama setiap bulan.',
   },
   menurun: {
     nama: 'Menurun',
-    penjelasan: 'Jasa dihitung dari sisa pinjaman, jadi cicilan paling besar di awal lalu makin kecil.',
+    penjelasan: 'Jasa dari sisa pinjaman; cicilan makin kecil.',
   },
 }
 

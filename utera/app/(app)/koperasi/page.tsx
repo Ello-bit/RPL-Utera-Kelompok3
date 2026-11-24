@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import BannerKasKosong from '../banner-kas-kosong'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/lib/database.types'
 import { formatRupiah } from '@/lib/kas'
@@ -292,26 +293,12 @@ export default function KoperasiPage() {
         <div>
           <h1 className="dash-heading">Pinjaman Koperasi</h1>
           <p className="dash-subheading">
-            Hitung cicilan pinjaman koperasi, cek apakah masih aman untuk kas usaha, lalu simpan rencana pengajuannya.
+            Hitung cicilan koperasi, cek keamanannya untuk kas, lalu simpan rencana pengajuan.
           </p>
         </div>
       </div>
 
-      {tidakAdaKas && (
-        <div className="kop-info">
-          <span className="material-symbols-rounded">info</span>
-          <div>
-            <strong>Belum ada catatan kas</strong>
-            <p>
-              Anda tetap bisa mencoba menghitung cicilan. Pengajuan baru bisa disimpan setelah Anda mencatat uang masuk
-              dan uang keluar di Buku Kas, karena batas aman cicilan dihitung dari laba usaha.
-            </p>
-          </div>
-          <Link href="/buku-kas" className="btn btn-primary btn-sm kop-info-aksi">
-            Mulai Catat Kas
-          </Link>
-        </div>
-      )}
+      {tidakAdaKas && <BannerKasKosong keterangan="Kalkulator tetap bisa dicoba." />}
 
       <div className="kop-grid">
         {/* ---------------- Isian ---------------- */}
@@ -466,11 +453,10 @@ export default function KoperasiPage() {
               <div>
                 <strong>Cicilan ini melebihi batas aman</strong>
                 <p>
-                  Cicilan {formatRupiah(hasil.cicilanAwal)} lebih besar dari {formatRupiah(batasAman)} (30% laba bulanan
-                  Anda). Pengajuan tidak bisa disimpan.
+                  Cicilan {formatRupiah(hasil.cicilanAwal)} melebihi {formatRupiah(batasAman)} (30% laba bulanan). Pengajuan tidak bisa disimpan.
                   {maksAman >= BATAS_KOPERASI.minPlafon
-                    ? ` Dengan jasa dan jangka waktu ini, pinjaman maksimal yang masih aman sekitar ${formatRupiah(maksAman)}. Anda juga bisa memperpanjang jangka waktu.`
-                    : ' Coba perpanjang jangka waktu atau pilih pinjaman yang lebih kecil.'}
+                    ? ` Pinjaman maksimal yang masih aman sekitar ${formatRupiah(maksAman)}, atau perpanjang jangka waktu.`
+                    : ' Perpanjang jangka waktu atau kecilkan pinjaman.'}
                 </p>
               </div>
             </div>
@@ -482,8 +468,7 @@ export default function KoperasiPage() {
               <div>
                 <strong>Batas aman belum bisa dihitung</strong>
                 <p>
-                  Batas aman cicilan dihitung dari laba usaha. Belum ada laba dari catatan kas Anda, jadi pengajuan belum
-                  bisa disimpan.
+                  Belum ada laba di catatan kas, jadi pengajuan belum bisa disimpan.
                 </p>
               </div>
             </div>
@@ -526,7 +511,7 @@ export default function KoperasiPage() {
         <div className="panel-header">
           <div>
             <h2 className="panel-title">Riwayat Pengajuan</h2>
-            <p className="panel-subtitle">Pengajuan yang sudah Anda simpan. Ubah statusnya sesuai perkembangan di koperasi.</p>
+            <p className="panel-subtitle">Ubah statusnya sesuai perkembangan di koperasi.</p>
           </div>
         </div>
 
@@ -558,7 +543,7 @@ export default function KoperasiPage() {
             <span className="kop-ikon">
               <span className="material-symbols-rounded">compare_arrows</span>
             </span>
-            Simpan satu pengajuan lagi, lalu centang &quot;Bandingkan&quot; pada keduanya untuk melihat perbedaannya berdampingan.
+            Simpan satu pengajuan lagi untuk bisa membandingkan keduanya.
           </p>
         )}
 
@@ -567,7 +552,7 @@ export default function KoperasiPage() {
             <span className="kop-ikon">
               <span className="material-symbols-rounded">compare_arrows</span>
             </span>
-            {dipilih.length === 0 && 'Centang "Bandingkan" pada dua pengajuan untuk melihat perbedaannya berdampingan.'}
+            {dipilih.length === 0 && 'Centang "Bandingkan" pada dua pengajuan.'}
             {dipilih.length === 1 && 'Satu dipilih. Centang satu pengajuan lagi untuk membandingkan.'}
             {dipilih.length === 2 && 'Dua pengajuan dibandingkan di bawah ini.'}
           </p>
@@ -674,7 +659,7 @@ export default function KoperasiPage() {
             <p className="kop-catatan-banding">
               {pasangan.banding.samaPlafon
                 ? 'A adalah pengajuan yang dicentang pertama.'
-                : 'Jumlah pinjaman berbeda, jadi cicilan dan total jasa tidak ditandai mana yang lebih baik. Yang adil dibandingkan adalah jasa per Rp 1 juta pinjaman. A adalah pengajuan yang dicentang pertama.'}
+                : 'Jumlah pinjaman berbeda, jadi yang dibandingkan adalah jasa per Rp 1 juta. A adalah yang dicentang pertama.'}
             </p>
           </div>
         )}

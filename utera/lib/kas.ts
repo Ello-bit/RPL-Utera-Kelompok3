@@ -146,3 +146,13 @@ export function formatRupiah(num: number): string {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID')
 }
 
+
+/** Angka dalam juta tanpa nol di belakang: 10000000 -> "10", 1500000 -> "1,5". */
+function jutaTeks(n: number): string {
+  return Number((n / 1_000_000).toFixed(1)).toLocaleString('id-ID')
+}
+
+/** Rentang rupiah ringkas untuk kartu: rentangJuta(10_000_000, 50_000_000) -> "Rp 10–50 Jt". */
+export function rentangJuta(min: number, max: number): string {
+  return `Rp ${jutaTeks(min)}–${jutaTeks(max)} Jt`
+}
